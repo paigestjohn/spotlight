@@ -1,6 +1,6 @@
 ---
 name: integrations
-description: Routing table for external tool integrations — browser-use, Junkipedia, OSINT Navigator, coJournalist, and more. Agents invoke this skill to discover which integrations are live and which one fits a given investigation task.
+description: Routing table for external tool integrations — browser-use, Junkipedia, OSINT Navigator, Scoutpost, and more. Agents invoke this skill to discover which integrations are live and which one fits a given investigation task.
 version: "1.0"
 invocable_by: [investigator, fact-checker, orchestrator]
 requires: []
@@ -27,7 +27,7 @@ The skill is cheap to load — it's a routing table, not a deep methodology guid
 | `browser-use` | browser-automation | form-navigation, search-export, login-driving, multi-step-browsing | Complex form submissions, pagination beyond firecrawl, agent-driven site navigation. NOT for chain-of-custody evidence (use `dev-browser`). |
 | `junkipedia` | social-osint | narrative-tracking, misinformation-search, social-media-monitoring, cross-platform-query | Tracking how a claim spread; finding social posts deleted from origin; cross-platform narrative investigation. |
 | `osint-navigator` | tool-discovery | tool-search-by-keyword, complex-query-synthesis, country-specific-tool-lookup | When the curated 150-tool catalog in `skills/osint/references/tools-by-category.md` doesn't have what you need. |
-| `cojournalist` | monitoring | project-scoped-monitoring, scout-creation, information-unit-retrieval, scheduled-monitoring | Approved monitoring that should keep running after the current investigation cycle. |
+| `scoutpost` | monitoring | project-scoped-monitoring, scout-creation, information-unit-retrieval, scheduled-monitoring | Approved monitoring that should keep running after the current investigation cycle. |
 | `unpaywall` | academic-open-access | doi-open-access-lookup, academic-fulltext-discovery, legal-pdf-location | Academic papers with DOIs when the content-access hierarchy needs a legal open-access copy. |
 
 ## Routing decision tree
@@ -51,7 +51,7 @@ What's the task?
 │     → fetch / search (verbs, no integration needed)
 │
 ├── "Create a durable monitor / keep watching this after the cycle ends"
-│     → cojournalist  (if green — check preflight)
+│     → scoutpost  (if green — check preflight)
 │     → fallback: invoke-skill("monitoring") for runtime-native routine guidance
 │
 ├── "Find a legal open-access copy of an academic paper with a DOI"

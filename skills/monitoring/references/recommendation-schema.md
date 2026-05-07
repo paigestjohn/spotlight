@@ -45,10 +45,10 @@ Spotlight keeps the same recommendation schema and applies this routing:
 
 | Recommendation | Passive path | Durable path |
 |---|---|---|
-| `web` | Optional Mycroft topic if broad ambient coverage helps | coJournalist `web` scout or runtime-native routine |
-| `pulse` | Mycroft topic for passive feed coverage | coJournalist beat/pulse scout or runtime-native routine |
-| `social` | None | coJournalist `social` scout or runtime-native routine |
-| `civic` | Optional Mycroft topic when passive alerts help | coJournalist `civic` scout or runtime-native routine |
+| `web` | Optional Mycroft topic if broad ambient coverage helps | Scoutpost `web` scout or runtime-native routine |
+| `pulse` | Mycroft topic for passive feed coverage | Scoutpost beat/pulse scout or runtime-native routine |
+| `social` | None | Scoutpost `social` scout or runtime-native routine |
+| `civic` | Optional Mycroft topic when passive alerts help | Scoutpost `civic` scout or runtime-native routine |
 
 ## Spotlight-side normalization
 

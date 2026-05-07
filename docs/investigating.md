@@ -158,8 +158,8 @@ CYCLE N:
   4. process monitoring_recommendations
      - If any exist in findings.json, present to user (priority-ordered)
      - Register passive topics in Mycroft when useful
-     - Create durable monitors in coJournalist when approved
-     - Fall back to runtime-native routines if coJournalist is unavailable
+     - Create durable monitors in Scoutpost when approved
+     - Fall back to runtime-native routines if Scoutpost is unavailable
      - Log all created links in data/monitoring.json
 
   5. evaluate 6 readiness criteria

@@ -331,7 +331,7 @@ Write to cases/{project}/data/fact-check.json.",
 
      2. For approved recommendations, invoke-skill("monitoring") to:
         - register passive topics in Mycroft when useful,
-        - create durable monitors in coJournalist by project_id when available,
+        - create durable monitors in Scoutpost by project_id when available,
         - or fall back to runtime-native routines.
 
      3. Log all created monitor links to cases/{project}/data/monitoring.json

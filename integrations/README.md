@@ -18,7 +18,7 @@ An agent invokes a skill to get *guidance*; it calls an integration to get *data
 | `browser-use` | browser-automation | No (OSS); optional cloud | `BROWSER_USE_API_KEY` (optional) |
 | `junkipedia` | social-osint | Yes | `JUNKIPEDIA_API_KEY` |
 | `osint-navigator` | tool-discovery | Yes | `OSINT_NAV_API_KEY` |
-| `cojournalist` | monitoring | Yes | `COJOURNALIST_API_KEY` |
+| `scoutpost` | monitoring | Yes | `SCOUTPOST_API_KEY` |
 | `unpaywall` | academic-open-access | Yes | `UNPAYWALL_EMAIL` |
 
 See `skills/integrations/SKILL.md` for the routing table agents use to pick the right integration per investigation task.

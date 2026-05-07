@@ -8,7 +8,7 @@ Spotlight's monitoring layer is now an **orchestrator**, not a local feed engine
 |---|---|
 | `mycroft` | Passive open-intelligence signals: feed polling, scoring, dedup, topic registry, local signal index |
 | `spotlight` | Investigation-scoped monitor recommendations, user approval, case linkage, resume-time briefing |
-| `cojournalist` | Durable scheduled scouts, notifications, projects, and information units |
+| `scoutpost` | Durable scheduled scouts, notifications, projects, and information units |
 
 This lets the three tools coexist cleanly while still working independently.
 
@@ -24,14 +24,14 @@ Spotlight orchestrator
         │ asks user which recommendations to approve
         ▼
 Registers passive topics in Mycroft when useful
-Creates durable monitors in coJournalist by project_id when approved
-Falls back to runtime-native routines when coJournalist is unavailable
+Creates durable monitors in Scoutpost by project_id when approved
+Falls back to runtime-native routines when Scoutpost is unavailable
         ▼
 Writes cases/{project}/data/monitoring.json
         ▼
 On resume:
   - query Mycroft signals for linked topics
-  - query coJournalist units/scouts for linked project
+  - query Scoutpost units/scouts for linked project
   - ask about runtime-native routine output if needed
         ▼
 Show monitoring briefing before next cycle
@@ -48,9 +48,9 @@ Show monitoring briefing before next cycle
 The file now acts as a case registry for external monitors.
 
 - `mycroft.topic_slugs[]` tracks linked passive topics
-- `cojournalist.project_id` is the preferred grouping primitive for durable monitors
-- `cojournalist.scouts[]` stores created monitor ids for the case
-- `fallback_routines[]` stores runtime-native routine handles when coJournalist is not used
+- `scoutpost.project_id` is the preferred grouping primitive for durable monitors
+- `scoutpost.scouts[]` stores created monitor ids for the case
+- `fallback_routines[]` stores runtime-native routine handles when Scoutpost is not used
 - `checks[]` stores what Spotlight surfaced back to the user over time
 
 ### Registry helper
@@ -66,7 +66,7 @@ python3 monitoring/registry.py migrate --project "<project>"
 Use it to normalize or migrate case state before appending:
 
 - Mycroft topic links
-- coJournalist `project_id` and `scout_id` links
+- Scoutpost `project_id` and `scout_id` links
 - runtime-native fallback routine handles
 - resume-time `checks[]`
 
@@ -80,21 +80,21 @@ If `~/.mycroft/monitoring/monitor.py` exists and the case has linked topics, Spo
 python3 ~/.mycroft/monitoring/monitor.py query --topic "<topic or target>" --since 7d --json
 ```
 
-### coJournalist durable monitors
+### Scoutpost durable monitors
 
-If the case has a stored `project_id`, Spotlight should fetch updates from coJournalist by that `project_id`, not by brittle scout-name matching.
+If the case has a stored `project_id`, Spotlight should fetch updates from Scoutpost by that `project_id`, not by brittle scout-name matching.
 
 Preferred path:
 
 ```bash
-cojo units list --project "<project_id>" --since 7d
+scout units list --project "<project_id>" --since 7d
 ```
 
 HTTP fallback:
 
 ```bash
-curl -s "https://www.cojournalist.ai/api/v1/units?project_id=<project_id>&limit=20" \
-  -H "Authorization: Bearer $COJOURNALIST_API_KEY"
+curl -s "https://www.scoutpost.ai/api/v1/units?project_id=<project_id>&limit=20" \
+  -H "Authorization: Bearer $SCOUTPOST_API_KEY"
 ```
 
 ### Runtime-native routines

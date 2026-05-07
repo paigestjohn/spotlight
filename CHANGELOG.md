@@ -9,14 +9,14 @@ All notable changes to Spotlight. Format follows [Keep a Changelog](https://keep
 - Monitoring ownership split is now explicit:
   - `mycroft` owns passive feed polling, scoring, deduplication, and topic-linked signal storage
   - `spotlight` owns investigation-scoped monitoring orchestration and case linkage
-  - `cojournalist` remains unchanged and is used through existing `projects`, `scouts`, and `units` surfaces
+  - `scoutpost` remains unchanged and is used through existing `projects`, `scouts`, and `units` surfaces
 - Spotlight no longer ships the legacy `monitoring/feeds/` framework.
 - `cases/{project}/data/monitoring.json` is now treated as an external-monitor registry rather than a feed-execution config.
 
 ### Added
 
 - `spotlight/monitoring/registry.py` for initializing, normalizing, and migrating `monitoring.json` to schema v2.
-- `integrations/cojournalist/` as the default durable-monitor integration surface.
+- `integrations/scoutpost/` as the default durable-monitor integration surface.
 - `mycroft/monitoring/` as the passive-monitor single source of truth, including `poll`, `query`, `preflight`, `topic`, and `prune`.
 - Installer-generated `spotlight-doctor` and `spotlight-update` wrappers. Manual updates now fetch `origin/main`, fast-forward only, and run doctor.
 - QMD setup in the installer, including automatic registration of the selected vault as the `spotlight` collection.
@@ -77,7 +77,7 @@ Methodology synthesized from:
 
 ### Deferred for future releases
 
-- Integrations: Serus AI, Thinkpol, Reality Defender, Klarety, coJournalist (awaiting API access or access approval)
+- Integrations: Serus AI, Thinkpol, Reality Defender, Klarety, Scoutpost (awaiting API access or access approval)
 - Agent eval harness with real LLM-backed test scenarios
 - Release automation + signed installers
 - i18n for review.html

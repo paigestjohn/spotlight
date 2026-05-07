@@ -82,7 +82,7 @@ Each skill is a directory with `SKILL.md` (+ optional `references/*.md` for larg
 - **`review`** — post-Gate-1 HTML review artifact. Renders a self-contained `cases/{project}/review.html` the journalist opens in any browser, submits structured feedback, downloads as JSON. Mode B re-spawns the investigator to process the feedback and regenerates the HTML. No server required.
 - **`integrations`** — routing layer for external tool integrations (browser-use, Junkipedia, OSINT Navigator, Unpaywall). Reads live preflight status, maps investigation tasks to integrations. See `integrations/` at repo root for manifests + per-integration usage docs.
 - **`ingest`** — archival from case files to vault. 7-step process with `.ingest-lock` concurrency and directory fallback.
-- **`monitoring`** — case-level monitoring orchestration. Coordinates Mycroft passive signals, coJournalist durable monitors, and runtime-native fallbacks.
+- **`monitoring`** — case-level monitoring orchestration. Coordinates Mycroft passive signals, Scoutpost durable monitors, and runtime-native fallbacks.
 
 ### Agent-support skills (invocable by investigator / fact-checker)
 
@@ -128,7 +128,7 @@ Frontmatter declares `allowed_verbs`, `preferred_model` (per-runtime mapping), `
 
 ## monitoring/ — case registry helpers
 
-Spotlight no longer ships a passive feed engine. Passive polling lives in Mycroft; durable always-on scouts live in coJournalist. Spotlight keeps only the investigation-scoped linkage and handoff state.
+Spotlight no longer ships a passive feed engine. Passive polling lives in Mycroft; durable always-on scouts live in Scoutpost. Spotlight keeps only the investigation-scoped linkage and handoff state.
 
 ```
 monitoring/
@@ -142,7 +142,7 @@ monitoring/
 - initialize a v2 external-monitor registry for a case
 - normalize or migrate legacy feed-oriented `monitoring.json`
 - record linked Mycroft topic slugs
-- record linked coJournalist `project_id` and `scout_id` values
+- record linked Scoutpost `project_id` and `scout_id` values
 - record runtime-native fallback handles and resume-time checks
 
 See [monitoring.md](monitoring.md) for the lifecycle and registry fields.

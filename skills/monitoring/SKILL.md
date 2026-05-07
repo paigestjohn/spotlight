@@ -1,6 +1,6 @@
 ---
 name: monitoring
-description: Investigation-scoped monitoring orchestration. Agents recommend targets; the orchestrator links them to Mycroft passive topics, coJournalist projects/scouts, or runtime-native routines.
+description: Investigation-scoped monitoring orchestration. Agents recommend targets; the orchestrator links them to Mycroft passive topics, Scoutpost projects/scouts, or runtime-native routines.
 version: "2.0"
 invocable_by: [orchestrator]
 requires: []
@@ -11,8 +11,8 @@ requires: []
 Spotlight no longer owns a local feed engine. Monitoring is now a coordination layer across three surfaces:
 
 - **Mycroft** for passive open-intelligence signals (GDELT, RSS, GDACS, ACLED)
-- **coJournalist** for durable scheduled scouts and later information units
-- **Runtime-native routines** when coJournalist is unavailable or declined
+- **Scoutpost** for durable scheduled scouts and later information units
+- **Runtime-native routines** when Scoutpost is unavailable or declined
 
 Agents still recommend targets in `monitoring_recommendations[]`. The orchestrator handles approval, creation, persistence, and later checks.
 
@@ -20,7 +20,7 @@ Agents still recommend targets in `monitoring_recommendations[]`. The orchestrat
 
 - **Case reference:** use `spotlight:{project}` as the cross-tool handle wherever possible.
 - **User gate:** no durable monitor is created without explicit approval.
-- **Default durable target:** prefer `cojournalist` when it is available and green in integration preflight.
+- **Default durable target:** prefer `scoutpost` when it is available and green in integration preflight.
 - **Passive signals:** if Mycroft is installed, Spotlight may register/update case-linked topics there; Spotlight never owns passive feed polling itself.
 
 ## Monitoring lifecycle
@@ -36,9 +36,9 @@ They recommend. They do not create monitors.
 When the user approves a recommendation, the orchestrator chooses one or both of:
 
 - **Passive topic in Mycroft** when the recommendation benefits from ambient feed coverage
-- **Durable monitor in coJournalist** when the recommendation should keep running and return later updates
+- **Durable monitor in Scoutpost** when the recommendation should keep running and return later updates
 
-If coJournalist is unavailable or declined, the orchestrator falls back to a runtime-native routine:
+If Scoutpost is unavailable or declined, the orchestrator falls back to a runtime-native routine:
 
 - Codex: Codex Automation
 - Claude: Claude routine
@@ -49,7 +49,7 @@ If coJournalist is unavailable or declined, the orchestrator falls back to a run
 At the start of a resumed investigation, the orchestrator checks:
 
 - **Mycroft topics** if `~/.mycroft/monitoring/monitor.py` exists and the case has linked topic slugs
-- **coJournalist units and scout state** if `monitoring.json` has a stored `project_id` or `scout_id`
+- **Scoutpost units and scout state** if `monitoring.json` has a stored `project_id` or `scout_id`
 - **Runtime-native routines** by retrieving task output when supported, or by asking the user whether updates were detected
 
 The orchestrator then presents a short monitoring briefing and asks whether to fold those updates into the next cycle.
@@ -84,12 +84,12 @@ execute-shell('python3 ~/.mycroft/monitoring/monitor.py query --topic "{topic_or
 execute-shell("python3 integrations/preflight.py --json")
 ```
 
-### Preferred coJournalist path
+### Preferred Scoutpost path
 
 Read the integration guide first:
 
 ```text
-read-file("integrations/cojournalist/integration.md")
+read-file("integrations/scoutpost/integration.md")
 ```
 
 Then create or reuse a project, create scouts under that `project_id`, and later fetch updates back by `project_id`.
@@ -106,7 +106,7 @@ This file is Spotlight-owned case state. It is no longer a feed-config file.
     "topic_slugs": ["example-topic"],
     "last_checked_at": "ISO 8601"
   },
-  "cojournalist": {
+  "scoutpost": {
     "project_id": "uuid",
     "project_name": "Spotlight: {project}",
     "scouts": [
@@ -131,7 +131,7 @@ This file is Spotlight-owned case state. It is no longer a feed-config file.
   "checks": [
     {
       "checked_at": "ISO 8601",
-      "source": "mycroft|cojournalist|runtime-routine",
+      "source": "mycroft|scoutpost|runtime-routine",
       "summary": "human-readable summary",
       "items": []
     }
@@ -145,7 +145,7 @@ If Spotlight encounters the old feed-oriented `monitoring.json` shape, treat it 
 
 In sensitive mode:
 
-- do not create new live Mycroft or coJournalist monitors;
+- do not create new live Mycroft or Scoutpost monitors;
 - do not query live remote monitoring backends;
 - you may still read previously exported or cached monitoring artifacts under the case directory.
 
@@ -154,6 +154,6 @@ In sensitive mode:
 | File | Purpose |
 |---|---|
 | `monitoring/registry.py` | Normalizes and updates `cases/{project}/data/monitoring.json` |
-| `integrations/cojournalist/integration.md` | Durable monitor creation and retrieval via existing coJournalist surfaces |
+| `integrations/scoutpost/integration.md` | Durable monitor creation and retrieval via existing Scoutpost surfaces |
 | `references/recommendation-schema.md` | Agent output schema for `monitoring_recommendations[]` |
 | `references/source-catalog.md` | Passive feed sources now owned by Mycroft |

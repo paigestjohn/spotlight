@@ -152,8 +152,8 @@ Archive order is documented as:
 Spotlight can turn findings into ongoing monitoring. It supports:
 
 - passive signals from Mycroft
-- durable monitoring through coJournalist
-- runtime-native fallbacks when coJournalist is unavailable
+- durable monitoring through Scoutpost
+- runtime-native fallbacks when Scoutpost is unavailable
 
 Monitoring recommendations can come from the investigator or the fact-checker and are logged into the case output.
 

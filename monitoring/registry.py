@@ -38,7 +38,7 @@ def default_registry(project: str) -> dict:
             "topic_slugs": [],
             "last_checked_at": None,
         },
-        "cojournalist": {
+        "scoutpost": {
             "project_id": None,
             "project_name": None,
             "scouts": [],
@@ -159,12 +159,17 @@ def normalize_registry(project: str, payload: dict | None) -> dict:
         registry["mycroft"]["topic_slugs"] = _dedupe_strings(mycroft.get("topic_slugs", []))
         registry["mycroft"]["last_checked_at"] = mycroft.get("last_checked_at")
 
-    cojournalist = payload.get("cojournalist", {})
-    if isinstance(cojournalist, dict):
-        registry["cojournalist"]["project_id"] = cojournalist.get("project_id")
-        registry["cojournalist"]["project_name"] = cojournalist.get("project_name")
-        registry["cojournalist"]["scouts"] = _normalize_scouts(cojournalist.get("scouts", []))
-        registry["cojournalist"]["last_checked_at"] = cojournalist.get("last_checked_at")
+    scoutpost = payload.get("scoutpost", {})
+    if not isinstance(scoutpost, dict):
+        scoutpost = {}
+    legacy_scoutpost = payload.get("cojournalist", {})
+    if not scoutpost and isinstance(legacy_scoutpost, dict):
+        scoutpost = legacy_scoutpost
+    if isinstance(scoutpost, dict):
+        registry["scoutpost"]["project_id"] = scoutpost.get("project_id")
+        registry["scoutpost"]["project_name"] = scoutpost.get("project_name")
+        registry["scoutpost"]["scouts"] = _normalize_scouts(scoutpost.get("scouts", []))
+        registry["scoutpost"]["last_checked_at"] = scoutpost.get("last_checked_at")
 
     registry["fallback_routines"] = _normalize_fallbacks(payload.get("fallback_routines", []))
     registry["checks"] = _normalize_checks(payload.get("checks", []))
@@ -197,18 +202,21 @@ def migrate_legacy_registry(project: str, payload: dict) -> dict:
     if isinstance(payload.get("checks"), list):
         registry["checks"] = _normalize_checks(payload.get("checks"))
 
-    cojo_project_id = payload.get("project_id")
-    cojo_project_name = payload.get("project_name")
-    if isinstance(payload.get("cojournalist"), dict):
-        cojo_project_id = payload["cojournalist"].get("project_id") or cojo_project_id
-        cojo_project_name = payload["cojournalist"].get("project_name") or cojo_project_name
-    registry["cojournalist"]["project_id"] = cojo_project_id
-    registry["cojournalist"]["project_name"] = cojo_project_name
+    scout_project_id = payload.get("project_id")
+    scout_project_name = payload.get("project_name")
+    scoutpost_payload = payload.get("scoutpost")
+    if not isinstance(scoutpost_payload, dict):
+        scoutpost_payload = payload.get("cojournalist")
+    if isinstance(scoutpost_payload, dict):
+        scout_project_id = scoutpost_payload.get("project_id") or scout_project_id
+        scout_project_name = scoutpost_payload.get("project_name") or scout_project_name
+    registry["scoutpost"]["project_id"] = scout_project_id
+    registry["scoutpost"]["project_name"] = scout_project_name
 
     scouts = payload.get("scouts")
-    if isinstance(payload.get("cojournalist"), dict):
-        scouts = payload["cojournalist"].get("scouts", scouts)
-    registry["cojournalist"]["scouts"] = _normalize_scouts(scouts)
+    if isinstance(scoutpost_payload, dict):
+        scouts = scoutpost_payload.get("scouts", scouts)
+    registry["scoutpost"]["scouts"] = _normalize_scouts(scouts)
 
     fallbacks = payload.get("fallback_routines")
     if fallbacks is None and isinstance(payload.get("routines"), list):
@@ -264,18 +272,18 @@ def cmd_link_mycroft_topic(args: argparse.Namespace) -> None:
     print(path)
 
 
-def cmd_link_cojournalist_project(args: argparse.Namespace) -> None:
+def cmd_link_scoutpost_project(args: argparse.Namespace) -> None:
     registry = load_registry(args.project)
-    registry["cojournalist"]["project_id"] = args.project_id
+    registry["scoutpost"]["project_id"] = args.project_id
     if args.project_name:
-        registry["cojournalist"]["project_name"] = args.project_name
+        registry["scoutpost"]["project_name"] = args.project_name
     path = _write_registry(args.project, registry)
     print(path)
 
 
-def cmd_link_cojournalist_scout(args: argparse.Namespace) -> None:
+def cmd_link_scoutpost_scout(args: argparse.Namespace) -> None:
     registry = load_registry(args.project)
-    scouts = registry["cojournalist"]["scouts"]
+    scouts = registry["scoutpost"]["scouts"]
     scout = {
         "scout_id": args.scout_id,
         "monitor_kind": args.monitor_kind,
@@ -286,7 +294,7 @@ def cmd_link_cojournalist_scout(args: argparse.Namespace) -> None:
     }
     scouts = [existing for existing in scouts if existing.get("scout_id") != args.scout_id]
     scouts.append(scout)
-    registry["cojournalist"]["scouts"] = scouts
+    registry["scoutpost"]["scouts"] = scouts
     path = _write_registry(args.project, registry)
     print(path)
 
@@ -329,8 +337,8 @@ def cmd_record_check(args: argparse.Namespace) -> None:
     )
     if args.source == "mycroft":
         registry["mycroft"]["last_checked_at"] = args.checked_at or registry["checks"][-1]["checked_at"]
-    elif args.source == "cojournalist":
-        registry["cojournalist"]["last_checked_at"] = args.checked_at or registry["checks"][-1]["checked_at"]
+    elif args.source == "scoutpost":
+        registry["scoutpost"]["last_checked_at"] = args.checked_at or registry["checks"][-1]["checked_at"]
     path = _write_registry(args.project, registry)
     print(path)
 
@@ -364,21 +372,21 @@ def build_parser() -> argparse.ArgumentParser:
     p_topic.add_argument("--last-checked-at")
     p_topic.set_defaults(func=cmd_link_mycroft_topic)
 
-    p_cojo_project = sub.add_parser("link-cojournalist-project", help="Attach a coJournalist project to a case.")
-    p_cojo_project.add_argument("--project", required=True)
-    p_cojo_project.add_argument("--project-id", required=True)
-    p_cojo_project.add_argument("--project-name")
-    p_cojo_project.set_defaults(func=cmd_link_cojournalist_project)
+    p_scout_project = sub.add_parser("link-scoutpost-project", help="Attach a Scoutpost project to a case.")
+    p_scout_project.add_argument("--project", required=True)
+    p_scout_project.add_argument("--project-id", required=True)
+    p_scout_project.add_argument("--project-name")
+    p_scout_project.set_defaults(func=cmd_link_scoutpost_project)
 
-    p_cojo_scout = sub.add_parser("link-cojournalist-scout", help="Record a coJournalist scout under the linked case.")
-    p_cojo_scout.add_argument("--project", required=True)
-    p_cojo_scout.add_argument("--scout-id", required=True)
-    p_cojo_scout.add_argument("--monitor-kind", required=True, choices=["web", "pulse", "social", "civic"])
-    p_cojo_scout.add_argument("--target", required=True)
-    p_cojo_scout.add_argument("--criteria", required=True)
-    p_cojo_scout.add_argument("--created-at")
-    p_cojo_scout.add_argument("--status")
-    p_cojo_scout.set_defaults(func=cmd_link_cojournalist_scout)
+    p_scout_scout = sub.add_parser("link-scoutpost-scout", help="Record a Scoutpost scout under the linked case.")
+    p_scout_scout.add_argument("--project", required=True)
+    p_scout_scout.add_argument("--scout-id", required=True)
+    p_scout_scout.add_argument("--monitor-kind", required=True, choices=["web", "pulse", "social", "civic"])
+    p_scout_scout.add_argument("--target", required=True)
+    p_scout_scout.add_argument("--criteria", required=True)
+    p_scout_scout.add_argument("--created-at")
+    p_scout_scout.add_argument("--status")
+    p_scout_scout.set_defaults(func=cmd_link_scoutpost_scout)
 
     p_fallback = sub.add_parser("link-fallback-routine", help="Record a runtime-native monitoring fallback.")
     p_fallback.add_argument("--project", required=True)
@@ -392,7 +400,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_check = sub.add_parser("record-check", help="Append a monitoring check entry for a case.")
     p_check.add_argument("--project", required=True)
-    p_check.add_argument("--source", required=True, choices=["mycroft", "cojournalist", "runtime-routine"])
+    p_check.add_argument("--source", required=True, choices=["mycroft", "scoutpost", "runtime-routine"])
     p_check.add_argument("--summary", required=True)
     p_check.add_argument("--items-json")
     p_check.add_argument("--checked-at")

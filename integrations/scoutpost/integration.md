@@ -1,6 +1,6 @@
-# coJournalist — Durable Monitoring Integration
+# Scoutpost — Durable Monitoring Integration
 
-**What:** coJournalist is the default durable-monitoring target for Spotlight. Spotlight does not modify coJournalist; it uses the existing project, scout, and unit surfaces exactly as they exist today.
+**What:** Scoutpost is the default durable-monitoring target for Spotlight. Spotlight does not modify Scoutpost; it uses the existing project, scout, and unit surfaces exactly as they exist today.
 
 **When to use:**
 
@@ -16,28 +16,28 @@
 
 ## Preferred flow
 
-1. Create or reuse **one coJournalist project per Spotlight case**
+1. Create or reuse **one Scoutpost project per Spotlight case**
 2. Create the approved scout(s) under that `project_id`
 3. Store the returned `project_id` and `scout_id` values in `cases/{project}/data/monitoring.json`
 4. On later resumes, fetch updates back by `project_id`
 
-This keeps case linkage in Spotlight while leaving coJournalist unchanged.
+This keeps case linkage in Spotlight while leaving Scoutpost unchanged.
 
-## Preferred invocation: `cojo` CLI
+## Preferred invocation: `scout` CLI
 
-If `cojo` is installed and already configured, prefer it over raw HTTP.
+If `scout` is installed and already configured, prefer it over raw HTTP.
 
 Create or reuse a project:
 
 ```sh
-cojo projects list
-cojo projects add --name "Spotlight: {project}" --description "Linked Spotlight investigation"
+scout projects list
+scout projects add --name "Spotlight: {project}" --description "Linked Spotlight investigation"
 ```
 
 Create a scout under that project:
 
 ```sh
-cojo scouts add \
+scout scouts add \
   --name "{monitor_name}" \
   --type <web|pulse|social|civic> \
   [--url "{url}"] \
@@ -48,18 +48,18 @@ cojo scouts add \
 Read updates later:
 
 ```sh
-cojo units list --project "{project_id}" --since 7d
+scout units list --project "{project_id}" --since 7d
 ```
 
 ## API fallback
 
-If the CLI is unavailable but `COJOURNALIST_API_KEY` is set, use the existing HTTP API.
+If the CLI is unavailable but `SCOUTPOST_API_KEY` is set, use the existing HTTP API.
 
 Create a project:
 
 ```sh
-curl -s https://www.cojournalist.ai/api/v1/projects \
-  -H "Authorization: Bearer $COJOURNALIST_API_KEY" \
+curl -s https://www.scoutpost.ai/api/v1/projects \
+  -H "Authorization: Bearer $SCOUTPOST_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"name":"Spotlight: {project}","description":"Linked Spotlight investigation","visibility":"private"}'
 ```
@@ -67,8 +67,8 @@ curl -s https://www.cojournalist.ai/api/v1/projects \
 Create a scout:
 
 ```sh
-curl -s https://www.cojournalist.ai/api/v1/scouts \
-  -H "Authorization: Bearer $COJOURNALIST_API_KEY" \
+curl -s https://www.scoutpost.ai/api/v1/scouts \
+  -H "Authorization: Bearer $SCOUTPOST_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "name":"{monitor_name}",
@@ -82,15 +82,15 @@ curl -s https://www.cojournalist.ai/api/v1/scouts \
 Read units:
 
 ```sh
-curl -s "https://www.cojournalist.ai/api/v1/units?project_id={project_id}&limit=20" \
-  -H "Authorization: Bearer $COJOURNALIST_API_KEY"
+curl -s "https://www.scoutpost.ai/api/v1/units?project_id={project_id}&limit=20" \
+  -H "Authorization: Bearer $SCOUTPOST_API_KEY"
 ```
 
 ## Mapping notes
 
-- Spotlight's `pulse` recommendation maps to coJournalist's current beat/pulse creation surface. Keep that normalization inside Spotlight; do not require a coJournalist change.
+- Spotlight's `pulse` recommendation maps to Scoutpost's current beat/pulse creation surface. Keep that normalization inside Spotlight; do not require a Scoutpost change.
 - Use `project_id` as the case grouping primitive. Do not rely on scout names for linkage.
-- Spotlight stores the linkage locally in `monitoring.json`; coJournalist remains generic.
+- Spotlight stores the linkage locally in `monitoring.json`; Scoutpost remains generic.
 
 ## Evidence and logging
 
@@ -100,4 +100,4 @@ curl -s "https://www.cojournalist.ai/api/v1/units?project_id={project_id}&limit=
 
 ## Sensitive mode
 
-In sensitive mode, do not create or query live coJournalist monitors. Existing local copies of prior unit exports may still be read from `cases/{project}/research/`.
+In sensitive mode, do not create or query live Scoutpost monitors. Existing local copies of prior unit exports may still be read from `cases/{project}/research/`.

@@ -47,7 +47,7 @@ Per-runtime wiring: **[docs/runtimes.md](docs/runtimes.md)**.
 - **Evidence grounding**: scrape-before-cite, every source has a `local_file`, archive hierarchy Wayback → Archive.today → local
 - **11 skills**: orchestrator (spotlight), review (post-Gate-1 HTML feedback loop), integrations (routing), ingest, monitoring, web-archiving, content-access, osint, investigate, follow-the-money, social-media-intelligence
 - **4 external integrations shipped**: browser-use (AI browser automation), Junkipedia (narrative tracking), OSINT Navigator (tool discovery), Unpaywall (academic open access). Framework accepts more — see [docs/integrations.md](docs/integrations.md).
-- **Monitoring orchestration**: passive signals from Mycroft plus durable monitors from coJournalist or runtime-native routines
+- **Monitoring orchestration**: passive signals from Mycroft plus durable monitors from Scoutpost or runtime-native routines
 - **Knowledge vault ingestion**: Markdown vaults for Obsidian or Tolaria, with directory fallback; atomic registry updates; lock-file concurrency
 - **Sensitive mode**: strips `fetch`/`search` from agents; investigation runs local-only
 - **opencode-native + Hermes-native**: zero adapter code needed for these runtimes; markdown-only contract for others
@@ -80,7 +80,7 @@ Optional:
 | **[docs/integrations.md](docs/integrations.md)** | External tool integrations (browser-use, Junkipedia, OSINT Navigator, Unpaywall), setup flow, manifest contract |
 | **[docs/investigating.md](docs/investigating.md)** | Pipeline phases, gates, cycles, readiness, stall protocol |
 | **[docs/fact-checking.md](docs/fact-checking.md)** | Independence, SIFT, verdict taxonomy, evidence trails |
-| **[docs/monitoring.md](docs/monitoring.md)** | Monitoring lifecycle across Mycroft, coJournalist, and runtime-native fallbacks |
+| **[docs/monitoring.md](docs/monitoring.md)** | Monitoring lifecycle across Mycroft, Scoutpost, and runtime-native fallbacks |
 | **[AGENTS.md](AGENTS.md)** | Machine-readable runtime contract (verb registry, agent manifests, skill registry) |
 
 ## Source reference
