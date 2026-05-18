@@ -7,7 +7,7 @@ This framework is the single place Spotlight models external tools. Integrations
 ## Why integrations are separate from skills
 
 - **Skills** are methodology playbooks: how to investigate a person, how to follow the money, how to verify a claim. Runtime-agnostic, no credentials.
-- **Integrations** are specific external tools with credentials and an API contract: Junkipedia's narrative database, OSINT Navigator's tool index, Unpaywall's DOI lookup, browser-use for AI-driven browser automation.
+- **Integrations** are specific external tools with credentials and an API contract: Junkipedia's narrative database, Noosphere C2PA's provenance signer, OSINT Navigator's tool index, Unpaywall's DOI lookup, Browser Harness for acquisition fallback, and browser-use for optional AI-driven browser automation.
 
 An agent invokes a skill to get *guidance*; it calls an integration to get *data*.
 
@@ -15,8 +15,10 @@ An agent invokes a skill to get *guidance*; it calls an integration to get *data
 
 | ID | Category | Requires key | Env vars |
 |---|---|---|---|
+| `browser-harness` | browser-automation | No | none |
 | `browser-use` | browser-automation | No (OSS); optional cloud | `BROWSER_USE_API_KEY` (optional) |
 | `junkipedia` | social-osint | Yes | `JUNKIPEDIA_API_KEY` |
+| `noosphere-c2pa` | provenance-signing | No | `NOOSPHERE_C2PA_URL`, `NOOSPHERE_C2PA_CREDENTIAL_ID` (optional) |
 | `osint-navigator` | tool-discovery | Yes | `OSINT_NAV_API_KEY` |
 | `scoutpost` | monitoring | Yes | `SCOUTPOST_API_KEY` |
 | `unpaywall` | academic-open-access | Yes | `UNPAYWALL_EMAIL` |
@@ -110,7 +112,7 @@ In sensitive mode (`AGENTS.md` → `sensitive: true`):
 
 - Integrations that require remote API calls cannot be invoked (`fetch`/`search` verbs are stripped, and most integrations pipe through those)
 - Preflight still runs; integrations requiring remote APIs report normally but the skill-level guard prevents their use
-- Local-only integrations (e.g. `browser-use` in offline mode against a cached archive) can still run if the adapter supports them
+- Local-only integrations (e.g. `browser-harness` against a local browser or `browser-use` against a cached archive) can still run if the adapter supports them
 
 ## Deferred integrations
 

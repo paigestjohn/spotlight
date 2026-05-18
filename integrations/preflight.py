@@ -56,7 +56,7 @@ def smoke_test(manifest: dict) -> tuple[bool, str | None]:
             return False, f"{type(e).__name__}: {e}"
 
     if kind == "library":
-        # Only browser-use at the moment; extend as library integrations are added
+        # Extend as library integrations are added.
         mod = {"browser-use": "browser_use"}.get(manifest["id"])
         if not mod:
             return True, None

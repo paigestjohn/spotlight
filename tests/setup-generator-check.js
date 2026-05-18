@@ -88,7 +88,9 @@ const configs = [
     label: "local/ollama",
     mode: "local",
     runtime: "local",
+    local_model: "gemma",
     local_server: "ollama",
+    opencode_interface: "cli",
     opencode_provider: null,
     cloud_key: "",
     cloud_key_var: "",
@@ -98,7 +100,20 @@ const configs = [
     label: "local/llamacpp",
     mode: "local",
     runtime: "local",
+    local_model: "qwen27b",
     local_server: "llamacpp",
+    opencode_interface: "cli",
+    opencode_provider: null,
+    cloud_key: "",
+    cloud_key_var: "",
+    model_repo: "HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive",
+  },
+  {
+    label: "local/ollama-qwen",
+    mode: "local",
+    runtime: "local",
+    local_model: "qwen27b",
+    local_server: "ollama",
     opencode_interface: "cli",
     opencode_provider: null,
     cloud_key: "",
@@ -190,6 +205,32 @@ for (const c of configs) {
   if (c.runtime === "local" && !script.includes("spotlight-local")) {
     console.log(`✗ ${c.label.padEnd(24)} local runtime does not install spotlight-local`);
     ok = false;
+  }
+  if (c.label === "local/ollama") {
+    const ollamaRequired = [
+      "hf.co/unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_M",
+      "SPOTLIGHT_OLLAMA_ALIAS",
+      "spotlight-gemma4-q4",
+      'ollama create "$SPOTLIGHT_OLLAMA_ALIAS" -f "$TMP_MODELFILE"',
+      'opencode --model "ollama/$SPOTLIGHT_OLLAMA_ALIAS" "$@"',
+      'SPOTLIGHT_DIR_DEFAULT="$(expand_path "$SPOTLIGHT_DIR_DEFAULT_INPUT")"',
+      "write_env_var OLLAMA_MODEL",
+    ];
+    for (const needle of ollamaRequired) ok = assertFragment(script, c.label, needle) && ok;
+    if (script.includes('ollama pull "$MODEL" >/dev/null 2>&1 || true')) {
+      console.log(`✗ ${c.label.padEnd(24)} still swallows Ollama pull failure`);
+      ok = false;
+    }
+  }
+  if (c.label === "local/ollama-qwen") {
+    const qwenRequired = [
+      "hf.co/HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive:IQ2_M",
+      "spotlight-qwen36-27b-q4",
+      'ollama create "$SPOTLIGHT_OLLAMA_ALIAS" -f "$TMP_MODELFILE"',
+      'opencode --model "ollama/$SPOTLIGHT_OLLAMA_ALIAS" "$@"',
+      "write_env_var OLLAMA_MODEL",
+    ];
+    for (const needle of qwenRequired) ok = assertFragment(script, c.label, needle) && ok;
   }
   if (c.runtime === "opencode" && !script.includes("opencode loads Spotlight skills")) {
     console.log(`✗ ${c.label.padEnd(24)} opencode skills not linked`);
