@@ -95,6 +95,30 @@ Merge into `~/.config/opencode/opencode.json` (preserves any other providers you
 
 Start with: `opencode --model llama.cpp/qwen27` (or use the `setup.html`-generated launcher script).
 
+### Local Ollama provider config
+
+Ollama's OpenAI-compatible endpoint expects chat requests at `/v1/chat/completions`. Configure opencode with the OpenAI-compatible provider and keep `baseURL` at the `/v1` root:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local OpenAI-compatible)",
+      "options": { "baseURL": "http://127.0.0.1:11434/v1" },
+      "models": {
+        "spotlight-gemma4-q4": {
+          "name": "gemma-4-26B-A4B-it-GGUF (local Ollama)"
+        }
+      }
+    }
+  }
+}
+```
+
+Do not use `ollama-ai-provider-v2` here. In opencode it calls `/v1/chat`, which Ollama answers with 404. Do not set `baseURL` to `/v1/chat/completions` either; the provider appends the chat completion route itself.
+
 ### Verb bindings
 
 opencode ships native `bash`, `read`, `write`, `edit`, `grep`, `glob`, `multi-edit` — covers 8 of the 13 verbs directly. The remaining five shell out:

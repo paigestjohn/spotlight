@@ -74,4 +74,3 @@
 ## Compatibility
 
 - Canonical full reference: https://spotlight.buriedsignals.com/llms_full.txt
-- Compatibility alias: https://spotlight.buriedsignals.com/llms-full.txt

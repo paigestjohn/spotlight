@@ -215,8 +215,18 @@ for (const c of configs) {
       'opencode --model "ollama/$SPOTLIGHT_OLLAMA_ALIAS" "$@"',
       'SPOTLIGHT_DIR_DEFAULT="$(expand_path "$SPOTLIGHT_DIR_DEFAULT_INPUT")"',
       "write_env_var OLLAMA_MODEL",
+      '.provider["ollama"] = {"npm":"@ai-sdk/openai-compatible"',
+      '"options":{"baseURL":$base}',
     ];
     for (const needle of ollamaRequired) ok = assertFragment(script, c.label, needle) && ok;
+    if (script.includes("ollama-ai-provider-v2")) {
+      console.log(`✗ ${c.label.padEnd(24)} uses Ollama-native provider that calls /v1/chat`);
+      ok = false;
+    }
+    if (script.includes("11434/v1/chat/completions")) {
+      console.log(`✗ ${c.label.padEnd(24)} hard-codes chat/completions into baseURL`);
+      ok = false;
+    }
     if (script.includes('ollama pull "$MODEL" >/dev/null 2>&1 || true')) {
       console.log(`✗ ${c.label.padEnd(24)} still swallows Ollama pull failure`);
       ok = false;
@@ -229,8 +239,18 @@ for (const c of configs) {
       'ollama create "$SPOTLIGHT_OLLAMA_ALIAS" -f "$TMP_MODELFILE"',
       'opencode --model "ollama/$SPOTLIGHT_OLLAMA_ALIAS" "$@"',
       "write_env_var OLLAMA_MODEL",
+      '.provider["ollama"] = {"npm":"@ai-sdk/openai-compatible"',
+      '"options":{"baseURL":$base}',
     ];
     for (const needle of qwenRequired) ok = assertFragment(script, c.label, needle) && ok;
+    if (script.includes("ollama-ai-provider-v2")) {
+      console.log(`✗ ${c.label.padEnd(24)} uses Ollama-native provider that calls /v1/chat`);
+      ok = false;
+    }
+    if (script.includes("11434/v1/chat/completions")) {
+      console.log(`✗ ${c.label.padEnd(24)} hard-codes chat/completions into baseURL`);
+      ok = false;
+    }
   }
   if (c.runtime === "opencode" && !script.includes("opencode loads Spotlight skills")) {
     console.log(`✗ ${c.label.padEnd(24)} opencode skills not linked`);

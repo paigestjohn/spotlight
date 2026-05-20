@@ -1965,7 +1965,7 @@
         p('  "$OC_CFG" > "$TMP" && mv "$TMP" "$OC_CFG"');
       } else {
         p('jq --arg base "' + baseURL + '" --arg id "' + ollamaAlias + '" --arg name "' + modelLeaf + ' (local Ollama)" \\');
-        p('  \'.provider["ollama"] = {"npm":"ollama-ai-provider-v2","name":"Ollama (local)","options":{"baseURL":$base},"models":{($id):{"name":$name}}}\' \\');
+        p('  \'.provider["ollama"] = {"npm":"@ai-sdk/openai-compatible","name":"Ollama (local OpenAI-compatible)","options":{"baseURL":$base},"models":{($id):{"name":$name}}}\' \\');
         p('  "$OC_CFG" > "$TMP" && mv "$TMP" "$OC_CFG"');
       }
       p('printf "%s✓%s opencode.json updated with ' + (cfg.local_server === 'llamacpp' ? 'llama.cpp' : 'ollama') + ' provider\\n" "$_c_green" "$_c_reset"');
