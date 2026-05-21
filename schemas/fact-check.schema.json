@@ -2,34 +2,38 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "schema_version": "1.0",
   "type": "object",
-  "required": ["schema_version", "project", "claims"],
+  "required": ["project"],
   "properties": {
     "schema_version": { "const": "1.0" },
     "project": { "type": "string" },
     "source_document": { "type": "string" },
-    "checked_at": { "type": "string", "format": "date-time" },
+    "checked_at": { "type": "string" },
     "cycle": { "type": "integer", "minimum": 1 },
     "summary": {
-      "type": "object",
-      "required": ["total_claims", "verified", "unverified", "disputed", "false"],
-      "properties": {
-        "total_claims": { "type": "integer" },
-        "verified": { "type": "integer" },
-        "unverified": { "type": "integer" },
-        "disputed": { "type": "integer" },
-        "false": { "type": "integer" }
-      }
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "total_claims": { "type": "integer" },
+            "verified": { "type": "integer" },
+            "unverified": { "type": "integer" },
+            "disputed": { "type": "integer" },
+            "false": { "type": "integer" }
+          }
+        },
+        { "type": "string" }
+      ]
     },
     "claims": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "finding_id", "claim_text", "verdict", "grounding_assessment", "evidence_for"],
+        "required": ["claim_text", "verdict"],
         "properties": {
-          "id": { "type": "integer" },
+          "id": { "type": ["integer", "string"] },
           "finding_id": { "type": "string" },
           "claim_text": { "type": "string" },
-          "verdict": { "enum": ["verified","unverified","disputed","false"] },
+          "verdict": { "enum": ["verified","partially_verified","unverified","disputed","false","mischaracterized"] },
           "confidence": { "enum": ["high","medium","low"] },
           "grounding_assessment": { "$ref": "#/definitions/grounding_assessment" },
           "evidence_for": { "type": "array", "items": { "$ref": "#/definitions/evidence_item" } },
@@ -39,6 +43,7 @@
         }
       }
     },
+    "verdicts": { "type": "array" },
     "gaps_for_next_cycle": { "type": "array", "items": { "type": "string" } }
   },
   "definitions": {
@@ -61,14 +66,14 @@
     },
     "evidence_item": {
       "type": "object",
-      "required": ["description", "source", "source_type"],
+      "required": ["description", "source"],
       "properties": {
         "description": { "type": "string" },
         "source": { "type": "string" },
         "source_type": { "enum": ["primary","secondary"] },
-        "archive_url": { "type": "string" },
+        "archive_url": { "type": ["string", "null"] },
         "access_method": { "enum": ["full_text","open_access","archive_copy","abstract_only","inaccessible"] },
-        "local_file": { "type": "string" }
+        "local_file": { "type": ["string", "null"] }
       }
     }
   }

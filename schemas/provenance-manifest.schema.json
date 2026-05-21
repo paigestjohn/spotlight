@@ -27,8 +27,8 @@
         "profile": { "const": "noosphere-c2pa" },
         "requires_api_key": { "const": false },
         "requires_signing_credential": { "type": "boolean" },
-        "credential_id": { "type": "string" },
-        "endpoint": { "type": "string" },
+        "credential_id": { "type": ["string", "null"] },
+        "endpoint": { "type": ["string", "null"] },
         "receipt_path": { "type": "string" },
         "signed_at": { "type": "string", "format": "date-time" },
         "error": { "type": "string" }

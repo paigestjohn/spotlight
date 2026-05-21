@@ -55,14 +55,68 @@ All notable changes to Spotlight. Format follows [Keep a Changelog](https://keep
 ### Changed (non-breaking)
 
 - **`provenance-manifest.schema.json` cleanup.** `signing.credential_id` and
-  `signing.endpoint` removed from `required` array (they were required but
-  typed as `["string", "null"]`, which is contradictory). Now properly
-  optional. `claim.grounding_strength` replaced with `claim.support_type`
-  for vocabulary consistency with `findings.grounding.support_type`.
+  `signing.endpoint` removed from `required` array. Their type stays
+  `["string", "null"]` so the legitimate "unsigned" state (where the
+  signing block exists but credentials/endpoint are null) still validates.
+  `claim.grounding_strength` replaced with `claim.support_type` for
+  vocabulary consistency with `findings.grounding.support_type`.
+- **`findings.schema.json` aligned with real corpus.** Validated against the
+  13 real `findings.json` files in `~/buried_signals/investigations/`. The
+  schema was previously strict in ways that didn't match what investigators
+  actually produced. Changes:
+  - `schema_version` and `grounding` demoted from `required` to optional on
+    findings (zero of 254 findings across the corpus had a `grounding`
+    object; the requirement was aspirational). New investigations still
+    emit `grounding` because the agent prompts require it; the schema no
+    longer rejects legacy cases.
+  - `findings.sources[].url` and `accessed` demoted from `required` to
+    optional (Apify-dataset sources use `id`/`description` instead).
+  - `findings.evidence` accepts string OR array of strings (scraped-output
+    findings legitimately produce an array of evidence items).
+  - `findings.sources[].type` enum extended with `search_result`,
+    `apify_dataset`, `file`, `url`, `corporate` (all values present in the
+    real corpus).
+  - `findings.confidence` enum extended with `disputed`.
+  - `findings.perspective` converted from enum to free-form string
+    (investigators emit analytical-lens values like `ad_tech_forensics`,
+    `network_analysis`, `technical_feasibility` alongside the original
+    viewpoint values; constraining was creating validation noise without
+    editorial signal).
+  - Result: 11/13 corpus findings now validate. Remaining 2 fail on
+    genuine data bugs (3 findings with empty `claim` text in
+    black-cube-tzur; paz-valais-communes uses `commune_checks` shape
+    rather than `findings`). The schema correctly rejects these as
+    malformed; they need data migration, not schema accommodation.
+- **`fact-check.schema.json` aligned with real corpus.** Similar reality
+  alignment for the 10 `fact-check.json` files. Changes:
+  - `schema_version` and `claims` demoted from `required` to optional
+    (some legacy fact-checks use `verdicts` array instead).
+  - On `claims[]` items, `grounding_assessment` and `evidence_for` demoted
+    from `required` (most corpus cases predate them).
+  - `claims[].verdict` enum extended with `partially_verified` and
+    `mischaracterized` (used by some cases).
+  - `claims[].id` accepts integer OR string (corpus uses both).
+  - `summary` accepts object OR string (some cases use essay-style summary).
+  - `evidence_item.archive_url` and `local_file` accept null (consistent
+    with corpus values).
+  - `verdicts` added as optional top-level alternative to `claims` (legacy
+    shape).
+  - Result: 9/10 corpus fact-checks now validate. Remaining 1 fails on
+    7 claims with empty `claim_text` in black-cube-tzur — genuine data bug.
 - **Integrations roadmap moved out of skill.**
   `skills/integrations/SKILL.md` no longer carries the "Current deferred
   integrations" bullet list. Moved to `docs/integrations-roadmap.md` with
   an activation checklist. Skill is leaner; roadmap stays tracked.
+
+### Known data bugs (not schema gaps)
+
+- `cases/black-cube-tzur/data/findings.json`: findings F25, F26, F31 have
+  no `claim` text.
+- `cases/black-cube-tzur/data/fact-check.json`: 7 claims have no
+  `claim_text`.
+- `cases/paz-valais-communes/data/findings.json`: file uses
+  `commune_checks`/`claim_checks` shape instead of `findings`. Needs
+  migration or reclassification as a different document type.
 
 ### Changed (earlier in [Unreleased])
 

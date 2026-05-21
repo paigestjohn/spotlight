@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "schema_version": "1.0",
   "type": "object",
-  "required": ["schema_version", "project", "findings"],
+  "required": ["project", "findings"],
   "properties": {
     "schema_version": { "const": "1.0" },
     "project": { "type": "string" },
@@ -14,31 +14,37 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "claim", "evidence", "sources", "confidence", "grounding"],
+        "required": ["id", "claim", "evidence", "sources", "confidence"],
         "properties": {
           "id": { "type": "string" },
           "claim": { "type": "string" },
-          "evidence": { "type": "string" },
+          "evidence": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "array", "items": { "type": "string" } }
+            ]
+          },
           "sources": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["url", "accessed"],
               "properties": {
-                "url": { "type": "string", "format": "uri" },
-                "type": { "enum": ["court_filing","news","registry","social_media","government","ngo_report","satellite","other"] },
-                "accessed": { "type": "string", "format": "date-time" },
+                "url": { "type": "string" },
+                "type": { "enum": ["court_filing","news","registry","social_media","government","ngo_report","satellite","search_result","apify_dataset","file","url","corporate","other"] },
+                "accessed": { "type": "string" },
                 "archive_url": { "type": "string" },
                 "local_file": { "type": "string" },
-                "access_method": { "enum": ["full_text","open_access","archive_copy","abstract_only","inaccessible"] }
+                "access_method": { "enum": ["full_text","open_access","archive_copy","abstract_only","inaccessible"] },
+                "id": { "type": "string" },
+                "description": { "type": "string" }
               }
             }
           },
-          "confidence": { "enum": ["high","medium","low"] },
+          "confidence": { "enum": ["high","medium","low","disputed"] },
           "confidence_rationale": { "type": "string" },
           "grounding": { "$ref": "#/definitions/grounding" },
           "evidence_bundle_refs": { "type": "array", "items": { "type": "string" } },
-          "perspective": { "enum": ["official","affected_community","independent_observer","corporate","legal"] }
+          "perspective": { "type": "string" }
         }
       }
     },
