@@ -25,43 +25,7 @@ All tool operations use abstract **verbs** defined in `AGENTS.md`. Your runtime 
 
 Run these checks in order. Stop at the first failure.
 
-### 0. Runtime profile
-
-Set `profile` before any config or vault work:
-
-- `profile = "classroom"` if the environment contains `SPOTLIGHT_PROFILE=classroom` or the user's prompt explicitly says to run Spotlight in classroom profile.
-- Otherwise `profile = "full"`.
-
-If `profile == "classroom"`, Spotlight is running as a teaching/course workflow, not the full newsroom workflow. Apply these constraints for the whole run:
-
-- Set `VAULT_PATH="none"` and `vault_type="none"` unless the user explicitly provides a local course folder for output.
-- Scope all writes to the current working directory or to the explicit course folder in the prompt.
-- Do not query a vault.
-- Do not write vault notes.
-- Do not run ingestion.
-- Do not create Scoutpost, Mycroft, or other durable monitors.
-- If monitoring recommendations exist, list them only.
-- Do not run provenance signing.
-- Still run the brief, methodology, multi-cycle investigator execution, independent fact-checker pass, Gate 1 summary, and local HTML review/report.
-
-Classroom profile keeps one source of truth: this canonical Spotlight skill. It changes which phases run; it does not fork the skill or weaken the investigation/fact-check loop.
-
 ### 1. Config check
-
-If `profile == "classroom"`, skip this step. Use an in-memory config:
-
-```json
-{
-  "search_library": "firecrawl",
-  "vault_path": "none",
-  "vault_type": "none",
-  "cases_root": "cases/",
-  "integrations": {
-    "osint_navigator": false
-  },
-  "active_project": "<project slug>"
-}
-```
 
 Use `read-file` on `.spotlight-config.json` in the working directory. If it exists and contains valid `search_library` + `vault_path` fields, update `last_used` to the current timestamp and skip to step 5 (project setup).
 
@@ -114,8 +78,6 @@ When building spawn prompts, remind agents these are available and expected.
 
 ### 3.7. Vault app preflight
 
-If `profile == "classroom"`, skip this step.
-
 Spotlight writes verified findings into a Markdown vault. If `.spotlight-config.json` sets `vault_type` to `"tolaria"` or `"directory"`, no Obsidian CLI check is required; log the configured vault type and continue. If the vault type is `"obsidian"` or unknown, check the Obsidian CLI so the user isn't surprised at ingestion time.
 
 ```
@@ -139,8 +101,6 @@ If the `obsidian` CLI is on PATH, log `✓ obsidian CLI present` and continue.
 
 ### 4. Vault configuration
 
-If `profile == "classroom"`, skip this step and keep `VAULT_PATH="none"`.
-
 Ask the user:
 
 > "Where should findings be archived when the investigation completes?
@@ -161,8 +121,6 @@ cases/{project}/research/
 cases/{project}/evidence/
 ```
 
-If `profile == "classroom"` and the prompt names an explicit report path such as `06-spotlight/report.html`, keep the same internal case structure but write the final review artifact to that path as well.
-
 ### 6. Duplicate project check
 
 If `cases/{project}/` already exists, prompt:
@@ -178,8 +136,6 @@ Use `list-files("cases/*")` to scan for directories that do NOT contain `summary
 > "Note: {N} investigation(s) in progress without a completed summary: {names}. Continuing with `{project}`."
 
 ### 8. Write config
-
-If `profile == "classroom"`, skip persistent config writes. Keep the in-memory config from step 1 with `active_project` set.
 
 Write `.spotlight-config.json` via `write-file`:
 
@@ -199,8 +155,6 @@ Write `.spotlight-config.json` via `write-file`:
 ```
 
 ### 9. Integration checks
-
-If `profile == "classroom"`, treat optional integrations as disabled unless already configured in the runtime. Do not prompt students to provision vendor integrations during the run.
 
 Check for optional API integrations. None are required — investigations work without them.
 
@@ -231,8 +185,6 @@ list-files("cases/{project}/data/review-feedback-processed.json")
 If `review-feedback.json` exists AND `review-feedback-processed.json` is absent or older, `invoke-skill("review")` before proceeding. The review skill enters Mode B (process), re-spawns the investigator with feedback-targeted instructions, updates findings/fact-check, and regenerates `review.html`. Only then continue with monitoring preflight.
 
 ### 10. Monitoring + integrations availability (optional)
-
-If `profile == "classroom"`, skip monitoring availability checks. Monitoring recommendations can still be produced later, but they are listed only and no durable monitors are created.
 
 Run integration preflight and check whether Mycroft passive monitoring is installed:
 
@@ -294,7 +246,6 @@ Approved brief directions:
 
 You may recommend monitoring targets in your methodology (see skills/monitoring for the recommendation schema and external-monitor lifecycle).
 If the investigation involves social media, plan to invoke social-media-intelligence for account authenticity and coordination detection.
-{if profile == 'classroom': CLASSROOM PROFILE: plan only local case files and a local HTML review/report. Do not plan vault queries, vault writes, ingestion, provenance signing, Scoutpost monitor creation, Mycroft monitor creation, or optional vendor provisioning. Monitoring recommendations may be listed for classroom discussion only.}
 
 Write methodology to cases/{project}/data/methodology.json.
 Do NOT execute the investigation.",
@@ -331,7 +282,6 @@ CYCLE: {N}
 SKILLS: acquisition-graduation (graduate repeated Browser Harness paths only after repeatability is proven), web-archiving (archive all evidence before citing), content-access (paywalled sources — use before marking inaccessible), epistemic-grounding (fill grounding object and cap confidence when support is weak), shell-safety (validate untrusted values before execute-shell), social-media-intelligence (use for account authenticity, coordination detection, narrative tracking when social media is involved)
 
 ACQUISITION: Firecrawl first via search/fetch. After every Firecrawl result, run the missing-source gate. Use Browser Harness only when static acquisition is insufficient for dynamic pages, portals, downloads, screenshots, visual verification, iframes/shadow DOM, or legally appropriate authenticated/local-browser contexts.
-{if profile == 'classroom': CLASSROOM PROFILE: use only local case files under the current course folder. Do not query or write any vault. Do not create durable monitors. Do not run provenance signing or ingestion. If you identify monitoring targets, add recommendations to findings.json only.}
 
 {if N > 1: Previous findings gaps:
 {gaps}
@@ -367,7 +317,6 @@ Apply SIFT source credibility check before searching for corroborating evidence.
 Independently assess claim-to-evidence grounding before assigning verdicts or confidence.
 Archive every source before citing it. Work through the content-access hierarchy before marking any source inaccessible.
 If you identify sources worth monitoring for ongoing verification, add them to monitoring_recommendations[] in data/findings.json.
-{if profile == 'classroom': CLASSROOM PROFILE: verify claims using available acquisition tools and local case files, but do not query/write a vault, create monitors, run ingestion, or run provenance signing. Monitoring recommendations are advisory only.}
 
 Fact-check all claims in cases/{project}/data/findings.json.
 Read cases/{project}/data/evidence-bundle.json when present and use it to assess acquisition quality, missing-source gates, screenshots/downloads, hashes, and human-verification flags.
@@ -392,14 +341,6 @@ Write to cases/{project}/data/fact-check.json.",
   5.5. Process monitoring recommendations:
 
      If data/findings.json contains monitoring_recommendations[]:
-
-     If `profile == "classroom"`, do not invoke the monitoring skill and do not create Scoutpost, Mycroft, or other durable monitors. Instead:
-
-     1. Write the recommendations to `cases/{project}/data/monitoring-recommendations.json`.
-     2. Include them in the Gate 1 summary under "Monitoring recommendations (not created)".
-     3. Continue to readiness evaluation.
-
-     Otherwise, in full profile:
 
      1. Present recommendations to user, ordered by priority (high → medium → low):
         > "The investigator identified {N} targets worth monitoring:
@@ -502,8 +443,6 @@ The user can request follow-up cycles targeting specific findings. If so, re-ent
 
 ### Package provenance before HTML review
 
-If `profile == "classroom"`, skip provenance packaging and signing. The classroom artifact is a local review/report, not a signed publication package.
-
 After approval and before invoking the review skill, invoke `provenance-signing`:
 
 ```text
@@ -524,8 +463,6 @@ Signing failures do not block review. Preserve the unsigned manifest and report 
 
 After approval, `invoke-skill("review")` to produce `cases/{project}/review.html` — a self-contained HTML artifact the user can open in any browser to inspect findings and submit structured feedback. See `skills/review/SKILL.md`.
 
-If `profile == "classroom"` and the prompt requested a specific output such as `06-spotlight/report.html`, write or copy the generated review artifact to that path too. Do not require feedback processing before ending the classroom run.
-
 Offer the user:
 
 > "Review artifact written to `cases/{project}/review.html`. Open it in any browser to inspect findings and submit feedback (optional). If you submit feedback, save the exported `review-feedback.json` into `cases/{project}/data/` and re-run `/spotlight` to process it. Or proceed to ingestion now."
@@ -537,8 +474,6 @@ When `/spotlight` is resumed and `cases/{project}/data/review-feedback.json` exi
 ---
 
 ## Phase 5 — Ingestion
-
-If `profile == "classroom"`, skip this phase. End after the local HTML review/report is generated and report the path to the user.
 
 After Gate 1 approval:
 

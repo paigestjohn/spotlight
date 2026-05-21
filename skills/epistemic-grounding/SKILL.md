@@ -72,15 +72,12 @@ Every `findings.json` finding must include:
 ```json
 "grounding": {
   "support_type": "direct|indirect|inferred|contradicted|insufficient",
-  "grounding_strength": "full|partial|weak|none",
   "source_role": "primary|secondary|contextual",
-  "quote_match": "exact|paraphrase|contextual|none",
   "claim_elements_supported": ["actor", "action", "date"],
   "missing_assumptions": [],
-  "contradictions": [],
   "confidence_cap": "high|medium|low",
   "misgrounding_risk": "short risk statement",
-  "grounding_rationale": "why the evidence does or does not ground the claim"
+  "grounding_rationale": "why the evidence does or does not ground the claim; include the contradiction-search outcome here"
 }
 ```
 

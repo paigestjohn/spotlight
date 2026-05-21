@@ -97,12 +97,9 @@ Assemble a single JSON object with the shape expected by the template (see `refe
       "confidence_rationale": "...",
       "grounding": {
         "support_type": "direct|indirect|inferred|contradicted|insufficient",
-        "grounding_strength": "full|partial|weak|none",
         "source_role": "primary|secondary|contextual",
-        "quote_match": "exact|paraphrase|contextual|none",
         "claim_elements_supported": ["..."],
         "missing_assumptions": ["..."],
-        "contradictions": ["..."],
         "confidence_cap": "high|medium|low",
         "misgrounding_risk": "...",
         "grounding_rationale": "..."
@@ -115,10 +112,8 @@ Assemble a single JSON object with the shape expected by the template (see `refe
         "confidence": "high|medium|low",
         "grounding_assessment": {
           "support_type": "direct|indirect|inferred|contradicted|insufficient",
-          "grounding_strength": "full|partial|weak|none",
           "claim_elements_checked": ["..."],
           "missing_assumptions": ["..."],
-          "contradiction_search": "...",
           "confidence_cap": "high|medium|low",
           "assessment": "..."
         },
@@ -133,7 +128,7 @@ Assemble a single JSON object with the shape expected by the template (see `refe
     "generated_at": "<ISO 8601>",
     "signing": {"profile": "noosphere-c2pa", "receipt_path": "..."},
     "case_artifacts": [{"kind": "findings", "path": "data/findings.json", "sha256": "..."}],
-    "claims": [{"finding_id": "F1", "grounding_strength": "full", "evidence_refs": ["E1"]}],
+    "claims": [{"finding_id": "F1", "support_type": "direct", "evidence_refs": ["E1"]}],
     "sources": [{"evidence_id": "E1", "source_url": "...", "sha256": "...", "human_verification_required": false}]
   },
   "fact_check_summary": {
@@ -336,7 +331,7 @@ The self-contained template lives at `references/template.html`. Characteristics
 
 - Single file, inline CSS and JS, no external assets, no CDN
 - Renders summary + findings + per-claim verdicts in a clean two-column layout
-- Renders grounding granularity per finding: support type, grounding strength, confidence cap, checked elements, missing assumptions, contradictions, and misgrounding risk
+- Renders grounding granularity per finding: support type, source role, confidence cap, checked elements, missing assumptions, and misgrounding risk (contradiction-search outcome is rolled into the grounding rationale)
 - Renders case-level provenance/C2PA state from `data/provenance-manifest.json`, including signing status, artifacts, source hashes, evidence refs, and whether human verification is still required
 - Per-finding feedback form: `challenge`, `deeper_verification`, `alternative_framing`
 - Overall form: `general_feedback`, `missing_angles`

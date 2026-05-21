@@ -500,7 +500,6 @@
       '<span class="fid">' + escapeHtml(f.id) + '</span>' +
       (f.confidence ? '<span class="badge conf-' + f.confidence + '">' + f.confidence + '</span>' : '') +
       (f.verdict && f.verdict.verdict ? '<span class="badge v-' + f.verdict.verdict + '">' + f.verdict.verdict + '</span>' : '') +
-      (f.grounding && f.grounding.grounding_strength ? '<span class="badge g-' + f.grounding.grounding_strength + '">grounding ' + f.grounding.grounding_strength + '</span>' : '') +
       (f.grounding && f.grounding.support_type ? '<span class="badge support-' + f.grounding.support_type + '">' + f.grounding.support_type + '</span>' : '') +
       (f.perspective ? '<span class="badge perspective">' + escapeHtml(f.perspective) + '</span>' : '');
     card.appendChild(hdr);
@@ -705,15 +704,11 @@
     box.className = 'grounding-detail';
     let html = '<h4>Grounding</h4><div class="grounding-grid">';
     html += renderKv('support type', g.support_type || fg.support_type);
-    html += renderKv('strength', g.grounding_strength || fg.grounding_strength);
     html += renderKv('source role', g.source_role);
-    html += renderKv('quote match', g.quote_match);
     html += renderKv('confidence cap', g.confidence_cap || fg.confidence_cap);
     html += renderKv('evidence refs', (f.evidence_bundle_refs || []).join(', '));
     html += '<div class="kv"><span class="k">supported / checked elements</span>' + renderList(g.claim_elements_supported || fg.claim_elements_checked) + '</div>';
     html += '<div class="kv"><span class="k">missing assumptions</span>' + renderList(g.missing_assumptions || fg.missing_assumptions) + '</div>';
-    html += '<div class="kv"><span class="k">contradictions</span>' + renderList(g.contradictions) + '</div>';
-    html += renderKv('contradiction search', fg.contradiction_search);
     html += renderKv('misgrounding risk', g.misgrounding_risk);
     html += renderKv('assessment', fg.assessment || g.grounding_rationale || f.confidence_rationale);
     html += '</div>';

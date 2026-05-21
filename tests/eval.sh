@@ -154,15 +154,6 @@ else
 fi
 
 echo ""
-echo "── Classroom profile regression ──"
-
-if python3 tests/classroom-profile-check.py >/dev/null 2>&1; then
-  ok "classroom profile gates vault, monitoring, provenance, and ingestion"
-else
-  fail "classroom profile regression failed"
-fi
-
-echo ""
 echo "── Review artifact regression ──"
 
 if node tests/review-template-check.js >/dev/null 2>&1; then

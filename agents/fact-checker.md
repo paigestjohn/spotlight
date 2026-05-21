@@ -176,12 +176,10 @@ Confidence is a function of all four combined.
       "confidence": "high|medium|low",
       "grounding_assessment": {
         "support_type": "direct|indirect|inferred|contradicted|insufficient",
-        "grounding_strength": "full|partial|weak|none",
         "claim_elements_checked": ["actor", "action", "date"],
         "missing_assumptions": [],
-        "contradiction_search": "what was searched and what was found",
         "confidence_cap": "high|medium|low",
-        "assessment": "whether the cited evidence actually grounds the claim"
+        "assessment": "whether the cited evidence actually grounds the claim; include the contradiction-search outcome here"
       },
       "evidence_for": [
         {

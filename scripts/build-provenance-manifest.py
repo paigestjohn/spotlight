@@ -82,9 +82,9 @@ def claim_entries(findings: dict[str, Any], fact_check: dict[str, Any]) -> list[
             "claim_text": finding.get("claim") or checked.get("claim_text") or "",
             "confidence": finding.get("confidence", "unknown"),
             "fact_check_verdict": checked.get("verdict", "missing"),
-            "grounding_strength": (
-                checked_grounding.get("grounding_strength")
-                or grounding.get("grounding_strength")
+            "support_type": (
+                checked_grounding.get("support_type")
+                or grounding.get("support_type")
                 or "unknown"
             ),
             "evidence_refs": finding.get("evidence_bundle_refs", []),

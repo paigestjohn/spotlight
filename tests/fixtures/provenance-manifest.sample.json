@@ -36,7 +36,7 @@
       "claim_text": "Example Corp Ltd is registered at Road Town, Tortola, British Virgin Islands, incorporated on 2019-03-14 with registration number 2019-ABC-123.",
       "confidence": "high",
       "fact_check_verdict": "verified",
-      "grounding_strength": "full",
+      "support_type": "direct",
       "evidence_refs": ["E1"]
     }
   ],

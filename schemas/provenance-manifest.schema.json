@@ -21,15 +21,14 @@
       "required": [
         "profile",
         "requires_api_key",
-        "requires_signing_credential",
-        "credential_id"
+        "requires_signing_credential"
       ],
       "properties": {
         "profile": { "const": "noosphere-c2pa" },
         "requires_api_key": { "const": false },
         "requires_signing_credential": { "type": "boolean" },
-        "credential_id": { "type": ["string", "null"] },
-        "endpoint": { "type": ["string", "null"] },
+        "credential_id": { "type": "string" },
+        "endpoint": { "type": "string" },
         "receipt_path": { "type": "string" },
         "signed_at": { "type": "string", "format": "date-time" },
         "error": { "type": "string" }
@@ -78,7 +77,7 @@
         "claim_text": { "type": "string" },
         "confidence": { "enum": ["high", "medium", "low", "unknown"] },
         "fact_check_verdict": { "enum": ["verified", "unverified", "disputed", "false", "missing"] },
-        "grounding_strength": { "enum": ["full", "partial", "weak", "none", "unknown"] },
+        "support_type": { "enum": ["direct", "indirect", "inferred", "contradicted", "insufficient", "unknown"] },
         "evidence_refs": { "type": "array", "items": { "type": "string" } }
       }
     },

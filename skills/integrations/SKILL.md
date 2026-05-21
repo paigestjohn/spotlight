@@ -112,13 +112,7 @@ The orchestrator flags sensitive-mode investigations at Gate 1 to note which int
 
 Integrations are drop-in directories under `integrations/`. When a new one appears (manifest.json + integration.md), add it to the routing table above. Preflight discovers it automatically — no code changes to `preflight.py`.
 
-Current deferred integrations (architecture ready, awaiting API access):
-
-- Serus AI (due diligence)
-- Thinkpol (grey web intelligence)
-- Reality Defender (deepfake detection)
-- Klarety (disinformation detection)
-When Tom has access to any of these, each is a 3-file drop-in: `manifest.json`, `integration.md`, update the routing table in this skill.
+For integrations whose architecture is ready but API access has not yet been granted, see `docs/integrations-roadmap.md`. Activation moves an entry out of that roadmap and into the routing table above.
 
 ## Reference
 

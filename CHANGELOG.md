@@ -4,7 +4,67 @@ All notable changes to Spotlight. Format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
-### Changed
+> **Next tag will be [2.0.0]** (SemVer major bump): the `grounding` object schema
+> drops three fields and `findings.sources` demotes three required fields to
+> optional. Both are breaking changes for downstream consumers parsing
+> `cases/{project}/data/findings.json`, `fact-check.json`, or
+> `provenance-manifest.json`. The classroom profile flag is also removed.
+
+### Removed
+
+- **Classroom profile flag.** `SPOTLIGHT_PROFILE=classroom` is no longer
+  recognised. The main investigation flow (brief → methodology → multi-cycle
+  investigator → fact-checker → Gate 1 → HTML review → ingestion) is the only
+  path; runtime is independent of teaching vs newsroom context. Removed
+  `docs/classroom-profile.md`, `tests/classroom-profile-check.py`, the
+  classroom test in `tests/eval.sh`, and 16 conditional branches in
+  `skills/spotlight/SKILL.md`. Reason: profile-as-flag added cognitive load
+  for a single concrete use case; if classroom needs return, document them
+  in a separate teaching profile rather than as a runtime branch.
+
+### Changed (breaking)
+
+- **`grounding` object trimmed from 10 fields to 7.** Removed
+  `grounding_strength` (overlapped `support_type`: `direct` → `full`,
+  `insufficient` → `none`), `quote_match` (implied by `support_type` +
+  `source_role`), and `contradictions` array (merged into the existing
+  free-text `grounding_rationale`). Same trim applied to
+  `grounding_assessment` in `fact-check.schema.json` (dropped
+  `grounding_strength` and `contradiction_search` — the latter merged into
+  `assessment`). Updated:
+  `schemas/findings.schema.json`, `schemas/fact-check.schema.json`,
+  `skills/epistemic-grounding/SKILL.md`, `skills/review/SKILL.md`,
+  `skills/review/references/template.html`,
+  `skills/spotlight/references/evidence-grounding.md`,
+  `agents/investigator.md`, `agents/fact-checker.md`,
+  `scripts/build-provenance-manifest.py`, and all fixtures + tests.
+  Reason: the dropped fields were redundant by construction; the cross-check
+  theory ("two angles catch errors") did not earn its keep in practice and
+  was creating write-fatigue and lower-quality fills.
+- **`findings.sources` required fields reduced.** `archive_url`,
+  `access_method`, and `local_file` demoted from required to optional in
+  `schemas/findings.schema.json`. Same demotion for `archive_url` and
+  `access_method` in `fact-check.schema.json`'s `evidence_item`. Reason: in
+  practice these are best-effort fields that the validator does not enforce
+  presence of. Schema contract now matches actual behaviour.
+- **`findings.lead` demoted from required to optional.** Top-level `lead` is
+  no longer required in `findings.schema.json`. It remains available as an
+  optional field. Reason: never consumed by any renderer or validator;
+  required-ness was aspirational.
+
+### Changed (non-breaking)
+
+- **`provenance-manifest.schema.json` cleanup.** `signing.credential_id` and
+  `signing.endpoint` removed from `required` array (they were required but
+  typed as `["string", "null"]`, which is contradictory). Now properly
+  optional. `claim.grounding_strength` replaced with `claim.support_type`
+  for vocabulary consistency with `findings.grounding.support_type`.
+- **Integrations roadmap moved out of skill.**
+  `skills/integrations/SKILL.md` no longer carries the "Current deferred
+  integrations" bullet list. Moved to `docs/integrations-roadmap.md` with
+  an activation checklist. Skill is leaner; roadmap stays tracked.
+
+### Changed (earlier in [Unreleased])
 
 - Monitoring ownership split is now explicit:
   - `mycroft` owns passive feed polling, scoring, deduplication, and topic-linked signal storage

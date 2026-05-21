@@ -16,7 +16,7 @@ Evidence grounding rules for the investigation pipeline. Referenced by the orche
 
 5. **Link every finding to file and archive.** Each source entry in a finding must include `local_file`, `archive_url`, and `access_method`.
 
-6. **Fill the grounding object.** Every finding must include `grounding.support_type`, `grounding_strength`, `source_role`, `quote_match`, supported claim elements, missing assumptions, contradictions, confidence cap, misgrounding risk, and rationale.
+6. **Fill the grounding object.** Every finding must include `grounding.support_type`, `source_role`, supported claim elements, missing assumptions, confidence cap, misgrounding risk, and rationale (the rationale captures the contradiction-search outcome).
 
 7. **If cannot scrape, explain why.** Document the reason (paywall, geo-block, requires login, site down) and mark the finding's confidence accordingly. A finding that relies on an unscraped source cannot be "high" confidence.
 
