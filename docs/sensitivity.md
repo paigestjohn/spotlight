@@ -60,12 +60,25 @@ install time. Add a second target.
 
 ```
 SPOTLIGHT_VAULT_PATH=~/Obsidian/main          # existing
-SPOTLIGHT_SENSITIVE_VAULT_PATH=~/Obsidian/sensitive  # new, optional
-SPOTLIGHT_SENSITIVE_INDEX=sensitive           # new, QMD index name
+SPOTLIGHT_SENSITIVE_ENABLED=1                 # new — opt-in flag
 ```
 
-If `SPOTLIGHT_SENSITIVE_VAULT_PATH` is unset, the sensitive ingest
-path is disabled and the skill behaves exactly as today.
+That's the only field the journalist sets. Everything else is derived
+by convention:
+
+- `SPOTLIGHT_SENSITIVE_VAULT_PATH = "${SPOTLIGHT_VAULT_PATH}-sensitive"`
+  (so the default lands at `~/Obsidian/main-sensitive` next to the
+  open vault — same parent dir, same naming root, suffix `-sensitive`).
+- `SPOTLIGHT_SENSITIVE_INDEX = "$(basename "$SPOTLIGHT_VAULT_PATH")-sensitive"`
+  (QMD index name follows the vault name; for `~/Obsidian/main` that's
+  `main-sensitive`).
+
+Both can be overridden explicitly if the journalist wants the sensitive
+vault somewhere unusual (e.g. on an encrypted volume), but the default
+is zero-config.
+
+If `SPOTLIGHT_SENSITIVE_ENABLED` is unset or `0`, the sensitive ingest
+path is disabled and Spotlight behaves exactly as today.
 
 **Invocation** — the ingest skill accepts an optional flag:
 
@@ -112,29 +125,80 @@ first is more auditable from logs.
 
 The wrapper is installed on PATH only by the local-runtime launcher
 (`~/.local/bin/spotlight-local`). A frontier-runtime launcher does
-not install it. **This is not an enforcement boundary** — a frontier
-agent with shell access can still run `qmd --index sensitive` and
-read the sensitive vault directly. The wrapper is a convenience for
-local sessions, not a gate.
+not install it.
 
-If a journalist runs frontier-runtime sessions on the same machine
-where the sensitive index exists, they accept that the frontier
-agent could in principle reach it. The mitigation for that risk is
-operational (don't run frontier sessions on the same machine, use a
-separate machine for sensitive material) and lives outside Spotlight.
+### Runtime check inside the wrapper
+
+In addition to the PATH-only install, the wrapper itself reads
+`SPOTLIGHT_RUNTIME` (a new env var every spotlight launcher sets at
+session start) and refuses if it's anything other than `local`:
+
+```bash
+# qmd-spotlight (sketch)
+RUNTIME="${SPOTLIGHT_RUNTIME:-}"
+case "$RUNTIME" in
+  local|"")  # local session, or shell user running it manually — allow
+    ;;
+  *)
+    echo "qmd-spotlight: refusing — SPOTLIGHT_RUNTIME='$RUNTIME', sensitive index is local-only." >&2
+    exit 64
+    ;;
+esac
+```
+
+Two layers stacked:
+
+1. **PATH** — frontier launchers don't put the wrapper on PATH at
+   all. An agent that calls `qmd-spotlight` by bare name gets
+   "command not found."
+2. **Env check** — if the wrapper is discovered at its filesystem
+   path and invoked directly, the env check fires. Frontier launchers
+   set `SPOTLIGHT_RUNTIME=claude` (or `gemini`, `codex`, `opencode`);
+   the wrapper sees a non-`local` value and refuses with an
+   explanatory error.
+
+### What this gate does and does not do
+
+**It catches:** the launcher misconfigured, the agent that learned
+about the wrapper's existence from documentation and tried to call
+it, prompt injection that names the wrapper by guess, the journalist
+who manually invoked the wrong launcher.
+
+**It does not catch:** a frontier agent that runs `qmd --index
+$(basename ${SPOTLIGHT_VAULT_PATH})-sensitive query "..."` directly,
+bypassing the wrapper entirely. QMD itself does not honor
+`SPOTLIGHT_RUNTIME`. Closing that bypass is what the cut UID-
+separation phase was for, and we are not bringing it back.
+
+Treat the env check as a "do not do this by accident" guard, not as a
+confidentiality boundary. If the journalist runs frontier-runtime
+sessions on the same machine where the sensitive index exists, they
+accept that the frontier agent could in principle reach it via raw
+`qmd`. The mitigation for that risk is operational (don't run
+frontier sessions on the same machine, use a separate machine for
+sensitive material) and lives outside Spotlight.
+
+### `SPOTLIGHT_RUNTIME` is useful beyond this wrapper
+
+This env var earns its keep for other reasons — skill prompts can
+condition behavior on it ("if `SPOTLIGHT_RUNTIME=local`, prefer
+locally-runnable tools"), the installer can use it to decide what to
+clean up, debug output benefits. Adding it for the wrapper gate
+means a primitive that's available everywhere else for free.
 
 ## Implementation surface
 
 | Touch | Change |
 |---|---|
-| `.env` / config schema | Add `SPOTLIGHT_SENSITIVE_VAULT_PATH` and `SPOTLIGHT_SENSITIVE_INDEX`. Both optional; absent = sensitive ingest disabled. |
-| `skills/ingest/SKILL.md` | Accept `--target sensitive`. When set, write to the sensitive vault path and add the result to the sensitive QMD index instead of the default. Refuse to cross-link into the default vault. |
-| New: `~/.local/bin/qmd-spotlight` (or `local-qmd`) | Wrapper that queries the default index, and if `SPOTLIGHT_SENSITIVE_INDEX` is set + the user passes `--with-sensitive` (or always, depending on chosen shape), also queries the sensitive index. Merge and emit. Installed by `install-spotlight.sh` only when the local runtime is selected. |
-| `install-spotlight.sh` | Prompt for the sensitive vault path during local-runtime install. Set up the symlink/path that puts the sensitive sqlite at the journalist's preferred location (default: `~/buried_signals/sensitive/qmd/sensitive.sqlite`). |
+| `.env` / config schema | Add `SPOTLIGHT_SENSITIVE_ENABLED` (the only field the journalist sets). Optional overrides `SPOTLIGHT_SENSITIVE_VAULT_PATH` and `SPOTLIGHT_SENSITIVE_INDEX` exist but default by convention to `<vault>-sensitive`. |
+| All launchers (`spotlight-local`, `spotlight-claude`, etc.) | Export `SPOTLIGHT_RUNTIME` at session start. `local`, `claude`, `gemini`, `codex`, or `opencode`. |
+| `skills/ingest/SKILL.md` | Accept `--target sensitive`. When set: write to the sensitive vault path; add the result to the sensitive QMD index instead of the default; refuse to cross-link into the default vault. Refuse entirely if `SPOTLIGHT_SENSITIVE_ENABLED=0`. |
+| New: `~/.local/bin/qmd-spotlight` | Wrapper that queries the default index, optionally also the sensitive index. Env check at top refuses if `SPOTLIGHT_RUNTIME` is set to a frontier value. Installed by `install-spotlight.sh` only when the local runtime is selected. |
+| `install-spotlight.sh` | When local runtime + `SPOTLIGHT_SENSITIVE_ENABLED=1`: ensure the sensitive vault directory exists at the convention-derived path, install the wrapper on PATH, prompt only if the journalist wants to override the default path/index name. |
 | `docs/sensitivity.md` | This doc. |
 
 That's the whole change. Roughly 50–100 LOC across config, ingest
-skill, and the wrapper.
+skill, the wrapper, and the launcher env exports.
 
 ## Out of scope
 
