@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spotlight — Docs</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000'><path d='M6 2h4v4h-4zM10 2h4v4h-4zM14 2h4v4h-4zM6 6h4v4h-4zM6 10h4v4h-4zM14 10h4v4h-4zM14 14h4v4h-4zM6 18h4v4h-4zM10 18h4v4h-4zM14 18h4v4h-4z'/></svg>">
+<meta name="description" content="Spotlight documentation — how the OSINT investigation skill works, configuration, skills overview, sensitive vault, FAQ.">
+
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://spotlight.buriedsignals.com/docs/">
+<meta property="og:title" content="Spotlight — Docs">
+<meta property="og:description" content="How Spotlight works: pipeline, skills, runtimes, sensitive vault.">
+<meta property="og:image" content="https://spotlight.buriedsignals.com/og-image.png">
+
+<link rel="alternate" type="text/markdown" title="llms.txt" href="/llms.txt">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ink: #07070a;
+    --ink-2: #0c0c10;
+    --paper: #ede8dc;
+    --paper-2: #e3ddce;
+    --paper-fg: #17140e;
+    --muted-dark: rgba(237, 232, 220, 0.55);
+    --muted-faint-dark: rgba(237, 232, 220, 0.18);
+    --muted-light: rgba(23, 20, 14, 0.55);
+    --muted-faint-light: rgba(23, 20, 14, 0.15);
+    --accent-warm: #c16a34;
+    --accent-cool: #346fa8;
+    --green: #4a7d3f;
+    --amber: #8a6212;
+    --red: #a83838;
+    --accent-warm-14: rgba(193, 106, 52, 0.14);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--ink); color: var(--paper); }
+  body {
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 14px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  .serif {
+    font-family: "Fraunces", serif;
+    font-variation-settings: "opsz" 144;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  /* ── NAV ────────────────────────────────────────────── */
+  nav.topnav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 28px;
+    background: transparent;
+    color: var(--paper);
+    mix-blend-mode: difference;
+  }
+  nav.topnav .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-family: "Fraunces", serif; font-size: 17px; font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  nav.topnav .brand svg { width: 18px; height: 18px; }
+  nav.topnav .links {
+    display: flex; gap: 22px; align-items: center;
+    font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+  }
+  nav.topnav .links a { transition: color 0.2s ease; opacity: 0.85; }
+  nav.topnav .links a:hover { color: var(--accent-warm); opacity: 1; }
+  nav.topnav .links a[href$="setup.html"] {
+    border: 1px solid var(--paper);
+    padding: 8px 14px;
+    border-radius: 999px;
+    opacity: 1;
+  }
+  nav.topnav .links a[href$="setup.html"]:hover {
+    background: var(--paper);
+    color: var(--ink);
+    border-color: var(--paper);
+  }
+
+  /* ── PAGE LAYOUT ───────────────────────────────────── */
+  .page { max-width: 1200px; margin: 0 auto; padding: 120px 32px 96px; }
+
+  .doc-hero {
+    border-bottom: 1px solid var(--muted-faint-dark);
+    padding-bottom: 48px;
+    margin-bottom: 64px;
+  }
+  .doc-hero .chap {
+    display: inline-block;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted-dark);
+    margin-bottom: 18px;
+  }
+  .doc-hero h1 {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    font-size: clamp(40px, 6vw, 76px);
+    line-height: 1.05;
+    margin: 0 0 24px 0;
+  }
+  .doc-hero h1 .accent { color: var(--accent-warm); }
+  .doc-hero .lede {
+    max-width: 620px;
+    color: var(--muted-dark);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .doc-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 64px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .doc-grid { grid-template-columns: 1fr; gap: 32px; }
+  }
+
+  /* TOC */
+  aside.toc {
+    position: sticky;
+    top: 100px;
+    align-self: start;
+    font-size: 12px;
+    line-height: 1.7;
+    letter-spacing: 0.05em;
+  }
+  aside.toc .toc-title {
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 11px;
+    color: var(--muted-dark);
+    margin-bottom: 14px;
+  }
+  aside.toc ol {
+    list-style: none;
+    padding: 0; margin: 0;
+    counter-reset: toc;
+  }
+  aside.toc li {
+    counter-increment: toc;
+    padding: 4px 0;
+    border-left: 1px solid var(--muted-faint-dark);
+    padding-left: 14px;
+  }
+  aside.toc li::before {
+    content: counter(toc, decimal-leading-zero);
+    color: var(--muted-dark);
+    margin-right: 10px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  aside.toc li.active {
+    border-left-color: var(--accent-warm);
+    color: var(--accent-warm);
+  }
+  aside.toc a { color: inherit; opacity: 0.78; transition: opacity 0.2s ease; }
+  aside.toc a:hover { opacity: 1; color: var(--accent-warm); }
+  @media (max-width: 900px) {
+    aside.toc { position: static; }
+  }
+
+  /* CONTENT */
+  main.doc-body {
+    max-width: 760px;
+  }
+  main.doc-body section + section {
+    margin-top: 64px;
+  }
+  main.doc-body h2 {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    letter-spacing: -0.018em;
+    font-size: 32px;
+    margin: 0 0 8px 0;
+    line-height: 1.15;
+  }
+  main.doc-body h2 .num {
+    color: var(--muted-dark);
+    font-size: 13px;
+    font-family: "Geist Mono", monospace;
+    font-weight: 400;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 10px;
+  }
+  main.doc-body h3 {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    font-size: 19px;
+    margin: 36px 0 10px 0;
+    color: var(--paper);
+  }
+  main.doc-body p, main.doc-body ul, main.doc-body ol {
+    color: var(--paper);
+    opacity: 0.86;
+  }
+  main.doc-body strong { color: var(--paper); opacity: 1; font-weight: 600; }
+  main.doc-body em { color: var(--paper); opacity: 0.95; }
+  main.doc-body ul, main.doc-body ol {
+    padding-left: 24px;
+  }
+  main.doc-body li + li { margin-top: 6px; }
+  main.doc-body code {
+    background: rgba(237, 232, 220, 0.08);
+    border: 1px solid var(--muted-faint-dark);
+    color: var(--accent-warm);
+    padding: 1px 6px;
+    font-family: "Geist Mono", monospace;
+    font-size: 0.92em;
+    border-radius: 3px;
+  }
+  main.doc-body pre {
+    background: var(--ink-2);
+    border: 1px solid var(--muted-faint-dark);
+    border-left: 2px solid var(--accent-warm);
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: "Geist Mono", monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--paper);
+    margin: 20px 0;
+  }
+  main.doc-body pre code {
+    background: transparent;
+    border: none;
+    color: inherit;
+    padding: 0;
+  }
+  main.doc-body a:not(.btn) {
+    color: var(--accent-warm);
+    border-bottom: 1px dotted var(--accent-warm);
+    transition: opacity 0.2s ease;
+  }
+  main.doc-body a:not(.btn):hover { opacity: 0.7; }
+
+  /* Pipeline diagram */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin: 28px 0 12px 0;
+  }
+  @media (max-width: 700px) {
+    .pipeline { grid-template-columns: repeat(2, 1fr); }
+  }
+  .pipeline-step {
+    background: rgba(237, 232, 220, 0.04);
+    border: 1px solid var(--muted-faint-dark);
+    padding: 14px;
+    border-radius: 4px;
+    position: relative;
+  }
+  .pipeline-step .step-n {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--accent-warm);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .pipeline-step .step-name {
+    font-family: "Fraunces", serif;
+    font-size: 15px;
+    line-height: 1.2;
+  }
+
+  /* Skill cards */
+  .skill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 24px 0;
+  }
+  .skill-card {
+    background: rgba(237, 232, 220, 0.04);
+    border: 1px solid var(--muted-faint-dark);
+    padding: 14px 16px;
+    border-radius: 4px;
+  }
+  .skill-card .sk-name {
+    font-family: "Fraunces", serif;
+    font-size: 15px;
+    color: var(--paper);
+    margin-bottom: 4px;
+  }
+  .skill-card .sk-desc {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted-dark);
+  }
+
+  /* Callouts */
+  .callout {
+    background: rgba(193, 106, 52, 0.05);
+    border: 1px solid var(--muted-faint-dark);
+    border-left: 2px solid var(--accent-warm);
+    padding: 18px 20px;
+    margin: 24px 0;
+    border-radius: 3px;
+  }
+  .callout .callout-tag {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--accent-warm);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  /* FAQ */
+  .faq details {
+    border-top: 1px solid var(--muted-faint-dark);
+    padding: 18px 0;
+  }
+  .faq details[open] { padding-bottom: 24px; }
+  .faq details:last-of-type {
+    border-bottom: 1px solid var(--muted-faint-dark);
+  }
+  .faq summary {
+    cursor: pointer;
+    list-style: none;
+    font-family: "Fraunces", serif;
+    font-size: 18px;
+    color: var(--paper);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after {
+    content: "+";
+    font-family: "Geist Mono", monospace;
+    color: var(--accent-warm);
+    font-size: 20px;
+    line-height: 1;
+    transition: transform 0.2s ease;
+  }
+  .faq details[open] summary::after { content: "−"; }
+  .faq .answer { margin-top: 14px; }
+
+  /* CTA strip — reuses the same .cta / .secondary patterns as index.html. */
+  .cta-strip {
+    margin-top: 80px;
+    border-top: 1px solid var(--muted-faint-dark);
+    padding-top: 48px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+  }
+  .cta-strip .cta {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 18px 14px 20px;
+    border: 1px solid rgba(255,245,217,0.75);
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    white-space: nowrap;
+    transition: background 0.3s, border-color 0.3s, color 0.3s, transform 0.2s;
+  }
+  .cta-strip .cta:hover {
+    background: var(--accent-warm);
+    border-color: var(--accent-warm);
+    color: var(--paper);
+    transform: translateY(-1px);
+  }
+  .cta-strip .secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 18px;
+    background: transparent;
+    color: rgba(237, 232, 220, 0.92);
+    border: 1px solid rgba(255, 245, 217, 0.68);
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s, transform 0.2s;
+  }
+  .cta-strip .secondary:hover {
+    color: var(--accent-warm);
+    border-color: var(--accent-warm);
+    transform: translateY(-1px);
+  }
+  .cta-strip .ghost {
+    color: var(--muted-dark);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    margin-left: auto;
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav" id="topnav">
+  <a href="../index.html" class="brand">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M6 2h4v4h-4zM10 2h4v4h-4zM14 2h4v4h-4zM6 6h4v4h-4zM6 10h4v4h-4zM14 10h4v4h-4zM14 14h4v4h-4zM6 18h4v4h-4zM10 18h4v4h-4zM14 18h4v4h-4z"/>
+    </svg>
+    Spotlight
+  </a>
+  <div class="links">
+    <a href="index.html">Docs</a>
+    <a href="https://github.com/buriedsignals/spotlight" target="_blank" rel="noopener">GitHub ↗</a>
+    <a href="../setup.html">Install</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <header class="doc-hero">
+    <span class="chap">Documentation</span>
+    <h1 class="serif">How <span class="accent">Spotlight</span> works.</h1>
+    <p class="lede">A versioned skill bundle that turns any AI agent runtime into an OSINT investigation pipeline. Brief → methodology → execution cycles → fact-check gate → vault. Open by default; opt-in sensitive track for local-model sessions.</p>
+  </header>
+
+  <div class="doc-grid">
+
+    <aside class="toc" id="toc">
+      <div class="toc-title">On this page</div>
+      <ol>
+        <li><a href="#what">What it is</a></li>
+        <li><a href="#pipeline">The pipeline</a></li>
+        <li><a href="#skills">Skills inside Spotlight</a></li>
+        <li><a href="#runtimes">Runtimes</a></li>
+        <li><a href="#config">Configuration</a></li>
+        <li><a href="#sensitive">Sensitive vault</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#more">Read more</a></li>
+      </ol>
+    </aside>
+
+    <main class="doc-body">
+
+      <!-- ── 01 What ─────────────────────────────────── -->
+      <section id="what">
+        <h2><span class="num">01 — What it is</span>An OSINT pipeline you check into your repo.</h2>
+        <p>Spotlight is a set of <strong>skills, agent prompts, schemas, and verification rules</strong> stored as version-controlled markdown. You point your AI agent runtime at the bundle, give it a lead, and it walks the investigation end-to-end: planning the methodology, running search and scrape cycles, archiving evidence locally before citing it, fact-checking with an independent pass, and writing the result into a knowledge vault you own.</p>
+        <p>The point isn't to replace the journalist. The point is to remove rote work — link-walking, archive-before-cite, schema compliance, citation hygiene, fact-check provenance — so editorial time goes to judgement and source work, not to babysitting the agent.</p>
+        <p>Everything in the bundle is editable. If your newsroom needs a different verdict taxonomy or a custom integration, you fork the repo, edit the markdown, and your agent picks up the change next session.</p>
+      </section>
+
+      <!-- ── 02 Pipeline ─────────────────────────────── -->
+      <section id="pipeline">
+        <h2><span class="num">02 — The pipeline</span>Six stages, one editorial loop.</h2>
+        <p>Every investigation runs through the same six stages. The agent moves between them under explicit gates — no silent transitions, no half-finished cases.</p>
+
+        <div class="pipeline">
+          <div class="pipeline-step"><div class="step-n">01</div><div class="step-name">Preflight</div></div>
+          <div class="pipeline-step"><div class="step-n">02</div><div class="step-name">Brief</div></div>
+          <div class="pipeline-step"><div class="step-n">03</div><div class="step-name">Methodology</div></div>
+          <div class="pipeline-step"><div class="step-n">04</div><div class="step-name">Execution × 5</div></div>
+          <div class="pipeline-step"><div class="step-n">05</div><div class="step-name">Gate 1</div></div>
+          <div class="pipeline-step"><div class="step-n">06</div><div class="step-name">Ingestion</div></div>
+        </div>
+
+        <h3>Preflight</h3>
+        <p>Runtime check, vault check, integrations check. Spotlight refuses to start if Firecrawl is missing, the vault is unreadable, or a required external tool isn't responding. Failures here are surfaced in plain English; no work happens until the environment is sound.</p>
+
+        <h3>Brief</h3>
+        <p>The agent restates the lead in its own words, names the affected parties, sets a scope, and writes a hypothesis. You read it back. If the agent has misunderstood the lead, you correct it here — it's faster to redirect in two sentences of prose than three execution cycles later.</p>
+
+        <h3>Methodology</h3>
+        <p>The agent writes a methodology JSON: which entities to investigate, which sources to consult (corporate registries, social media, archived web, OSINT Navigator tool lookups), which fact-check threshold applies. The file is editable. The execution cycles will follow this plan; if you don't like the plan, change it before the agent starts.</p>
+
+        <h3>Execution cycles</h3>
+        <p>Up to five execution cycles, each in two modes: <strong>PLANNING</strong> (what to do next) and <strong>EXECUTION</strong> (do it, record what came back). The investigator agent runs the cycles; every source is archived locally before it can be cited; every claim gets an evidence trail with grounding rationale.</p>
+
+        <h3>Gate 1 — six readiness criteria</h3>
+        <p>Before ingestion, the case has to pass six checks:</p>
+        <ol>
+          <li>Findings are non-empty and schema-valid.</li>
+          <li>Independence — fact-checker spawned as a separate agent, not the investigator's same context.</li>
+          <li>Disputes recorded — contradictions in the evidence are surfaced, not papered over.</li>
+          <li>Affected perspective consulted (where the lead concerns a named entity).</li>
+          <li>Document trail intact — every source has an <code>access_method</code> and a local file.</li>
+          <li>Gap assessment — what we don't know is named, not hidden.</li>
+        </ol>
+        <p>If a criterion fails, the agent loops back. If it persists past cycle five, the stall protocol triggers — the investigation is paused and the journalist decides whether to continue, change scope, or shelf.</p>
+
+        <h3>Ingestion</h3>
+        <p>Findings, fact-check verdicts, methodology, and source archives are written into your knowledge vault as structured markdown with wikilinks. Future investigations search the vault via QMD and build on prior work without rediscovering the same entities from scratch.</p>
+      </section>
+
+      <!-- ── 03 Skills ───────────────────────────────── -->
+      <section id="skills">
+        <h2><span class="num">03 — Skills inside Spotlight</span>15 skills that compose the pipeline.</h2>
+        <p>Each skill is a markdown file with a frontmatter contract (name, description, allowed verbs). The agent loads them at runtime. You can edit any of them.</p>
+
+        <div class="skill-grid">
+          <div class="skill-card"><div class="sk-name">spotlight</div><div class="sk-desc">Orchestrator — walks the pipeline, manages state, calls other skills.</div></div>
+          <div class="skill-card"><div class="sk-name">investigate</div><div class="sk-desc">Execution-cycle logic. PLANNING/EXECUTION modes, stall protocol.</div></div>
+          <div class="skill-card"><div class="sk-name">review</div><div class="sk-desc">Gate 1 readiness checks. Renders human-review HTML.</div></div>
+          <div class="skill-card"><div class="sk-name">ingest</div><div class="sk-desc">Vault archival — entity notes, methodology notes, source notes, registries.</div></div>
+          <div class="skill-card"><div class="sk-name">epistemic-grounding</div><div class="sk-desc">Claim-to-evidence grounding. Confidence caps by access method.</div></div>
+          <div class="skill-card"><div class="sk-name">osint</div><div class="sk-desc">Tool lookup via OSINT Navigator. Country-specific registries.</div></div>
+          <div class="skill-card"><div class="sk-name">follow-the-money</div><div class="sk-desc">Corporate filings, beneficial-ownership chains, registry walks.</div></div>
+          <div class="skill-card"><div class="sk-name">social-media-intelligence</div><div class="sk-desc">Platform-specific scraping, archive-first capture.</div></div>
+          <div class="skill-card"><div class="sk-name">content-access</div><div class="sk-desc">Legal access hierarchy for paywalled or restricted sources.</div></div>
+          <div class="skill-card"><div class="sk-name">web-archiving</div><div class="sk-desc">Wayback / Archive.today / local archive chain, chain-of-custody.</div></div>
+          <div class="skill-card"><div class="sk-name">acquisition-graduation</div><div class="sk-desc">Source-acquisition workflow — when a lead becomes a story.</div></div>
+          <div class="skill-card"><div class="sk-name">integrations</div><div class="sk-desc">External tool manifests, preflight, Browser Harness, Junkipedia, Unpaywall.</div></div>
+          <div class="skill-card"><div class="sk-name">monitoring</div><div class="sk-desc">Persistent monitoring tied to a case — Scoutpost, Mycroft, runtime-native.</div></div>
+          <div class="skill-card"><div class="sk-name">provenance-signing</div><div class="sk-desc">Noosphere C2PA provenance manifest for published findings.</div></div>
+          <div class="skill-card"><div class="sk-name">shell-safety</div><div class="sk-desc">Validates untrusted input before any shell execution; probes for destructive ops.</div></div>
+        </div>
+
+        <p>Two agent prompts sit alongside the skills — <code>investigator</code> and <code>fact-checker</code> — and a thin runtime contract in <code>AGENTS.md</code> defines the 13 verbs the host runtime has to implement.</p>
+      </section>
+
+      <!-- ── 04 Runtimes ─────────────────────────────── -->
+      <section id="runtimes">
+        <h2><span class="num">04 — Runtimes</span>Use the agent you already have.</h2>
+        <p>Spotlight is runtime-agnostic. The same skill bundle drives any agent that can read markdown skills and call shell tools.</p>
+
+        <h3>Cloud runtimes</h3>
+        <p>Claude Code, Gemini CLI, Codex CLI, and OpenCode (routed to OpenRouter / Fireworks / Together) all work natively. Authentication is via each runtime's own login — no API key needed for the subscription-backed ones (Claude, Gemini, Codex), and a provider key for OpenCode pay-per-token.</p>
+        <p>Cloud runtimes are the right choice for open material — public-record research, archived web, corporate filings. They're faster and more capable than what fits on a laptop, and the trade-off is that the agent's context goes to the third-party provider.</p>
+
+        <h3>Local runtimes</h3>
+        <p>OpenCode pointed at a local Ollama or llama-server endpoint keeps everything on the journalist's machine. The recommended default is the journalism-trained gemma4 E4B fine-tune (<code>tomvaillant/gemma4-e4b-abliterated-journalist-GGUF</code>) — 8B dense, ~5 GB on disk, fits comfortably on a 16 GB Mac with room for the orchestration pipeline.</p>
+        <p>Local runtimes are slower than cloud runtimes, and quality is lower per token. They're the right choice when the material can't leave the machine.</p>
+
+        <h3>Hardware fit-check</h3>
+        <p>The <a href="../setup.html">install form</a> probes your hardware via <code>navigator.deviceMemory</code> + WebGPU and recommends a model: E4B Journalist for 16 GB, Qwen3.6 27B for 24 GB+, or Cloud mode if neither fits.</p>
+      </section>
+
+      <!-- ── 05 Config ──────────────────────────────── -->
+      <section id="config">
+        <h2><span class="num">05 — Configuration</span>One install, a handful of env vars.</h2>
+        <p>The <a href="../setup.html">install form</a> generates a single Terminal one-liner that writes your config and runs the installer. Everything lives in <code>~/.config/spotlight/.env</code>; you can edit it after install to reconfigure.</p>
+
+        <h3>Required</h3>
+<pre><code>SPOTLIGHT_VAULT_PATH=~/Obsidian/main          # where investigations get archived
+FIRECRAWL_API_KEY=fc-...                      # web scraping (free tier ok)
+OSINT_NAV_API_KEY=on_...                      # tool lookup (free tier ok)</code></pre>
+
+        <h3>Runtime selection</h3>
+<pre><code>SPOTLIGHT_RUNTIME=local                       # or claude / gemini / codex / opencode
+SPOTLIGHT_LOCAL_MODEL=gemma-e4b               # gemma-e4b / gemma / qwen27b
+SPOTLIGHT_LOCAL_SERVER=ollama                 # ollama / llamacpp</code></pre>
+
+        <h3>Optional — sensitive vault</h3>
+<pre><code>SPOTLIGHT_SENSITIVE_ENABLED=1                 # opt-in; default off
+
+# Both of these are derived by convention if SPOTLIGHT_SENSITIVE_ENABLED=1.
+# Override them only if you want the sensitive vault on an unusual path.
+# SPOTLIGHT_SENSITIVE_VAULT_PATH=~/Obsidian/main-sensitive
+# SPOTLIGHT_SENSITIVE_INDEX=main-sensitive</code></pre>
+
+        <h3>Optional — integrations</h3>
+<pre><code>JUNKIPEDIA_API_KEY=...     # disinformation monitoring (optional)
+UNPAYWALL_EMAIL=...        # OA paper access (optional)
+SPOTLIGHT_INT_BROWSERUSE=true   # Browser Harness for interactive sessions</code></pre>
+      </section>
+
+      <!-- ── 06 Sensitive ──────────────────────────── -->
+      <section id="sensitive">
+        <h2><span class="num">06 — Sensitive vault</span>Two ingest targets, one union query.</h2>
+        <p>Spotlight investigations default to open material. If you also work with sensitive material — source-protected documents, off-record interview notes, unpublished tip identities — you can opt in to a second, parallel knowledge vault that lives next to the main one with a <code>-sensitive</code> suffix.</p>
+
+        <div class="callout">
+          <div class="callout-tag">Convention</div>
+          <p>Set <code>SPOTLIGHT_SENSITIVE_ENABLED=1</code>. That's it. The sensitive vault path defaults to <code>${SPOTLIGHT_VAULT_PATH}-sensitive</code> and the sensitive QMD index name follows the same suffix. No second name field to maintain.</p>
+        </div>
+
+        <h3>How it works</h3>
+        <ul>
+          <li>The ingest skill accepts <code>--target sensitive</code>. With the flag, notes land in the sensitive vault and get indexed into a separate QMD database. Without the flag, ingestion is unchanged.</li>
+          <li>A local-runtime wrapper (<code>qmd-spotlight</code>) is installed on PATH only when <code>SPOTLIGHT_RUNTIME=local</code>. Pass <code>--with-sensitive</code> and the wrapper queries both the open and sensitive indices and unions the results.</li>
+          <li>Frontier-runtime sessions don't get the wrapper installed. If the wrapper is somehow invoked from a frontier session anyway, an env-var check refuses with a clear error.</li>
+        </ul>
+
+        <h3>What this is — and what it isn't</h3>
+        <p>This is <strong>plumbing</strong>, not enforcement. The flag lets a local-model session reach material the journalist deliberately put in a separate vault, without making that material discoverable from a frontier-model session that just calls bare <code>qmd</code>. It does not prevent a frontier agent on the same machine from running <code>qmd --index &lt;name&gt;-sensitive</code> directly and reading the sensitive vault that way.</p>
+
+        <p>If your threat model requires that level of guarantee, run sensitive work on a separate machine and treat the sensitive vault on the laptop as a <em>summary archive</em> of work done elsewhere — not as the workspace for the sensitive investigation itself. The <a href="https://github.com/buriedsignals/spotlight/blob/main/docs/sensitivity.md">design spec on GitHub</a> walks through why earlier drafts proposed UID separation and air-gap phases, why those were cut, and what's left.</p>
+
+        <h3>Suggested workflow</h3>
+        <ol>
+          <li>Open research happens via the normal Spotlight pipeline against the default vault, under whichever runtime is best for the material (usually cloud).</li>
+          <li>If a sensitive piece arrives, work on it in your own environment — local model on an isolated machine, encrypted disk, paper, whatever matches your operational layer.</li>
+          <li>When you're ready, the output of that work can be ingested into the sensitive vault (<code>invoke-skill ingest --target sensitive</code>) so future local-runtime Spotlight sessions can search it alongside the open knowledge base.</li>
+          <li>Declassification (moving a finding from sensitive to open) is a manual file copy + re-ingest — no special command, by design.</li>
+        </ol>
+      </section>
+
+      <!-- ── 07 FAQ ─────────────────────────────────── -->
+      <section id="faq" class="faq">
+        <h2><span class="num">07 — FAQ</span>Common questions.</h2>
+
+        <details>
+          <summary>Is Spotlight a SaaS?</summary>
+          <div class="answer">
+            <p>No. Spotlight is a markdown skill bundle you check out from GitHub and point your existing agent at. There's no Spotlight server, no Spotlight account, no Spotlight API key. The tools it leans on (Firecrawl, OSINT Navigator) each have their own free tier.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>What does it cost?</summary>
+          <div class="answer">
+            <p>The Spotlight bundle itself is free and open-source (MIT). Costs come from whatever runtime you choose:</p>
+            <ul>
+              <li><strong>Claude Code / Gemini CLI / Codex CLI</strong> — covered by your existing subscription (Claude Max, Gemini Advanced, ChatGPT Plus/Pro/Team).</li>
+              <li><strong>OpenCode</strong> — pay-per-token through OpenRouter / Fireworks / Together. Roughly $0.50–$2 per investigation.</li>
+              <li><strong>Local model</strong> — free at runtime; one-time disk cost for the model weights (~5 GB for E4B, ~10 GB for Qwen3.6 27B).</li>
+            </ul>
+            <p>Firecrawl and OSINT Navigator have free tiers sufficient for normal newsroom volume.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Why does the runtime matter?</summary>
+          <div class="answer">
+            <p>Different runtimes have different trust properties. Cloud runtimes send the agent's context to a third-party provider — fine for open material, not fine for sensitive material. Local runtimes keep the context on the journalist's machine. The journalist picks the runtime per session; there's no automatic switching.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>How is fact-checking different from the main investigation?</summary>
+          <div class="answer">
+            <p>The fact-check pass runs as an <em>independent agent spawn</em> — a fresh context, separate from the investigator. It applies SIFT methodology (Stop, Investigate the source, Find better coverage, Trace claims), produces a verdict taxonomy (<code>verified</code> / <code>unverified</code> / <code>disputed</code> / <code>false</code> / <code>partially_verified</code> / <code>mischaracterized</code>), and writes its evidence trail to a separate JSON. The investigator can't see the fact-checker's output until after Gate 1. This is deliberately adversarial — same-context fact-checking under-catches errors the investigator already convinced itself of.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>What's the sensitive vault flag for?</summary>
+          <div class="answer">
+            <p>It turns on a second, parallel ingest target so material you deliberately classified sensitive doesn't show up in default QMD searches that a frontier-model session might run. It's a convenience boundary, not a confidentiality guarantee — see "What this is and what it isn't" above for the honest framing.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Can I bring my own skills / custom integrations?</summary>
+          <div class="answer">
+            <p>Yes. Fork the repo, add a skill folder under <code>skills/</code> with a <code>SKILL.md</code> matching the frontmatter contract, register it in <code>AGENTS.md</code>. Your runtime picks it up next session. The 13-verb runtime contract is the only thing that has to stay stable; everything else is editable.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>What happens if the agent gets stuck?</summary>
+          <div class="answer">
+            <p>The stall protocol fires after five execution cycles without passing Gate 1's readiness criteria. The investigation pauses, the agent writes a stall summary (what was tried, what didn't work, what's missing), and you decide: continue with a different scope, shelf the case, or escalate to a manual investigation. The stall summary becomes part of the case record either way — no investigation silently abandons.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Where does provenance live?</summary>
+          <div class="answer">
+            <p>Each case produces a <code>provenance-manifest.json</code> built against the Noosphere C2PA contract. By default it's unsigned (the signing block exists but credential / endpoint are <code>null</code>); newsrooms that have a Noosphere signing setup can wire it in via the <code>provenance-signing</code> skill. The manifest tracks ingestion events, fact-check verdicts, and (when enabled) tier transitions.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Where do I file bugs or contribute?</summary>
+          <div class="answer">
+            <p>Issues, PRs, and discussions on GitHub: <a href="https://github.com/buriedsignals/spotlight">github.com/buriedsignals/spotlight</a>. The contribution guide is at <code>CONTRIBUTING.md</code> in the repo root.</p>
+          </div>
+        </details>
+      </section>
+
+      <!-- ── 08 Read more ───────────────────────────── -->
+      <section id="more">
+        <h2><span class="num">08 — Read more</span>Deeper docs on GitHub.</h2>
+        <p>The repo holds the full operator manual — architecture, runtime wiring, integrations, vulnerabilities, recovery. Most readers won't need these unless they're customizing Spotlight or debugging.</p>
+        <ul>
+          <li><a href="https://github.com/buriedsignals/spotlight/blob/main/docs/structure.md">structure.md</a> — repo layout, the 13-verb contract</li>
+          <li><a href="https://github.com/buriedsignals/spotlight/blob/main/docs/runtimes.md">runtimes.md</a> — wiring Spotlight into each agent runtime</li>
+          <li><a href="https://github.com/buriedsignals/spotlight/blob/main/docs/integrations.md">integrations.md</a> — external tool manifests + preflight</li>
+          <li><a href="https://github.com/buriedsignals/spotlight/blob/main/docs/investigating.md">investigating.md</a> — pipeline detail, gate criteria, stall protocol</li>
+          <li><a href="https://github.com/buriedsignals/spotlight/blob/main/docs/fact-checking.md">fact-checking.md</a> — independent verification pass</li>
+          <li><a href="https://github.com/buriedsignals/spotlight/blob/main/docs/epistemic-grounding.md">epistemic-grounding.md</a> — claim-to-evidence grounding, confidence caps</li>
+          <li><a href="https://github.com/buriedsignals/spotlight/blob/main/docs/sensitivity.md">sensitivity.md</a> — design spec for the sensitive vault (this page summarizes it)</li>
+          <li><a href="https://github.com/buriedsignals/spotlight/blob/main/docs/vulnerabilities.md">vulnerabilities.md</a> — shell-safety vulnerabilities and v2 mitigations</li>
+          <li><a href="https://github.com/buriedsignals/spotlight/blob/main/docs/monitoring.md">monitoring.md</a> — persistent monitoring tied to a case</li>
+          <li><a href="https://github.com/buriedsignals/spotlight/blob/main/docs/recovery.md">recovery.md</a> — when things break</li>
+          <li><a href="https://github.com/buriedsignals/spotlight/blob/main/DISCLAIMER.md">DISCLAIMER.md</a> — scope limits and editorial responsibility</li>
+        </ul>
+      </section>
+
+      <div class="cta-strip">
+        <a class="cta" href="../setup.html">Install Spotlight <span aria-hidden="true">→</span></a>
+        <a class="secondary" href="https://github.com/buriedsignals/spotlight" target="_blank" rel="noopener">GitHub ↗</a>
+        <span class="ghost">MIT licensed · v2 in development</span>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  // Active-section highlighting in the TOC as the reader scrolls.
+  (function () {
+    var toc = document.getElementById('toc');
+    if (!toc) return;
+    var links = toc.querySelectorAll('a[href^="#"]');
+    var sections = Array.from(links)
+      .map(function (a) { return document.querySelector(a.getAttribute('href')); })
+      .filter(Boolean);
+    if (!sections.length) return;
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var id = entry.target.id;
+        links.forEach(function (a) {
+          var li = a.parentElement;
+          if (li) li.classList.toggle('active', a.getAttribute('href') === '#' + id);
+        });
+      });
+    }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
+    sections.forEach(function (s) { observer.observe(s); });
+  })();
+</script>
+
+</body>
+</html>

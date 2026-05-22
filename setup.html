@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spotlight — Install</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000'><path d='M6 2h4v4h-4zM10 2h4v4h-4zM14 2h4v4h-4zM6 6h4v4h-4zM6 10h4v4h-4zM14 10h4v4h-4zM14 14h4v4h-4zM6 18h4v4h-4zM10 18h4v4h-4zM14 18h4v4h-4z'/></svg>">
-<meta name="description" content="Configure your Spotlight install. Cloud or local, integrations, vault — generate the script and run it.">
+<meta name="description" content="Configure your Spotlight install. Frontier or local, integrations, vault — generate the script and run it.">
 <link rel="alternate" type="text/markdown" title="llms.txt" href="/llms.txt">
 <link rel="alternate" type="text/markdown" title="llms_full.txt" href="/llms_full.txt">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -108,7 +108,7 @@
   nav.topnav .links a { transition: color 0.2s ease; opacity: 0.85; }
   nav.topnav .links a:hover { color: var(--accent-warm); opacity: 1; }
   /* Install — promoted as a CTA (bordered pill) in the topnav. */
-  nav.topnav .links a[href="setup.html"] {
+  nav.topnav .links a[href$="setup.html"] {
     display: inline-flex; align-items: center;
     padding: 9px 14px;
     border: 1px solid currentColor;
@@ -117,7 +117,7 @@
     font-weight: 500;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
-  nav.topnav .links a[href="setup.html"]:hover {
+  nav.topnav .links a[href$="setup.html"]:hover {
     background: var(--accent-warm-14);
     border-color: var(--accent-warm);
     color: var(--accent-warm);
@@ -888,7 +888,7 @@
     /* Hide every nav link except Install, promoted to a compact CTA. */
     nav.topnav .links { display: flex; gap: 0; }
     nav.topnav .links a { display: none; }
-    nav.topnav .links a[href="setup.html"] {
+    nav.topnav .links a[href$="setup.html"] {
       padding: 7px 12px;
       font-size: 10px;
       letter-spacing: 0.18em;
@@ -1016,6 +1016,8 @@
     Spotlight
   </a>
   <div class="links">
+    <a href="docs/index.html">Docs</a>
+    <a href="https://github.com/buriedsignals/spotlight" target="_blank" rel="noopener">GitHub ↗</a>
     <a href="setup.html">Install</a>
   </div>
 </nav>
@@ -1030,7 +1032,7 @@
       </h1>
     </div>
     <div class="hero-side" data-reveal="body" style="--rd: 1000ms">
-      Pick your runtime, drop in your keys, generate the script. Cloud or local — same skills, same review loop. Install in a single Terminal paste.
+      Pick your runtime, drop in your keys, generate the script. Frontier or local — same skills, same review loop. Install in a single Terminal paste.
     </div>
   </div>
 </section>
@@ -1043,12 +1045,12 @@
       <!-- 01 — Mode -->
       <div class="sec-header">
         <span class="chap" data-reveal="meta">01 — Mode <span class="req">Required</span></span>
-        <h2 data-reveal="title">Cloud or local.</h2>
+        <h2 data-reveal="title">Frontier or Local.</h2>
       </div>
       <section class="card">
         <div class="radio-group">
-          <label><input type="radio" name="mode" value="cloud" checked><span class="opt-name"><span class="name">Cloud</span><span class="desc">Use a hosted model (Claude Code, Gemini, or Codex). Faster investigations, higher quality, but queries go to the provider.</span></span></label>
-          <label><input type="radio" name="mode" value="local"><span class="opt-name"><span class="name">Local</span><span class="desc">Run a journalism model on your own machine. Private by design — nothing leaves your laptop. Uses <strong>opencode</strong> (opencode.ai, MIT) as the agent harness with a model pulled from Hugging Face.</span></span></label>
+          <label><input type="radio" name="mode" value="cloud" checked><span class="opt-name"><span class="name">Frontier</span><span class="desc">Use a hosted model (Claude Code, Gemini, Codex, or OpenCode). Faster investigations, higher quality, but queries go to the provider.</span></span></label>
+          <label><input type="radio" name="mode" value="local"><span class="opt-name"><span class="name">Local</span><span class="desc">Run a journalism model on your own machine. Private by design — nothing leaves your laptop. Pick your harness; the installer preconfigures the inference server underneath.</span></span></label>
         </div>
       </section>
 
@@ -1059,37 +1061,17 @@
           <h2 data-reveal="title">Hosted on your Mac.</h2>
         </div>
         <section class="card">
-          <label class="block">Inference server</label>
-          <div class="radio-group" id="local-server-group">
-            <label><input type="radio" name="local_server" value="llamacpp" checked><span class="opt-name"><span class="name">llama-server</span><span class="desc">Lean and Terminal-only. The script installs it via <code>brew install llama.cpp</code>, downloads the model GGUF from Hugging Face, and serves on <code>127.0.0.1:8080</code>.</span></span></label>
-            <label><input type="radio" name="local_server" value="ollama"><span class="opt-name"><span class="name">Ollama</span><span class="desc">CLI-first model manager. The script installs it via <code>brew</code>, pulls the model, starts the service — nothing to click.</span></span></label>
-          </div>
-
-          <label class="block" style="margin-top: 24px;">Agent harness</label>
+          <label class="block">Agent harness</label>
           <div class="radio-group" id="agent-group">
-            <label><input type="radio" name="agent" value="opencode" checked><span class="opt-name"><span class="name">opencode</span><span class="desc">Recommended. Native sub-agents — investigator and fact-checker run in independent contexts, preserving Spotlight's verification independence guarantee.</span></span></label>
-            <label><input type="radio" name="agent" value="pi"><span class="opt-name"><span class="name">Pi</span><span class="desc">Minimal TypeScript harness (<a href="https://pi.dev" target="_blank">pi.dev</a>) with the <code>pi-llama-cpp</code> extension for model browsing. <strong>No native sub-agents</strong> — investigator and fact-checker share one context, weakening independence. Choose this only for a lean install.</span></span></label>
+            <label><input type="radio" name="agent" value="opencode" checked><span class="opt-name"><span class="name">OpenCode</span><span class="desc">Recommended. Native sub-agents — investigator and fact-checker run in independent contexts, preserving Spotlight's verification independence guarantee. Installer preconfigures <strong>Ollama</strong> as the inference server.</span></span></label>
+            <label><input type="radio" name="agent" value="pi"><span class="opt-name"><span class="name">Pi</span><span class="desc">Minimal TypeScript harness (<a href="https://pi.dev" target="_blank">pi.dev</a>) with the <code>pi-llama-cpp</code> extension for model browsing. <strong>No native sub-agents</strong> — investigator and fact-checker share one context, weakening independence. Installer preconfigures <strong>llama.cpp</strong> as the inference server.</span></span></label>
           </div>
 
-          <div id="opencode-interface-wrap">
-          <label class="block" style="margin-top: 24px;">opencode interface</label>
-          <div class="radio-group" id="opencode-interface-group">
-            <label><input type="radio" name="opencode_interface" value="cli" checked><span class="opt-name"><span class="name">CLI (Terminal)</span><span class="desc">Lighter — installs <code>brew install opencode</code> and runs in your Terminal. Recommended.</span></span></label>
-            <label><input type="radio" name="opencode_interface" value="desktop"><span class="opt-name"><span class="name">Desktop GUI</span><span class="desc">Installs <code>brew install --cask opencode-desktop</code> — same agent, point-and-click app.</span></span></label>
-          </div>
-          </div>
-
-          <p class="lede" id="local-lede-llamacpp-opencode" style="margin-top: 16px;">
-            The installer uses <strong>opencode</strong> (<a href="https://opencode.ai" target="_blank">opencode.ai</a>, MIT) as the agent harness with <strong>llama-server</strong> (llama.cpp) serving the model locally on <code>127.0.0.1:8080</code>. opencode reads Spotlight's skills + AGENTS.md natively; native sub-agents handle the investigator/fact-checker pattern.
+          <p class="lede" id="local-lede-opencode" style="margin-top: 16px;">
+            The installer uses <strong>opencode</strong> (<a href="https://opencode.ai" target="_blank">opencode.ai</a>, MIT) as the agent harness and <strong>Ollama</strong> to serve the model locally on <code>127.0.0.1:11434</code>. opencode reads Spotlight's skills + AGENTS.md natively; native sub-agents handle the investigator/fact-checker pattern. Both install with one command.
           </p>
-          <p class="lede hidden" id="local-lede-ollama-opencode" style="margin-top: 16px;">
-            The installer uses <strong>opencode</strong> (<a href="https://opencode.ai" target="_blank">opencode.ai</a>, MIT) as the agent harness and <strong>Ollama</strong> to serve the model locally on <code>127.0.0.1:11434</code>. Both install with one command.
-          </p>
-          <p class="lede hidden" id="local-lede-llamacpp-pi" style="margin-top: 16px;">
-            The installer uses <strong>Pi</strong> (<a href="https://pi.dev" target="_blank">pi.dev</a>, MIT) as the agent harness with <strong>llama-server</strong> serving the model on <code>127.0.0.1:8080</code>. The <code>pi-llama-cpp</code> extension lets you browse/load/switch models from inside Pi. Note: Pi has no native sub-agents, so investigator + fact-checker share context.
-          </p>
-          <p class="lede hidden" id="local-lede-ollama-pi" style="margin-top: 16px;">
-            The installer uses <strong>Pi</strong> (<a href="https://pi.dev" target="_blank">pi.dev</a>, MIT) as the agent harness with <strong>Ollama</strong> on <code>127.0.0.1:11434</code>. Pi's <code>pi-llama-cpp</code> extension speaks the same OpenAI-compatible API surface. Note: Pi has no native sub-agents.
+          <p class="lede hidden" id="local-lede-pi" style="margin-top: 16px;">
+            The installer uses <strong>Pi</strong> (<a href="https://pi.dev" target="_blank">pi.dev</a>, MIT) as the agent harness with <strong>llama.cpp</strong> (via the <code>pi-llama-cpp</code> extension) serving the model locally on <code>127.0.0.1:8080</code>. Pi lets you browse/load/switch models from inside the harness. Note: Pi has no native sub-agents, so investigator + fact-checker share context.
           </p>
 
           <div class="fit-row">
@@ -1169,9 +1151,9 @@
         <div class="sec-header">
           <span class="chap" data-reveal="meta">02 — Runtime</span>
           <h2 data-reveal="title">Pick your AI agent.</h2>
-          <p class="lede" style="margin-top:8px;">Spotlight is a skill bundle — it runs inside an AI agent runtime you already have. Subscription runtimes (Claude Code, Gemini, Codex) authenticate via their own login: <strong>no API key needed</strong>. Only OpenCode requires a provider key (pay-per-token).</p>
         </div>
         <section class="card">
+          <p class="lede" style="margin-top:0; margin-bottom: 20px;">Spotlight is a skill bundle — it runs inside an AI agent runtime you already have. Subscription runtimes (Claude Code, Gemini, Codex) authenticate via their own login: <strong>no API key needed</strong>. Only OpenCode requires a provider key (pay-per-token).</p>
           <div class="radio-group" id="cloud-group">
             <label><input type="radio" name="cloud_runtime" value="claude" checked><span class="opt-name"><span class="name">Claude Code</span><span class="desc">Anthropic Claude (Opus / Sonnet) — covered by Claude Max or Claude Pro subscription. Strongest for methodology + fact-checking depth.</span></span></label>
             <label><input type="radio" name="cloud_runtime" value="gemini"><span class="opt-name"><span class="name">Gemini</span><span class="desc">Google Gemini — covered by Google AI / Gemini subscription. Good for long-context investigations.</span></span></label>
@@ -1547,21 +1529,21 @@
   document.querySelectorAll('input[name="local_model"]').forEach(el => el.addEventListener('change', renderLocalModel));
 
   // --- Local server + agent switching ---
+  // Server is now derived from the chosen harness — opencode→ollama, pi→llamacpp.
+  // The user no longer picks a server; the install one-liner emits the matching
+  // SPOTLIGHT_LOCAL_SERVER value via envValues().
+  const SERVER_FOR_AGENT = { opencode: 'ollama', pi: 'llamacpp' };
   function renderLocalServer() {
-    const srv = document.querySelector('input[name="local_server"]:checked').value;
     const agentEl = document.querySelector('input[name="agent"]:checked');
     const agent = agentEl ? agentEl.value : 'opencode';
-    // Toggle the four lede variants — only the matching (server, agent) pair is shown.
-    ['llamacpp-opencode', 'ollama-opencode', 'llamacpp-pi', 'ollama-pi'].forEach(key => {
-      const want = `${srv}-${agent}`;
-      document.getElementById('local-lede-' + key).classList.toggle('hidden', key !== want);
-    });
+    const srv = SERVER_FOR_AGENT[agent] || 'ollama';
+    // Toggle the two lede variants — one per harness.
+    document.getElementById('local-lede-opencode').classList.toggle('hidden', agent !== 'opencode');
+    document.getElementById('local-lede-pi').classList.toggle('hidden', agent !== 'pi');
+    // Server notes mirror the derived server.
     document.getElementById('local-note-llamacpp').classList.toggle('hidden', srv !== 'llamacpp');
     document.getElementById('local-note-ollama').classList.toggle('hidden', srv !== 'ollama');
-    // opencode-interface picker is opencode-only.
-    document.getElementById('opencode-interface-wrap').classList.toggle('hidden', agent !== 'opencode');
   }
-  document.querySelectorAll('input[name="local_server"]').forEach(el => el.addEventListener('change', renderLocalServer));
   document.querySelectorAll('input[name="agent"]').forEach(el => el.addEventListener('change', renderLocalServer));
 
   // --- Runtime registry (single source of truth) ---
@@ -1663,9 +1645,13 @@
       mode: mode,
       runtime: mode === 'local' ? 'local' : cloudRt,
       local_model: mode === 'local' ? document.querySelector('input[name="local_model"]:checked').value : null,
-      local_server: mode === 'local' ? document.querySelector('input[name="local_server"]:checked').value : null,
+      // local_server is derived from the chosen harness, not user-picked
+      local_server: mode === 'local'
+        ? (SERVER_FOR_AGENT[document.querySelector('input[name="agent"]:checked').value] || 'ollama')
+        : null,
       agent: mode === 'local' ? document.querySelector('input[name="agent"]:checked').value : null,
-      opencode_interface: mode === 'local' ? document.querySelector('input[name="opencode_interface"]:checked').value : null,
+      // opencode interface is always CLI now; no UI picker.
+      opencode_interface: mode === 'local' ? 'cli' : null,
       opencode_provider: cloudRt === 'opencode' ? opencodeProv : null,
       cloud_key: mode === 'cloud' ? document.getElementById('cloud_key').value.trim() : '',
       cloud_key_var: cloudKeyVar,
