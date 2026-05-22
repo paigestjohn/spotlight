@@ -118,6 +118,21 @@ All notable changes to Spotlight. Format follows [Keep a Changelog](https://keep
   `commune_checks`/`claim_checks` shape instead of `findings`. Needs
   migration or reclassification as a different document type.
 
+### Added
+
+- `integrations/browse/` — Browserbase Browse CLI as a second-tier browser
+  automation tool, scoped behind a "use when a curated browse.sh skill exists
+  for the target portal" trigger. Default `--local` mode (no API key, no cloud
+  routing, sovereign by default). Browser Harness remains the primary browser
+  fallback for general portal work; Browse fills the gap when someone has
+  already mapped a site (OpenCorporates filings, Wayback snapshot search, etc).
+  The browse.sh catalog (~100 skills) auto-discovers; the routing table in
+  `skills/integrations/SKILL.md` and the decision tree update agents on when
+  to prefer Browse over Browser Harness. Installation: `npm install -g browse`.
+  Detailed routing logic, cost model, sensitive-mode behaviour, and pitfalls
+  (per-command CLI latency, accessibility-tree verbosity, fresh-browser default)
+  documented in `integrations/browse/integration.md`.
+
 ### Changed (earlier in [Unreleased])
 
 - Monitoring ownership split is now explicit:

@@ -25,6 +25,7 @@ The skill is cheap to load — it's a routing table, not a deep methodology guid
 | Integration | Category | Capabilities | When to pick |
 |---|---|---|---|
 | `browser-harness` | browser-automation | cdp-browser-control, dynamic-page-acquisition, screenshot-capture, download-capture, visual-verification | Preferred v2 browser fallback after Firecrawl misses material evidence. Use for portals, JS-rendered pages, screenshots, downloads, iframes/shadow DOM, and acquisition evidence bundles. |
+| `browse` | browser-automation | skill-catalog-navigation, selector-based-driver, ref-based-driver, accessibility-tree-snapshot, portal-navigation | Second-tier browser tool. Use when a curated browse.sh skill exists for the target portal (e.g. OpenCorporates filings, Wayback Machine snapshot search) — saves writing navigation logic from scratch. Default `--local`, no API key. Browser Harness remains primary for general portal work; see `integrations/browse/integration.md` for the routing rules. |
 | `browser-use` | browser-automation | form-navigation, search-export, login-driving, multi-step-browsing | Optional legacy/adjacent browser automation. Prefer Browser Harness for Spotlight acquisition evidence. |
 | `junkipedia` | social-osint | narrative-tracking, misinformation-search, social-media-monitoring, cross-platform-query | Tracking how a claim spread; finding social posts deleted from origin; cross-platform narrative investigation. |
 | `noosphere-c2pa` | provenance-signing | case-provenance-manifest, c2pa-content-credentials, optional-signing-receipt | After Gate 1, package and optionally sign the investigation trail. No API key; Noosphere controls signing credentials. |
@@ -38,7 +39,8 @@ The skill is cheap to load — it's a routing table, not a deep methodology guid
 What's the task?
 │
 ├── "Navigate a form / click through a UI / extract from a JS-rendered page"
-│     → browser-harness  (preferred if green — check preflight)
+│     → check `browse skills find <domain>` first — if a curated skill exists, prefer `browse` (saves writing nav logic from scratch; default `--local`)
+│     → otherwise browser-harness  (preferred general fallback if green — check preflight)
 │     → fallback: browser-use for non-evidence-grade automation if Browser Harness is unavailable
 │     → fallback: fetch() static scrape; may not work for JS-heavy pages
 │
