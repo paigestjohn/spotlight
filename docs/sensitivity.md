@@ -313,36 +313,70 @@ unambiguous.
 
 ## Enforcement chain
 
-In order of *what fails first if the system is misconfigured*:
+The 2026-05-22 verification test (see
+`~/buried_signals/investigations_test/VERIFICATION.md`) confirmed that
+a launcher-installed wrapper alone is **not sufficient**. A frontier
+agent with raw shell access (Claude Code's Bash tool, OpenCode's
+exec, etc.) can ignore the wrapper and run `qmd --index sensitive`
+directly. The wrapper protects honest agents and prompt-injection
+victims; it does not protect against agents that go around it.
+
+Therefore: UID separation is the load-bearing defense, not the
+"optional recommended" footnote it was in the earlier draft.
+
+In order from outermost (cheap, weak) to innermost (expensive,
+strong):
 
 1. **`case.yaml` pointer.** Frontier launcher reads it; if non-null,
    refuses to attach. Single point of failure: if `case.yaml` is
    corrupted or unreadable, fail closed (refuse all runtimes until the
-   journalist verifies).
-2. **Launcher-level path separation.** The frontier launcher's runtime
-   invocation does not include `~/buried_signals/sensitive/` in any
-   `--include`, `--workspace`, or context-file flag. Defense against a
-   future agent runtime that might walk arbitrary paths in CWD.
-3. **QMD database path scoping.** `QMD_DB_PATHS` exported by the
-   frontier launcher names only `~/.qmd/knowledge.db`. The sensitive
-   db file path is never on a command line, env var, or config file
-   the frontier process can read.
-4. **Filesystem permissions (optional, recommended).** The
-   `~/buried_signals/sensitive/` directory has mode `0700` and is
-   owned by the journalist's UID. Agent processes that run under a
-   different UID (a future containerized runtime, for example) can't
-   read it even if a bug exposed the path.
-5. **Backup / index exclusion (install-time, one-time).** The Spotlight
-   installer adds `~/buried_signals/sensitive/` to:
+   journalist verifies). Catches the common-case misclick.
+2. **Launcher-installed wrapper (`qmd-spotlight`).** Frontier launcher
+   installs a `qmd-spotlight` shim on PATH that hard-codes
+   `--index knowledge`. Local launcher installs a different shim that
+   queries both indices and merges. Defends against honest agents
+   that call the tool as named. **Does not defend against agents
+   with raw `qmd` access.**
+3. **Runtime permission template.** The frontier launcher writes a
+   per-runtime permission file (Claude Code's `.claude/settings.json`
+   allowlist, Codex's permissions, OpenCode's tool allowlist) that
+   denies bare `qmd` invocation — only `qmd-spotlight` is allowed.
+   Closes the prompt-injection escape route on cooperating runtimes.
+   Still a soft gate at the runtime layer.
+4. **UID separation (load-bearing).** Frontier agent runs under a
+   different macOS UID from the journalist's primary login. The
+   sensitive sqlite file and `~/buried_signals/sensitive/` directory
+   are `chmod 0700` and owned by the journalist's primary UID. The
+   frontier-UID process literally cannot read the sensitive index
+   regardless of how clever the agent or its prompt is. **This is
+   the gate the design relies on for actual confidentiality.**
+   Implementation: a dedicated `spotlight-frontier` Unix account on
+   the journalist's Mac, the frontier launcher invokes the runtime
+   via `sudo -u spotlight-frontier`. Home directory and sqlite cache
+   are per-UID. The journalist's primary UID retains read/write on
+   open case dirs (group ownership) so the frontier session can still
+   write findings.
+5. **Filesystem-attribute exclusion (install-time, one-time).** The
+   Spotlight installer adds `~/buried_signals/sensitive/` to:
    - `~/Library/Preferences/com.apple.spotlight.plist` excluded paths
-     (so macOS Spotlight doesn't index it).
+     (so macOS Spotlight doesn't index it — prevents `mdfind` leakage).
    - Time Machine exclusions (`tmutil addexclusion`).
    - Any documented backup tools the journalist names at install time
-     (Arq, Backblaze, etc.) — install script prompts.
+     (Arq, Backblaze, iCloud, Dropbox, Syncthing) — install script
+     prompts and refuses to proceed if a watched-path conflict is
+     detected.
+6. **Air gap (Phase 6, opt-in).** Sensitive workflow on a separate
+   machine entirely (the existing Mac mini under Hermes, no network
+   during sensitive sessions). Strongest guarantee, highest
+   operational cost. Reach for this when the material's
+   confidentiality has criminal-prosecution implications.
 
 The order matters: an attacker (or a buggy upgrade) has to defeat
-*every* layer to leak. A soft gate that consults one env var has only
-one layer.
+*every* layer in the path to the data. The wrapper alone is one
+layer. UID separation makes the wrapper meaningfully harder to
+bypass because the bypass route (`qmd --index sensitive`) now also
+requires escaping the UID — which requires a macOS privilege
+escalation, not just a clever prompt.
 
 ## Open questions to resolve before implementation
 
@@ -354,12 +388,14 @@ one layer.
    sensitive root under a path that is gitignored *and* outside the
    usual `iCloud` / `Dropbox` / `Syncthing` watched paths by default.
    Document this as an install-time check.
-2. **QMD's actual support for multi-db invocations.** This design
-   assumes QMD can be invoked against a chosen set of database paths.
-   If QMD currently hard-codes its db location, that's the largest
-   implementation cost. To be measured before committing to this
-   shape. Worst case: ship two QMD installations on disk (different
-   `$XDG_DATA_HOME`), pick one based on runtime — workable but uglier.
+2. ~~**QMD's actual support for multi-db invocations.**~~ **Resolved
+   2026-05-22.** QMD's native `--index <name>` flag resolves to a
+   separate sqlite file per name. The verification test confirmed
+   this works without any QMD patch. Production should still consider
+   relocating the sensitive sqlite to a path outside `~/.cache/qmd/`
+   (e.g. `~/buried_signals/sensitive/qmd/sensitive.sqlite`); the
+   simplest implementation is a symlink, the cleaner one is a small
+   QMD feature for `--index-path <abs-path>`.
 3. **What "sensitive runtime" means at the OpenCode layer.** OpenCode
    routes to a provider via `npm`. The local-runtime variant routes to
    a local Ollama or llama-server. The frontier-runtime variants route
@@ -381,6 +417,13 @@ one layer.
    ("see also the public-record context at <link>"). The reverse must
    not happen (open note must never reference the existence of a
    sensitive note). The ingest skill needs explicit rules here.
+6. **UID-separation account provisioning.** The new load-bearing
+   defense requires a dedicated `spotlight-frontier` macOS user
+   account on the journalist's machine. Provisioning needs sudo at
+   install time; the installer must explain to the journalist what
+   it's doing and why (a non-trivial security ask). Group permissions
+   need to be set so the frontier UID can still read/write open case
+   dirs. Sketch the install script's UX before committing.
 
 ## Implementation phases
 
@@ -392,29 +435,53 @@ escalated cases. No QMD work yet, no sensitive-store directory
 creation — the launcher just hard-blocks. Lets us validate the
 journalist UX before touching any data path.
 
-**Phase 2 — Sensitive-store directory + local launcher.** Add
-`spotlight escalate`. Local launcher mounts both case dir and
-sensitive store. No QMD changes yet — the local runtime simply has
-access to both filesystem paths. Knowledge base is still single-db.
+**Phase 2 — Sensitive-store directory + local launcher + dual QMD
+indices.** Add `spotlight escalate`. Local launcher exposes both case
+dir and sensitive store, installs the `local-qmd` wrapper that
+queries both indices. Frontier launcher installs `frontier-qmd`
+wrapper that queries the open index only. Ingest split based on
+finding sensitivity tag. Entity-note splitting rules implemented
+here.
 
-**Phase 3 — Dual QMD invocations + ingest split.** The biggest change.
-Ingest writes to the right database based on which store the finding
-came from. Local launcher invokes QMD with both db paths; frontier
-launcher invokes with only the open db. Entity-note splitting rules
-implemented here.
+> The 2026-05-22 verification confirmed QMD's `--index <name>` flag
+> is enough machinery for this phase — no QMD patch required.
+> Production deployments should consider symlinking the sensitive
+> sqlite out of `~/.cache/qmd/` to `~/buried_signals/sensitive/qmd/`
+> for backup-exclusion alignment.
 
-**Phase 4 — Declassification.** `spotlight declassify` command.
+**Phase 3 — UID separation (load-bearing).** Provision the
+`spotlight-frontier` macOS user account at install time. Frontier
+launcher invokes the agent runtime via `sudo -u spotlight-frontier`.
+The sensitive store is `chmod 0700` and owned by the journalist's
+primary UID. Frontier process literally cannot read the sensitive
+sqlite or the sensitive directory regardless of what its agent tries.
+**This is the phase where confidentiality becomes load-bearing**;
+phases 1–2 ship a system that defends only against honest agents,
+which is enough for most newsroom work but not for source protection
+under legal threat.
+
+**Phase 4 — Runtime permission templates + declassification.** Write
+per-runtime permission files (Claude Code, Codex, OpenCode) that the
+frontier launcher installs to deny bare `qmd` invocation — only
+`qmd-spotlight` is permitted. `spotlight declassify` command.
 Provenance-manifest entries. Tests for the one-way ratchet.
 
 **Phase 5 — Backup / indexer exclusions + multi-machine docs.**
-Installer adds the right exclusions. Multi-machine setup
-documentation. Reverse-audit script that scans
-`~/buried_signals/sensitive/` for backup-tool sentinel files and
-warns.
+Installer adds the right exclusions (Spotlight, Time Machine, named
+cloud sync tools). Multi-machine setup documentation. Reverse-audit
+script that scans `~/buried_signals/sensitive/` for backup-tool
+sentinel files (`.dropbox`, `iCloud Drive` metadata, Time Machine
+markers) and warns.
 
-Phases 1–2 give the journalist a usable system with manual ingest
-discipline. Phase 3 is where the design's full value lands. Phases
-4–5 are quality-of-life and operational hardening.
+**Phase 6 — Air gap (opt-in).** For cases where UID separation isn't
+enough — criminal-prosecution stakes, hostile-state threats. Sensitive
+workflow on the existing Mac mini, network disabled during sensitive
+sessions, files moved between machines via signed-only mechanism.
+Scope to be defined when first needed; do not pre-build.
+
+Phases 1–2 give the journalist a usable system with launcher-level
+defense; Phase 3 is the gate that makes "absolutely sure" defensible.
+Phases 4–6 are hardening and quality-of-life.
 
 ## Out of scope
 
