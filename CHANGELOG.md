@@ -20,11 +20,6 @@ All notable changes to Spotlight. Format follows [Keep a Changelog](https://keep
   gemma4 architecture with tool calls and thinking mode). Default selection
   in the setup form; the fit-check now recommends it for any Mac in the
   16–24 GB tier.
-- **`patch-spotlight-low-ram.sh`.** Standalone post-install patch for users
-  who already ran the installer with the 26B MoE on a 16 GB Mac and hit
-  Ollama's 500 "unable to load model". Pulls the E4B blob, repoints the
-  existing `spotlight-gemma4-q4` alias so `opencode.json` keeps working,
-  smoke-tests the load, and optionally purges the 17 GB blob with `--purge`.
 
 ### Fixed
 

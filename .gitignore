@@ -22,6 +22,9 @@ __pycache__/
 # Brainstorming companion
 .superpowers/
 
+# Local debug fixups (kept locally, not maintained in-repo)
+patch-spotlight-low-ram.sh
+
 # Dependencies and build outputs
 node_modules/
 dist/
