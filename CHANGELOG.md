@@ -10,6 +10,32 @@ All notable changes to Spotlight. Format follows [Keep a Changelog](https://keep
 > `cases/{project}/data/findings.json`, `fact-check.json`, or
 > `provenance-manifest.json`. The classroom profile flag is also removed.
 
+### Added
+
+- **Gemma 4 E4B Journalist as the default low-RAM local model.** New
+  `SPOTLIGHT_LOCAL_MODEL=gemma-e4b` option in `install-spotlight.sh`, paired
+  with a third radio card in `setup.html`. Pulls
+  `hf.co/tomvaillant/gemma4-e4b-abliterated-journalist-GGUF:Q4_K_M` (~5 GB on
+  disk, ~7 GB at runtime, 8B dense, abliterated, journalist fine-tune,
+  gemma4 architecture with tool calls and thinking mode). Default selection
+  in the setup form; the fit-check now recommends it for any Mac in the
+  16–24 GB tier.
+- **`patch-spotlight-low-ram.sh`.** Standalone post-install patch for users
+  who already ran the installer with the 26B MoE on a 16 GB Mac and hit
+  Ollama's 500 "unable to load model". Pulls the E4B blob, repoints the
+  existing `spotlight-gemma4-q4` alias so `opencode.json` keeps working,
+  smoke-tests the load, and optionally purges the 17 GB blob with `--purge`.
+
+### Fixed
+
+- **Misleading model-size labels.** `install-spotlight.sh` reported
+  `OLLAMA_SIZE_LABEL="~8 GB"` for the 26B A4B MoE, conflating active-param
+  footprint with the actual 17 GB GGUF blob. Corrected to `~17 GB`. Same
+  fix applied to `setup.html` (model-info stat block + the download-size
+  blurbs under both llama.cpp and Ollama). The 16 GB recommendation tier
+  in the fit-check now points to the E4B Journalist instead of the 26B MoE
+  (which OOMs at that RAM level).
+
 ### Removed
 
 - **Classroom profile flag.** `SPOTLIGHT_PROFILE=classroom` is no longer

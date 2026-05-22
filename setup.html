@@ -1107,13 +1107,20 @@
             </div>
           </div>
 
-          <!-- Model selector — two cards, one gets recommended after fit check -->
+          <!-- Model selector — three cards, one gets recommended after fit check -->
           <div class="radio-group" id="model-group">
+            <label id="model-card-gemma-e4b">
+              <input type="radio" name="local_model" value="gemma-e4b" checked>
+              <span class="opt-name">
+                <span class="name">Gemma 4 — E4B Journalist (8B dense)</span>
+                <span class="desc">Low-RAM option — 8B dense gemma4 with an investigative-journalism fine-tune, abliterated (no refusals on OSINT material). Runs comfortably on 16 GB Macs with room left for orchestration. Tool calls and thinking mode supported.</span>
+              </span>
+            </label>
             <label id="model-card-gemma">
-              <input type="radio" name="local_model" value="gemma" checked>
+              <input type="radio" name="local_model" value="gemma">
               <span class="opt-name">
                 <span class="name">Gemma 4 — 26B A4B MoE</span>
-                <span class="desc">Light option — only 3.8B active parameters. Needs 16+ GB RAM, but even then investigation quality degrades: no thinking mode, no vision, little headroom for orchestration. Better for quick queries than full investigations.</span>
+                <span class="desc">Mid option — 3.8B active params over a 25.2B MoE backbone. Larger reasoning surface than E4B but the full 17 GB blob has to stay resident; needs 24 GB RAM in practice. No thinking mode, no vision.</span>
               </span>
             </label>
             <label id="model-card-qwen">
@@ -1125,13 +1132,20 @@
             </label>
           </div>
 
-          <input type="hidden" id="model_repo" value="unsloth/gemma-4-26B-A4B-it-GGUF">
+          <input type="hidden" id="model_repo" value="tomvaillant/gemma4-e4b-abliterated-journalist-GGUF">
 
-          <div class="model-info" id="model-info-gemma">
+          <div class="model-info" id="model-info-gemma-e4b">
+            <div class="stat"><strong>8B</strong>Dense — all params active</div>
+            <div class="stat"><strong>~5 GB</strong>disk</div>
+            <div class="stat"><strong>~7 GB</strong>RAM at runtime</div>
+            <div class="stat"><strong>16 GB</strong>recommended</div>
+          </div>
+
+          <div class="model-info hidden" id="model-info-gemma">
             <div class="stat"><strong>26B A4B</strong>MoE — 3.8B active / 25.2B total</div>
-            <div class="stat"><strong>~8 GB</strong>disk</div>
-            <div class="stat"><strong>~10 GB</strong>RAM at runtime</div>
-            <div class="stat"><strong>16 GB+</strong>recommended</div>
+            <div class="stat"><strong>~17 GB</strong>disk</div>
+            <div class="stat"><strong>~19 GB</strong>RAM at runtime</div>
+            <div class="stat"><strong>24 GB+</strong>recommended</div>
           </div>
 
           <div class="model-info hidden" id="model-info-qwen27b">
@@ -1142,10 +1156,10 @@
           </div>
 
           <p class="note-advisory" id="local-note-llamacpp">
-            Large download (~8 GB for Gemma, ~10 GB for Qwen). The installer streams the GGUF from Hugging Face via <code>curl</code>; resume-on-interrupt is supported. The model lives at <code>~/Models/&lt;repo-leaf&gt;/</code>; you can swap quants by re-running with <code>MODEL=...</code>.
+            Download size depends on model: ~5 GB for Gemma E4B, ~17 GB for Gemma 26B MoE, ~10 GB for Qwen3.6 27B. The installer streams the GGUF from Hugging Face via <code>curl</code>; resume-on-interrupt is supported. The model lives at <code>~/Models/&lt;repo-leaf&gt;/</code>; you can swap quants by re-running with <code>MODEL=...</code>.
           </p>
           <p class="note-advisory hidden" id="local-note-ollama">
-            Large download (~8 GB for Gemma, ~10 GB for Qwen). Progress streams live in Terminal via Ollama's native UI. Spotlight uses Hugging Face's tagged Ollama artifacts, for example <code>hf.co/unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_M</code> or <code>hf.co/HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive:IQ2_M</code>. To use another installed Ollama model later, set <code>OLLAMA_MODEL</code> and <code>SPOTLIGHT_OLLAMA_ALIAS</code> in <code>.env</code>.
+            Download size depends on model: ~5 GB for Gemma E4B, ~17 GB for Gemma 26B MoE, ~10 GB for Qwen3.6 27B. Progress streams live in Terminal via Ollama's native UI. Spotlight uses Hugging Face's tagged Ollama artifacts, for example <code>hf.co/tomvaillant/gemma4-e4b-abliterated-journalist-GGUF:Q4_K_M</code>, <code>hf.co/unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_M</code>, or <code>hf.co/HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive:IQ2_M</code>. To use another installed Ollama model later, set <code>OLLAMA_MODEL</code> and <code>SPOTLIGHT_OLLAMA_ALIAS</code> in <code>.env</code>.
           </p>
         </section>
       </div>
@@ -1512,24 +1526,23 @@
 
   // --- Model repo map ---
   const MODEL_REPOS = {
+    'gemma-e4b': 'tomvaillant/gemma4-e4b-abliterated-journalist-GGUF',
     gemma: 'unsloth/gemma-4-26B-A4B-it-GGUF',
     qwen27b: 'HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive',
   };
 
-  // --- Local model switching (Gemma vs Qwen27b) ---
+  // --- Local model switching (E4B vs 26B MoE vs Qwen27b) ---
   function renderLocalModel() {
     const sel = document.querySelector('input[name="local_model"]:checked').value;
     document.getElementById('model_repo').value = MODEL_REPOS[sel];
+    document.getElementById('model-info-gemma-e4b').classList.toggle('hidden', sel !== 'gemma-e4b');
     document.getElementById('model-info-gemma').classList.toggle('hidden', sel !== 'gemma');
     document.getElementById('model-info-qwen27b').classList.toggle('hidden', sel !== 'qwen27b');
-    // Update fit-check button text to reflect the recommended model
-    if (sel === 'gemma') {
-      fitBtn.textContent = 'Check my Mac and recommend';
-      fitBtn.disabled = false;
-    } else {
-      fitBtn.textContent = 'Check if my Mac can run this';
-      fitBtn.disabled = false;
-    }
+    // Fit-check button copy reflects whether the choice is the cautious default
+    fitBtn.textContent = sel === 'gemma-e4b'
+      ? 'Check my Mac and recommend'
+      : 'Check if my Mac can run this';
+    fitBtn.disabled = false;
   }
   document.querySelectorAll('input[name="local_model"]').forEach(el => el.addEventListener('change', renderLocalModel));
 
@@ -1843,11 +1856,23 @@
       values.LOCAL_SERVER = cfg.local_server || 'llamacpp';
       values.LOCAL_ENDPOINT = cfg.local_server === 'llamacpp' ? 'http://127.0.0.1:8080/v1' : 'http://127.0.0.1:11434/v1';
       if (cfg.local_server === 'ollama') {
-        const isGemmaEnv = (cfg.model_repo || '').indexOf('gemma-4') >= 0;
-        values.OLLAMA_MODEL = isGemmaEnv
-          ? 'hf.co/unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_M'
-          : 'hf.co/HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive:IQ2_M';
-        values.SPOTLIGHT_OLLAMA_ALIAS = isGemmaEnv ? 'spotlight-gemma4-q4' : 'spotlight-qwen36-27b-q4';
+        const OLLAMA_TAGS = {
+          'gemma-e4b': {
+            model: 'hf.co/tomvaillant/gemma4-e4b-abliterated-journalist-GGUF:Q4_K_M',
+            alias: 'spotlight-gemma4-e4b',
+          },
+          gemma: {
+            model: 'hf.co/unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_M',
+            alias: 'spotlight-gemma4-q4',
+          },
+          qwen27b: {
+            model: 'hf.co/HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive:IQ2_M',
+            alias: 'spotlight-qwen36-27b-q4',
+          },
+        };
+        const tag = OLLAMA_TAGS[cfg.local_model] || OLLAMA_TAGS['gemma-e4b'];
+        values.OLLAMA_MODEL = tag.model;
+        values.SPOTLIGHT_OLLAMA_ALIAS = tag.alias;
       }
     }
     return values;
@@ -2039,37 +2064,41 @@ Setup is complete. Open a new terminal and run \`spotlight\`. Then ask it to sta
   });
 
   // --- Model recommendation after fit check ---
+  const e4bCard = document.getElementById('model-card-gemma-e4b');
   const gemmaCard = document.getElementById('model-card-gemma');
   const qwenCard = document.getElementById('model-card-qwen');
+  const MODEL_CARDS = { 'gemma-e4b': e4bCard, gemma: gemmaCard, qwen27b: qwenCard };
+  const NOT_RECOMMENDED_COPY = {
+    'gemma-e4b': '<em>Not recommended for your hardware — your machine can run a larger model with more reasoning depth. You can still select it above.</em>',
+    gemma: '<em>Not recommended — the full 17 GB MoE blob has to stay resident, so 16 GB Macs OOM. Pick E4B (smaller) or Qwen3.6 27B (denser) instead. You can still select it above.</em>',
+    qwen27b: '<em>Not recommended for your hardware — needs 24+ GB RAM. You can still select it above.</em>',
+  };
+  const ORIGINAL_COPY = {
+    'gemma-e4b': 'Low-RAM option — 8B dense gemma4 with an investigative-journalism fine-tune, abliterated (no refusals on OSINT material). Runs comfortably on 16 GB Macs with room left for orchestration. Tool calls and thinking mode supported.',
+    gemma: 'Mid option — 3.8B active params over a 25.2B MoE backbone. Larger reasoning surface than E4B but the full 17 GB blob has to stay resident; needs 24 GB RAM in practice. No thinking mode, no vision.',
+    qwen27b: 'Quality option — all 27B parameters active per token. Thinking mode, zero refusals, multimodal vision. Better for deep investigations and complex reasoning. Needs 24+ GB RAM.',
+  };
 
   function recommendModel(recommended) {
-    const other = recommended === 'gemma' ? 'qwen27b' : 'gemma';
-    // Set the radio to the recommended model
     const radio = document.querySelector(`input[name="local_model"][value="${recommended}"]`);
     if (radio) { radio.checked = true; renderLocalModel(); }
-    // Style the cards
-    gemmaCard.classList.toggle('recommended', recommended === 'gemma');
-    gemmaCard.classList.toggle('not-recommended', recommended !== 'gemma');
-    qwenCard.classList.toggle('recommended', recommended === 'qwen27b');
-    qwenCard.classList.toggle('not-recommended', recommended !== 'qwen27b');
-    // Also clear any previous explicit recommendation on the "wrong" card
-    if (recommended === 'gemma') {
-      qwenCard.querySelector('.opt-name .desc').innerHTML =
-        '<em>Not recommended for your hardware — needs 24+ GB RAM. You can still select it above.</em>';
-    } else {
-      gemmaCard.querySelector('.opt-name .desc').innerHTML =
-        '<em>Not recommended — MoE with only 3.8B active params. Reasoning depth degrades. You can still select it above.</em>';
-    }
+    Object.entries(MODEL_CARDS).forEach(([key, card]) => {
+      const isRec = key === recommended;
+      card.classList.toggle('recommended', isRec);
+      card.classList.toggle('not-recommended', !isRec);
+      if (!isRec) {
+        card.querySelector('.opt-name .desc').innerHTML = NOT_RECOMMENDED_COPY[key];
+      } else {
+        card.querySelector('.opt-name .desc').innerHTML = ORIGINAL_COPY[key];
+      }
+    });
   }
 
   function clearModelRecommendation() {
-    gemmaCard.classList.remove('recommended', 'not-recommended');
-    qwenCard.classList.remove('recommended', 'not-recommended');
-    // Restore original descriptions
-    gemmaCard.querySelector('.opt-name .desc').innerHTML =
-      'Light option — only 3.8B active parameters. Fast on 16 GB Macs, but reasoning depth degrades vs dense models. No thinking mode, no vision. Good for quick queries and low-RAM machines.';
-    qwenCard.querySelector('.opt-name .desc').innerHTML =
-      'Quality option — all 27B parameters active per token. Thinking mode, zero refusals, multimodal vision. Better for deep investigations and complex reasoning. Needs 24+ GB RAM.';
+    Object.entries(MODEL_CARDS).forEach(([key, card]) => {
+      card.classList.remove('recommended', 'not-recommended');
+      card.querySelector('.opt-name .desc').innerHTML = ORIGINAL_COPY[key];
+    });
   }
 
   // --- LLM fit check ---
@@ -2140,18 +2169,23 @@ Setup is complete. Open a new terminal and run \`spotlight\`. Then ask it to sta
     let verdict = 'amber';
     let title = 'Model recommendation based on your hardware';
     let body = '';
-    let recommendedModel = null; // 'gemma' or 'qwen27b'
+    let recommendedModel = null; // 'gemma-e4b' | 'gemma' | 'qwen27b' | null
 
     if (deviceMemGB && deviceMemGB >= 24) {
       verdict = 'green';
       title = 'Qwen3.6 27B — fits comfortably on your hardware';
-      body = 'You have <b>' + deviceMemGB + ' GB+</b> RAM. The Qwen3.6 27B (dense, thinking mode, zero refusals) will run well here. Gemma 4 MoE also runs fine but offers less reasoning depth.';
+      body = 'You have <b>' + deviceMemGB + ' GB+</b> RAM. The Qwen3.6 27B (dense, thinking mode, zero refusals) will run well here. The Gemma 4 26B MoE also fits at this RAM tier; the E4B Journalist is faster but less capable.';
       recommendedModel = 'qwen27b';
     } else if (deviceMemGB && deviceMemGB >= 16) {
+      verdict = 'green';
+      title = 'Gemma 4 E4B Journalist — fits your 16 GB Mac';
+      body = 'You have <b>~' + deviceMemGB + ' GB</b> RAM. The E4B Journalist (8B dense, ~5 GB on disk, ~7 GB at runtime) leaves plenty of headroom for Spotlight\'s orchestration (browser automation, search, vault writes). The 26B MoE blob is 17 GB and will OOM on 16 GB Macs — don\'t pick that one. At 24+ GB you could move up to Qwen3.6 27B.';
+      recommendedModel = 'gemma-e4b';
+    } else if (deviceMemGB && deviceMemGB >= 8) {
       verdict = 'amber';
-      title = 'Gemma 4 — works, but investigation quality degrades';
-      body = 'You have <b>~' + deviceMemGB + ' GB</b> RAM. Gemma 4 MoE (~10 GB at runtime) fits but leaves little headroom for Spotlight\'s orchestration (browser automation, search, vault writes). Reasoning depth degrades — no thinking mode, no vision. If your Mac supports it, we\'d recommend 24+ GB for the Qwen3.6 27B.';
-      recommendedModel = 'gemma';
+      title = 'Tight fit — E4B Journalist might just work';
+      body = 'You have <b>~' + deviceMemGB + ' GB</b> RAM. The E4B Journalist (~7 GB at runtime) is the only local option that has any chance of loading, but headroom for the orchestration pipeline is thin. If it OOMs or thrashes, switch to <strong>Cloud</strong> mode.';
+      recommendedModel = 'gemma-e4b';
     } else if (deviceMemGB) {
       verdict = 'red';
       title = 'No local model — switch to Cloud mode';
@@ -2160,9 +2194,9 @@ Setup is complete. Open a new terminal and run \`spotlight\`. Then ask it to sta
     } else if (isAppleSilicon && cores >= 8) {
       // Apple Silicon with 8+ cores typically has 16+ GB unified, but deviceMemory may not report it
       verdict = 'amber';
-      title = 'Confirm your RAM — 16 GB for Gemma, 24 GB for Qwen3.6 27B';
-      body = 'Apple Silicon with <b>' + cores + ' cores</b> typically has 16+ GB unified memory, but we can\'t confirm via the browser. Run the command below — if you\'re at 16 GB, Gemma 4 MoE works (with degraded quality). At 24 GB+, the Qwen3.6 27B is the recommended choice.';
-      recommendedModel = null;
+      title = 'Confirm your RAM — defaulting to E4B Journalist';
+      body = 'Apple Silicon with <b>' + cores + ' cores</b> typically has 16+ GB unified memory, but we can\'t confirm via the browser. We\'re defaulting to the E4B Journalist (safe on any 16 GB+ Mac). Run the command below to check your actual RAM — at 24+ GB the Qwen3.6 27B is a better pick.';
+      recommendedModel = 'gemma-e4b';
     } else if (isMac && arch === 'x86') {
       verdict = 'red';
       title = 'Intel Mac — use Cloud mode';
@@ -2170,9 +2204,9 @@ Setup is complete. Open a new terminal and run \`spotlight\`. Then ask it to sta
       recommendedModel = null;
     } else if (isLinux) {
       verdict = 'amber';
-      title = 'Check your GPU/VRAM — 16 GB RAM minimum for local';
-      body = 'On Linux, you need 16+ GB system RAM for Gemma 4 MoE, or 24+ GB for Qwen3.6 27B. With a 6+ GB NVIDIA/AMD GPU, both can work via VRAM offloading. Confirm your specs with the command below.';
-      recommendedModel = null;
+      title = 'Check your GPU/VRAM — defaulting to E4B Journalist';
+      body = 'On Linux, the E4B Journalist (8B, ~5 GB) runs on 16 GB RAM CPU-only or any 6+ GB NVIDIA/AMD GPU. For the 26B MoE you need 24+ GB system RAM, and for Qwen3.6 27B the same. Confirm your specs with the command below.';
+      recommendedModel = 'gemma-e4b';
     } else {
       verdict = 'red';
       title = 'Browser detection limited — use Cloud mode';
