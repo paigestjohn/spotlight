@@ -15,8 +15,9 @@ If you are new to Spotlight, read in this order:
 5. **[fact-checking.md](fact-checking.md)** — the independent verification pass: SIFT, verdict taxonomy, evidence trails
 6. **[epistemic-grounding.md](epistemic-grounding.md)** — claim-to-evidence grounding, evidence bundles, confidence caps
 7. **[vulnerabilities.md](vulnerabilities.md)** — shell-safety vulnerabilities and v2 mitigations
-8. **[monitoring.md](monitoring.md)** — monitoring orchestration across Mycroft, Scoutpost, and runtime-native fallbacks
-9. **[recovery.md](recovery.md)** — when things break: agent crashes, corrupted files, stale locks, API failures
+8. **[sensitivity.md](sensitivity.md)** — design doc (not yet implemented): protecting sensitive material via physical separation, escalation, and one-way declassification
+9. **[monitoring.md](monitoring.md)** — monitoring orchestration across Mycroft, Scoutpost, and runtime-native fallbacks
+10. **[recovery.md](recovery.md)** — when things break: agent crashes, corrupted files, stale locks, API failures
 
 ## 60-second quick-start
 
