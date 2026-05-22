@@ -59,8 +59,8 @@ preferred_model:
   claude: opus
   gemini: gemini-2.5-pro
   gpt: gpt-4o
-  local: HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive
-  fallback_note: Investigation quality degrades significantly on lighter models. Local ship — Qwen3.6 27B Uncensored (dense, thinking mode, zero refusals, multimodal) for 24+ GB Macs; Gemma 4 26B A4B MoE for 16 GB Macs. Both unsloth GGUF. Q4_K_M recommended. Native vision for scanned docs + satellite imagery.
+  local: huihui_ai/Qwen3.6-abliterated:27b
+  fallback_note: Two-tier local fleet, both abliterated journalism models. Default — Tom's Qwen 3.5 9B Journalist (tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF:Q4_K_M) for 16 GB Macs, ~6 GB on disk. Heavy tier — Huihui's Qwen 3.6 27B Abliterated (huihui_ai/Qwen3.6-abliterated:27b) for 32 GB+ Macs, ~17 GB on disk, ~24 GB at runtime. The setup form's fit-check enforces the 32 GB minimum before the 27B option commits. Bench-validated against the eval suite in tools/fine-tuning/eval/.
 vault_context:
   enabled: true
   query_on_load: true
