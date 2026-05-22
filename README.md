@@ -34,9 +34,17 @@ When you pick **Local** mode in the setup form, you get a choice of two ablitera
 
 Both are **abliterated** — the refusal-vector has been removed so the model answers OSINT-grade prompts (corporate beneficial-ownership chains, surveillance technique verification, metadata forensics, etc.) instead of hedging or refusing. A stock instruction-tuned model is unsuitable for Spotlight regardless of size; abliteration is the editorial requirement.
 
-The 9B is Tom's own fine-tune on the [investigative-journalism-training corpus](https://huggingface.co/datasets/tomvaillant/investigative-journalism-training): SIFT methodology, primary-source preference, OPSEC awareness, OSINT tool recall. On a 30-prompt eval against the bundled `eval/prompts.jsonl` suite (tool recommendations, methodology, ethics-opsec, refusal probes), the 9B scored 83.5 / 100 composite — 100% refusal-resistance, 100% directness. It outscored Tom's own 8B Gemma 4 E4B fine-tune (82.3) primarily on hedging behavior, and was the strongest model in its RAM tier we could measure.
+The 9B is Tom's own fine-tune on the [investigative-journalism-training corpus](https://huggingface.co/datasets/tomvaillant/investigative-journalism-training): SIFT methodology, primary-source preference, OPSEC awareness, OSINT tool recall. On a 30-prompt eval against the bundled `eval/prompts.jsonl` suite (tool recommendations, methodology, ethics-opsec, refusal probes), the 9B scored **83.5 / 100** composite — 100% refusal-resistance, 100% directness. It outscored Tom's own 8B Gemma 4 E4B fine-tune (82.3) primarily on hedging behavior, and was the strongest model in its RAM tier we could measure.
 
 The 27B is huihui-ai's Qwen 3.6 abliteration. We picked it over the popular [HauhauCS variant](https://huggingface.co/HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive) for install reliability — HauhauCS uses non-standard K_P imatrix quants with a multimodal mmproj projection file, and the IQ2_M quant failed to load via Ollama in our testing. Huihui-ai is the team that pioneered the abliteration technique HauhauCS is downstream of, ships a native Ollama tag (no `hf.co/` indirection), and uses standard Q4_K quants.
+
+Head-to-head on a 5-prompt subset of the same eval suite (with the `/no_think` workaround described below): **27B scored 100.0 composite vs the 9B's 91.2.** Same 100% refusal-resistance, same 100% directness, but the 27B emits ~3× more tool URLs per response (mean 5.2 vs 1.8), zero hedge markers, and slightly more concise responses (480 median words vs 752). The size cost is justified when the journalist has the hardware.
+
+### 27B thinking-mode workaround (built into the installer)
+
+Qwen 3.6 abliterated variants default to thinking mode and ignore the OpenAI-compat `think: false` payload field. Without disabling thinking, the model dumps reasoning into the API's `reasoning` field and leaves `content` empty unless `max_tokens` is generous (~4k+). On our first bench run the 27B returned 15/15 empty responses.
+
+The fix is Qwen's documented `/no_think` directive in the user message. The installer (`install-spotlight.sh`) writes this as a `SYSTEM` line into the Ollama Modelfile when the 27B is selected, so opencode / pi don't need to inject it per-request. After the install, your local 27B is `spotlight-qwen27b`, which is the Huihui base tag plus the `/no_think` system prompt baked in.
 
 ### What got dropped, and why
 

@@ -367,6 +367,21 @@ if [ "$SPOTLIGHT_MODE" = "local" ]; then
       fi
       TMP_MODELFILE="$(mktemp)"
       printf "FROM %s\n" "$OLLAMA_MODEL" > "$TMP_MODELFILE"
+      # Qwen 3.6 thinking-mode workaround: the abliterated 27B variants
+      # (Huihui, HauhauCS) default to thinking mode and ignore the
+      # OpenAI-compat `think:false` payload field. Without disabling
+      # thinking, the model dumps reasoning into the `reasoning` field
+      # and leaves `content` empty until max_tokens is generous (~4k+).
+      # The /no_think directive in the user message is Qwen's documented
+      # soft-switch; we bake it into the alias as a system prompt so
+      # opencode / pi don't have to inject it per-request. Bench-verified:
+      # with /no_think the 27B scored 100.0 composite vs 91.2 for the 9B
+      # on a 5-prompt subset; without it, content was empty 15/15.
+      case "$SPOTLIGHT_LOCAL_MODEL" in
+        qwen27b)
+          printf 'SYSTEM "/no_think"\n' >> "$TMP_MODELFILE"
+          ;;
+      esac
       ollama create "$SPOTLIGHT_OLLAMA_ALIAS" -f "$TMP_MODELFILE"
       rm -f "$TMP_MODELFILE"
     elif [ "$DRY_RUN" = "1" ]; then
