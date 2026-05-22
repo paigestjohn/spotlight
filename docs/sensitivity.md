@@ -227,3 +227,118 @@ restrictions and just providing the plumbing (two ingest targets,
 one union query), Spotlight stays focused on what it's actually for
 and lets the journalist compose their own sensitive workflow with
 whatever tools genuinely match their threat model.
+
+---
+
+## FAQ
+
+For readers who landed here without context on what Spotlight is and
+what this design fits into.
+
+**Source code:** <https://github.com/buriedsignals/spotlight>
+
+### What is Spotlight?
+
+Spotlight is an OSINT investigation orchestrator for journalists. It
+runs on top of an AI agent runtime (Claude Code, Codex, Gemini,
+OpenCode, Goose, Hermes, or a local model via Ollama / llama-server)
+and walks the agent through a fixed pipeline: preflight → brief →
+methodology → five execution cycles → fact-checking gate → ingestion
+into a knowledge vault. The skills, agent prompts, schemas, and
+verification rules are version-controlled markdown — the agent
+follows them; the journalist owns them.
+
+The point of the pipeline is **editorial accountability**: every
+claim is grounded in scraped evidence, every source is archived
+locally before it's cited, fact-checking runs as an independent pass
+with its own verdict taxonomy, and confidence is gated by
+access-method enforcement. The output of an investigation is a
+findings JSON, a fact-check JSON, an evidence trail, and (optionally)
+a knowledge-base ingest so subsequent investigations can build on
+prior work via QMD search.
+
+Spotlight does not replace the journalist. It removes the rote
+work — link-walking, archive-before-citing, schema compliance,
+fact-check provenance — so the journalist's time goes to editorial
+judgement and source work.
+
+### Why does the runtime matter?
+
+Different runtimes have different trust properties. **Frontier
+runtimes** (Claude, Gemini, OpenAI, OpenRouter) send the agent's
+context to a third-party provider — fine for open material, not fine
+for sensitive material. **Local runtimes** (Ollama or llama-server
+running a model like
+`tomvaillant/gemma4-e4b-abliterated-journalist-GGUF:Q4_K_M`) keep the
+context on the journalist's machine.
+
+The journalist picks the runtime per session, and the install script
+configures both. There is no automatic switching.
+
+### What is the sensitive vault flag this doc describes?
+
+A flag in the install config that turns on a second, parallel ingest
+target. With `SPOTLIGHT_SENSITIVE_ENABLED=1`:
+
+- A second vault directory is created next to the main one, suffixed
+  `-sensitive` (so the convention reads "same name, sensitive
+  twin"). The journalist owns what goes in it.
+- The ingest skill gains a `--target sensitive` mode that writes to
+  the second vault + a second QMD index instead of the default.
+- Local-runtime sessions get a `qmd-spotlight` wrapper on PATH that
+  queries both indices and unions the results. Frontier-runtime
+  sessions don't get the wrapper installed; if they discover it and
+  try to call it anyway, an env-var check (`SPOTLIGHT_RUNTIME`)
+  refuses with a clear error.
+
+That's the whole feature.
+
+### Is this a confidentiality guarantee?
+
+No. The flag's purpose is **plumbing**, not enforcement. It lets a
+local-model session reach sensitive material the journalist
+deliberately put in a separate vault, without making that material
+discoverable from a frontier-model session that just calls bare
+`qmd`. It does not prevent a frontier agent on the same machine from
+running `qmd --index <name>-sensitive` directly and reading the
+sensitive vault that way.
+
+If your threat model needs that level of guarantee, run sensitive
+work on a separate machine (the existing Mac mini / Hermes path is
+already in the Spotlight ecosystem for this) and treat the sensitive
+vault on the laptop as a *summary archive* of work done elsewhere,
+not as the workspace for sensitive investigation itself. The design
+doc names this distinction in "What this is not" at the top of the
+page.
+
+### Why not enforce harder?
+
+Earlier drafts of this doc proposed UID separation, runtime
+permission templates, escalation/declassification state transitions,
+case-level sensitivity fields, and frontier-runtime hard-blocks. The
+2026-05-22 verification harness at
+`~/buried_signals/investigations_test/` confirmed two things:
+
+1. The dual-index *query* mechanic works (QMD's native `--index
+   <name>` is sufficient — no QMD patch needed).
+2. The launcher wrapper alone is bypassable by an agent with raw
+   shell access. Closing that bypass requires UID separation, which
+   is too much install-time machinery (creating a `spotlight-frontier`
+   Unix account, group permissions, sudo plumbing) for an OSINT
+   orchestrator to honestly justify.
+
+Spotlight's job is to standardize the investigation workflow.
+Confidentiality is an operational concern that lives outside the
+tool. We provide the plumbing; the journalist composes the
+operational layer (separate machine, encrypted disk, air gap, paper)
+that matches their actual threat model.
+
+### Where do I read more?
+
+- Repo: <https://github.com/buriedsignals/spotlight>
+- Architecture overview: [`docs/structure.md`](structure.md)
+- Investigation pipeline: [`docs/investigating.md`](investigating.md)
+- Fact-checking pass: [`docs/fact-checking.md`](fact-checking.md)
+- Epistemic grounding: [`docs/epistemic-grounding.md`](epistemic-grounding.md)
+- Runtime wiring: [`docs/runtimes.md`](runtimes.md)
+- Disclaimer + scope limits: [`DISCLAIMER.md`](../DISCLAIMER.md) (in the repo root)
