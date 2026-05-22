@@ -79,28 +79,41 @@ export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$PATH"
 : "${OSINT_NAV_API_KEY:?osint-navigator key missing from config}"
 
 # Derive model artifact names from the model selection.
-# Size labels reflect the actual GGUF blob size on disk — what `ollama ls` reports.
-# Don't conflate active params (MoE) with file footprint: Q4_K_M of a 26B-A4B is
-# still 17 GB on disk because all experts have to be resident for routing.
+#
+# Two tiers, both abliterated journalist tunes, both Ollama-native + HF GGUF
+# available for the llamacpp path:
+#
+#   qwen9b  — Tom's 9B dense Qwen 3.5 fine-tune. 16 GB Macs.
+#             Bench winner among 8-9B options; same investigative-journalism
+#             corpus as the gemma4-e4b tune previously offered, but qwen3.5
+#             architecture refused on 0/30 OSINT probes vs gemma's 1/30.
+#
+#   qwen27b — Huihui-ai's Qwen 3.6 27B abliterated. 32 GB Macs.
+#             Ollama-native tag from the abliteration originators. Standard
+#             Q4_K quant (not the K_P imatrix variants that have had Ollama
+#             load issues). Setup form's fit-check enforces 32 GB minimum
+#             before this tier is selectable.
+#
+# Removed in this revision:
+#   - gemma-e4b (Tom's gemma4 E4B journalist) — superseded by qwen9b after
+#     bench showed qwen 3.5 9B outscored it on refusal-resistance.
+#   - gemma (unsloth gemma-4-26B-A4B MoE) — 17 GB OOMs on 16 GB Macs; the
+#     active-param-vs-file-footprint trap that misled Luc.
+#   - qwen27b @ HauhauCS IQ2_M — failed to load on our test machine
+#     (non-standard K_P quants + mmproj vision file appear Ollama-incompat).
+#     Huihui's variant uses standard Q4_K quants and loads cleanly.
 case "$SPOTLIGHT_LOCAL_MODEL" in
-  gemma-e4b)
-    # Tom's 8B dense gemma4 journalist fine-tune (abliterated). Fits 16 GB Macs.
+  qwen9b)
     GGUF_FILE="model-q4_k_m.gguf"
-    OLLAMA_MODEL_DEFAULT="hf.co/tomvaillant/gemma4-e4b-abliterated-journalist-GGUF:Q4_K_M"
-    OLLAMA_ALIAS_DEFAULT="spotlight-gemma4-e4b"
-    OLLAMA_SIZE_LABEL="~5 GB"
-    ;;
-  gemma)
-    GGUF_FILE="gemma-4-26B-A4B-it-UD-Q4_K_M.gguf"
-    OLLAMA_MODEL_DEFAULT="hf.co/unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_M"
-    OLLAMA_ALIAS_DEFAULT="spotlight-gemma4-q4"
-    OLLAMA_SIZE_LABEL="~17 GB"
+    OLLAMA_MODEL_DEFAULT="hf.co/tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF:Q4_K_M"
+    OLLAMA_ALIAS_DEFAULT="spotlight-qwen9b"
+    OLLAMA_SIZE_LABEL="~6 GB"
     ;;
   qwen27b)
-    GGUF_FILE="Qwen3.6-27B-Uncensored-HauhauCS-Aggressive-Q4_K_P.gguf"
-    OLLAMA_MODEL_DEFAULT="hf.co/HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive:IQ2_M"
-    OLLAMA_ALIAS_DEFAULT="spotlight-qwen36-27b-q4"
-    OLLAMA_SIZE_LABEL="~10 GB"
+    GGUF_FILE="model-Q4_K.gguf"
+    OLLAMA_MODEL_DEFAULT="huihui_ai/Qwen3.6-abliterated:27b"
+    OLLAMA_ALIAS_DEFAULT="spotlight-qwen27b"
+    OLLAMA_SIZE_LABEL="~17 GB"
     ;;
   *)
     GGUF_FILE=""

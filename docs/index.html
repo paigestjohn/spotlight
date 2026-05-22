@@ -529,11 +529,15 @@
         <p>Cloud runtimes are the right choice for open material — public-record research, archived web, corporate filings. They're faster and more capable than what fits on a laptop, and the trade-off is that the agent's context goes to the third-party provider.</p>
 
         <h3>Local runtimes</h3>
-        <p>OpenCode pointed at a local Ollama or llama-server endpoint keeps everything on the journalist's machine. The recommended default is the journalism-trained gemma4 E4B fine-tune (<code>tomvaillant/gemma4-e4b-abliterated-journalist-GGUF</code>) — 8B dense, ~5 GB on disk, fits comfortably on a 16 GB Mac with room for the orchestration pipeline.</p>
-        <p>Local runtimes are slower than cloud runtimes, and quality is lower per token. They're the right choice when the material can't leave the machine.</p>
+        <p>OpenCode pointed at a local Ollama endpoint keeps everything on the journalist's machine. The installer ships two abliterated journalism models:</p>
+        <ul>
+          <li><strong>Default — Qwen 3.5 9B Journalist</strong> (<code>tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF:Q4_K_M</code>). 9B dense, ~6 GB on disk, fits 16 GB Macs comfortably. Bench-tested at 100% refusal-resistance on OSINT-grade prompts.</li>
+          <li><strong>Heavy tier — Huihui Qwen 3.6 27B Abliterated</strong> (<code>huihui_ai/Qwen3.6-abliterated:27b</code>). 27B dense, ~17 GB on disk, ~24 GB resident at runtime. <strong>Needs 32 GB unified memory minimum</strong> — the setup form's fit-check enforces this before the option commits.</li>
+        </ul>
+        <p>Local runtimes are slower than cloud runtimes — the 9B does an investigation in ~15 min vs ~5 min on cloud; the 27B takes 45–90 min. They're the right choice when material can't leave the machine.</p>
 
         <h3>Hardware fit-check</h3>
-        <p>The <a href="../setup.html">install form</a> probes your hardware via <code>navigator.deviceMemory</code> + WebGPU and recommends a model: E4B Journalist for 16 GB, Qwen3.6 27B for 24 GB+, or Cloud mode if neither fits.</p>
+        <p>The <a href="../setup.html">install form</a> probes your hardware via <code>navigator.deviceMemory</code> + WebGPU and recommends a model: 9B Journalist for any 16 GB+ Mac (default), the 27B if RAM reports ≥ 32 GB. Below 16 GB the form pushes users to Frontier mode.</p>
       </section>
 
       <!-- ── 05 Config ──────────────────────────────── -->
