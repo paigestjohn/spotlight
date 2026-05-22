@@ -120,6 +120,21 @@ All notable changes to Spotlight. Format follows [Keep a Changelog](https://keep
 
 ### Added
 
+- `scripts/validate-case.py` — write-time validator for a case directory.
+  Catches the data bugs surfaced by the v2.0.0 schema reality alignment
+  (empty `claim` / `claim_text` fields, missing required top-level keys,
+  wrong-shape documents like `commune_checks`/`claim_checks` written into
+  `findings.json`, dangling fact-check `finding_id` references). Wired into
+  the orchestrator at steps 2.5 and 4.5 of Phase 3 (Execution): after the
+  investigator and again after the fact-checker, the orchestrator runs
+  `python3 scripts/validate-case.py cases/{project}` and re-spawns the
+  agent with the errors quoted if validation fails ("fix the shape only,
+  don't change verdicts"). New agent prompt rules in
+  `agents/investigator.md` and `agents/fact-checker.md` make the shape
+  contract explicit: never emit a finding without claim text; never use
+  alternative top-level shapes; skip the finding/claim entirely if it
+  can't be articulated. Smoke-tested in `tests/eval.sh` (positive: passes
+  sample fixtures; negative: rejects empty `claim`).
 - `integrations/browse/` — Browserbase Browse CLI as a second-tier browser
   automation tool, scoped behind a "use when a curated browse.sh skill exists
   for the target portal" trigger. Default `--local` mode (no API key, no cloud

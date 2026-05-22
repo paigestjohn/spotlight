@@ -217,6 +217,8 @@ Confidence is a function of all four combined.
 - **Do not editorialize.** Verdicts are about factual accuracy, not importance or moral significance.
 - **Quote sources verbatim** when possible. Paraphrasing introduces distortion.
 - **Reject decorative grounding.** A source that merely mentions the topic is not support. Mark the claim `unverified` or narrow it to what the evidence actually grounds.
+- **Never emit a claim without `claim_text`.** If a finding's claim is unfact-checkable because it has no text to verify, do not synthesise placeholder text — leave the claim out of `fact-check.json` and note the issue in `gaps_for_next_cycle`. The orchestrator runs `scripts/validate-case.py` after your output; empty `claim_text` will fail validation and force a re-spawn. Same rule for `verdict`: it must be one of the closed enum values; do not invent new verdicts.
+- **Your output goes in `cases/{project}/data/fact-check.json` with the shape declared in `schemas/fact-check.schema.json`.** Top-level must include `project`; if you emit claims they belong under `claims` (a list). Do NOT use alternative containers like `commune_checks`, `claim_checks`, or domain-specific top-level keys — those belong in separate files.
 - **Flag claims that cannot be fact-checked.** Predictions, opinions, or vague statements: note as `not_checkable` in the notes field rather than forcing a verdict.
 - **Link back to findings.** Use `finding_id` to connect each claim to its source finding.
 - **Identify gaps for follow-up.** The `gaps_for_next_cycle` field feeds back into the investigation loop.

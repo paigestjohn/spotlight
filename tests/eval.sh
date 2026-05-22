@@ -163,6 +163,37 @@ else
 fi
 
 echo ""
+echo "── validate-case.py smoke ──"
+
+# Wrap the existing sample fixtures into a fake case dir and run the validator.
+_VC_TMP=$(mktemp -d -t spotlight-validate-case.XXXXXX)
+mkdir -p "$_VC_TMP/data"
+cp tests/fixtures/findings.sample.json "$_VC_TMP/data/findings.json"
+cp tests/fixtures/fact-check.sample.json "$_VC_TMP/data/fact-check.json"
+if python3 scripts/validate-case.py "$_VC_TMP" >/dev/null 2>&1; then
+  ok "validate-case.py passes the sample fixtures"
+else
+  fail "validate-case.py rejected its own sample fixtures"
+fi
+rm -rf "$_VC_TMP"
+
+# Negative test: a case with an empty 'claim' must fail
+_VC_NEG=$(mktemp -d -t spotlight-validate-case-neg.XXXXXX)
+mkdir -p "$_VC_NEG/data"
+python3 -c "
+import json, sys
+d = json.load(open('tests/fixtures/findings.sample.json'))
+d['findings'][0]['claim'] = ''
+json.dump(d, open('$_VC_NEG/data/findings.json', 'w'))
+"
+if python3 scripts/validate-case.py "$_VC_NEG" >/dev/null 2>&1; then
+  fail "validate-case.py FAILED to reject empty 'claim' (negative test)"
+else
+  ok "validate-case.py rejects empty 'claim' (negative test)"
+fi
+rm -rf "$_VC_NEG"
+
+echo ""
 if [ $FAIL -eq 0 ]; then
   printf "%s✓ All %d eval checks passed%s\n" "$_c_green" "$PASS" "$_c_reset"
   exit 0

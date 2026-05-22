@@ -304,6 +304,19 @@ Append to cases/{project}/data/investigation-log.json.",
 
   2. When complete: read-file("cases/{project}/data/findings.json"); verify investigation-log.json was appended.
 
+  2.5. Validate the investigator output before fact-checking:
+
+     ```
+     execute-shell("python3 scripts/validate-case.py cases/{project}")
+     ```
+
+     If validation reports errors (non-zero exit), the investigator left data
+     bugs — empty `claim` fields, missing required keys, wrong-shape output,
+     or dangling references. Do NOT proceed to the fact-checker. Re-spawn the
+     investigator with the validator errors quoted verbatim in the prompt and
+     a directive: "fix these data bugs without changing your findings or
+     verdicts; only correct the shape." Loop until the validator passes.
+
   3. Spawn fact-checker:
 
      handle = spawn-agent(
@@ -326,6 +339,16 @@ Write to cases/{project}/data/fact-check.json.",
      output = wait-agent(handle)
 
   4. When complete: read-file("cases/{project}/data/fact-check.json").
+
+  4.5. Validate the fact-checker output before the editorial check:
+
+     ```
+     execute-shell("python3 scripts/validate-case.py cases/{project}")
+     ```
+
+     Same rules as 2.5 — if validation fails, re-spawn the fact-checker with
+     the errors quoted in the prompt and a "fix the shape only" directive.
+     Loop until the validator passes.
 
   5. Run editorial standards check:
      - Do findings have sources with URLs, timestamps, and `local_file`?
