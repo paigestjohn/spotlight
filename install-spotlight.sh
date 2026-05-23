@@ -79,18 +79,41 @@ export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$PATH"
 : "${OSINT_NAV_API_KEY:?osint-navigator key missing from config}"
 
 # Derive model artifact names from the model selection.
+#
+# Two tiers, both abliterated journalist tunes, both Ollama-native + HF GGUF
+# available for the llamacpp path:
+#
+#   qwen9b  — Tom's 9B dense Qwen 3.5 fine-tune. 16 GB Macs.
+#             Bench winner among 8-9B options; same investigative-journalism
+#             corpus as the gemma4-e4b tune previously offered, but qwen3.5
+#             architecture refused on 0/30 OSINT probes vs gemma's 1/30.
+#
+#   qwen27b — Huihui-ai's Qwen 3.6 27B abliterated. 32 GB Macs.
+#             Ollama-native tag from the abliteration originators. Standard
+#             Q4_K quant (not the K_P imatrix variants that have had Ollama
+#             load issues). Setup form's fit-check enforces 32 GB minimum
+#             before this tier is selectable.
+#
+# Removed in this revision:
+#   - gemma-e4b (Tom's gemma4 E4B journalist) — superseded by qwen9b after
+#     bench showed qwen 3.5 9B outscored it on refusal-resistance.
+#   - gemma (unsloth gemma-4-26B-A4B MoE) — 17 GB OOMs on 16 GB Macs; the
+#     active-param-vs-file-footprint trap that misled Luc.
+#   - qwen27b @ HauhauCS IQ2_M — failed to load on our test machine
+#     (non-standard K_P quants + mmproj vision file appear Ollama-incompat).
+#     Huihui's variant uses standard Q4_K quants and loads cleanly.
 case "$SPOTLIGHT_LOCAL_MODEL" in
-  gemma)
-    GGUF_FILE="gemma-4-26B-A4B-it-UD-Q4_K_M.gguf"
-    OLLAMA_MODEL_DEFAULT="hf.co/unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_M"
-    OLLAMA_ALIAS_DEFAULT="spotlight-gemma4-q4"
-    OLLAMA_SIZE_LABEL="~8 GB"
+  qwen9b)
+    GGUF_FILE="model-q4_k_m.gguf"
+    OLLAMA_MODEL_DEFAULT="hf.co/tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF:Q4_K_M"
+    OLLAMA_ALIAS_DEFAULT="spotlight-qwen9b"
+    OLLAMA_SIZE_LABEL="~6 GB"
     ;;
   qwen27b)
-    GGUF_FILE="Qwen3.6-27B-Uncensored-HauhauCS-Aggressive-Q4_K_P.gguf"
-    OLLAMA_MODEL_DEFAULT="hf.co/HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive:IQ2_M"
-    OLLAMA_ALIAS_DEFAULT="spotlight-qwen36-27b-q4"
-    OLLAMA_SIZE_LABEL="~10 GB"
+    GGUF_FILE="model-Q4_K.gguf"
+    OLLAMA_MODEL_DEFAULT="huihui_ai/Qwen3.6-abliterated:27b"
+    OLLAMA_ALIAS_DEFAULT="spotlight-qwen27b"
+    OLLAMA_SIZE_LABEL="~17 GB"
     ;;
   *)
     GGUF_FILE=""
@@ -344,6 +367,21 @@ if [ "$SPOTLIGHT_MODE" = "local" ]; then
       fi
       TMP_MODELFILE="$(mktemp)"
       printf "FROM %s\n" "$OLLAMA_MODEL" > "$TMP_MODELFILE"
+      # Qwen 3.6 thinking-mode workaround: the abliterated 27B variants
+      # (Huihui, HauhauCS) default to thinking mode and ignore the
+      # OpenAI-compat `think:false` payload field. Without disabling
+      # thinking, the model dumps reasoning into the `reasoning` field
+      # and leaves `content` empty until max_tokens is generous (~4k+).
+      # The /no_think directive in the user message is Qwen's documented
+      # soft-switch; we bake it into the alias as a system prompt so
+      # opencode / pi don't have to inject it per-request. Bench-verified:
+      # with /no_think the 27B scored 100.0 composite vs 91.2 for the 9B
+      # on a 5-prompt subset; without it, content was empty 15/15.
+      case "$SPOTLIGHT_LOCAL_MODEL" in
+        qwen27b)
+          printf 'SYSTEM "/no_think"\n' >> "$TMP_MODELFILE"
+          ;;
+      esac
       ollama create "$SPOTLIGHT_OLLAMA_ALIAS" -f "$TMP_MODELFILE"
       rm -f "$TMP_MODELFILE"
     elif [ "$DRY_RUN" = "1" ]; then

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spotlight — Install</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000'><path d='M6 2h4v4h-4zM10 2h4v4h-4zM14 2h4v4h-4zM6 6h4v4h-4zM6 10h4v4h-4zM14 10h4v4h-4zM14 14h4v4h-4zM6 18h4v4h-4zM10 18h4v4h-4zM14 18h4v4h-4z'/></svg>">
-<meta name="description" content="Configure your Spotlight install. Cloud or local, integrations, vault — generate the script and run it.">
+<meta name="description" content="Configure your Spotlight install. Frontier or local, integrations, vault — generate the script and run it.">
 <link rel="alternate" type="text/markdown" title="llms.txt" href="/llms.txt">
 <link rel="alternate" type="text/markdown" title="llms_full.txt" href="/llms_full.txt">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -108,7 +108,7 @@
   nav.topnav .links a { transition: color 0.2s ease; opacity: 0.85; }
   nav.topnav .links a:hover { color: var(--accent-warm); opacity: 1; }
   /* Install — promoted as a CTA (bordered pill) in the topnav. */
-  nav.topnav .links a[href="setup.html"] {
+  nav.topnav .links a[href$="setup.html"] {
     display: inline-flex; align-items: center;
     padding: 9px 14px;
     border: 1px solid currentColor;
@@ -117,7 +117,7 @@
     font-weight: 500;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
-  nav.topnav .links a[href="setup.html"]:hover {
+  nav.topnav .links a[href$="setup.html"]:hover {
     background: var(--accent-warm-14);
     border-color: var(--accent-warm);
     color: var(--accent-warm);
@@ -888,7 +888,7 @@
     /* Hide every nav link except Install, promoted to a compact CTA. */
     nav.topnav .links { display: flex; gap: 0; }
     nav.topnav .links a { display: none; }
-    nav.topnav .links a[href="setup.html"] {
+    nav.topnav .links a[href$="setup.html"] {
       padding: 7px 12px;
       font-size: 10px;
       letter-spacing: 0.18em;
@@ -1016,6 +1016,8 @@
     Spotlight
   </a>
   <div class="links">
+    <a href="docs/index.html">Docs</a>
+    <a href="https://github.com/buriedsignals/spotlight" target="_blank" rel="noopener">GitHub ↗</a>
     <a href="setup.html">Install</a>
   </div>
 </nav>
@@ -1030,7 +1032,7 @@
       </h1>
     </div>
     <div class="hero-side" data-reveal="body" style="--rd: 1000ms">
-      Pick your runtime, drop in your keys, generate the script. Cloud or local — same skills, same review loop. Install in a single Terminal paste.
+      Pick your runtime, drop in your keys, generate the script. Frontier or local — same skills, same review loop. Install in a single Terminal paste.
     </div>
   </div>
 </section>
@@ -1043,12 +1045,12 @@
       <!-- 01 — Mode -->
       <div class="sec-header">
         <span class="chap" data-reveal="meta">01 — Mode <span class="req">Required</span></span>
-        <h2 data-reveal="title">Cloud or local.</h2>
+        <h2 data-reveal="title">Frontier or Local.</h2>
       </div>
       <section class="card">
         <div class="radio-group">
-          <label><input type="radio" name="mode" value="cloud" checked><span class="opt-name"><span class="name">Cloud</span><span class="desc">Use a hosted model (Claude Code, Gemini, or Codex). Faster investigations, higher quality, but queries go to the provider.</span></span></label>
-          <label><input type="radio" name="mode" value="local"><span class="opt-name"><span class="name">Local</span><span class="desc">Run a journalism model on your own machine. Private by design — nothing leaves your laptop. Uses <strong>opencode</strong> (opencode.ai, MIT) as the agent harness with a model pulled from Hugging Face.</span></span></label>
+          <label><input type="radio" name="mode" value="cloud" checked><span class="opt-name"><span class="name">Frontier</span><span class="desc">Use a hosted model (Claude Code, Gemini, Codex, or OpenCode). Faster investigations, higher quality, but queries go to the provider.</span></span></label>
+          <label><input type="radio" name="mode" value="local"><span class="opt-name"><span class="name">Local</span><span class="desc">Run a journalism model on your own machine. Private by design — nothing leaves your laptop. Pick your harness; the installer preconfigures the inference server underneath.</span></span></label>
         </div>
       </section>
 
@@ -1059,37 +1061,17 @@
           <h2 data-reveal="title">Hosted on your Mac.</h2>
         </div>
         <section class="card">
-          <label class="block">Inference server</label>
-          <div class="radio-group" id="local-server-group">
-            <label><input type="radio" name="local_server" value="llamacpp" checked><span class="opt-name"><span class="name">llama-server</span><span class="desc">Lean and Terminal-only. The script installs it via <code>brew install llama.cpp</code>, downloads the model GGUF from Hugging Face, and serves on <code>127.0.0.1:8080</code>.</span></span></label>
-            <label><input type="radio" name="local_server" value="ollama"><span class="opt-name"><span class="name">Ollama</span><span class="desc">CLI-first model manager. The script installs it via <code>brew</code>, pulls the model, starts the service — nothing to click.</span></span></label>
-          </div>
-
-          <label class="block" style="margin-top: 24px;">Agent harness</label>
+          <label class="block">Agent harness</label>
           <div class="radio-group" id="agent-group">
-            <label><input type="radio" name="agent" value="opencode" checked><span class="opt-name"><span class="name">opencode</span><span class="desc">Recommended. Native sub-agents — investigator and fact-checker run in independent contexts, preserving Spotlight's verification independence guarantee.</span></span></label>
-            <label><input type="radio" name="agent" value="pi"><span class="opt-name"><span class="name">Pi</span><span class="desc">Minimal TypeScript harness (<a href="https://pi.dev" target="_blank">pi.dev</a>) with the <code>pi-llama-cpp</code> extension for model browsing. <strong>No native sub-agents</strong> — investigator and fact-checker share one context, weakening independence. Choose this only for a lean install.</span></span></label>
+            <label><input type="radio" name="agent" value="opencode" checked><span class="opt-name"><span class="name">OpenCode</span><span class="desc">Recommended. Native sub-agents — investigator and fact-checker run in independent contexts, preserving Spotlight's verification independence guarantee. Installer preconfigures <strong>Ollama</strong> as the inference server.</span></span></label>
+            <label><input type="radio" name="agent" value="pi"><span class="opt-name"><span class="name">Pi</span><span class="desc">Minimal TypeScript harness (<a href="https://pi.dev" target="_blank">pi.dev</a>) with the <code>pi-llama-cpp</code> extension for model browsing. <strong>No native sub-agents</strong> — investigator and fact-checker share one context, weakening independence. Installer preconfigures <strong>llama.cpp</strong> as the inference server.</span></span></label>
           </div>
 
-          <div id="opencode-interface-wrap">
-          <label class="block" style="margin-top: 24px;">opencode interface</label>
-          <div class="radio-group" id="opencode-interface-group">
-            <label><input type="radio" name="opencode_interface" value="cli" checked><span class="opt-name"><span class="name">CLI (Terminal)</span><span class="desc">Lighter — installs <code>brew install opencode</code> and runs in your Terminal. Recommended.</span></span></label>
-            <label><input type="radio" name="opencode_interface" value="desktop"><span class="opt-name"><span class="name">Desktop GUI</span><span class="desc">Installs <code>brew install --cask opencode-desktop</code> — same agent, point-and-click app.</span></span></label>
-          </div>
-          </div>
-
-          <p class="lede" id="local-lede-llamacpp-opencode" style="margin-top: 16px;">
-            The installer uses <strong>opencode</strong> (<a href="https://opencode.ai" target="_blank">opencode.ai</a>, MIT) as the agent harness with <strong>llama-server</strong> (llama.cpp) serving the model locally on <code>127.0.0.1:8080</code>. opencode reads Spotlight's skills + AGENTS.md natively; native sub-agents handle the investigator/fact-checker pattern.
+          <p class="lede" id="local-lede-opencode" style="margin-top: 16px;">
+            The installer uses <strong>opencode</strong> (<a href="https://opencode.ai" target="_blank">opencode.ai</a>, MIT) as the agent harness and <strong>Ollama</strong> to serve the model locally on <code>127.0.0.1:11434</code>. opencode reads Spotlight's skills + AGENTS.md natively; native sub-agents handle the investigator/fact-checker pattern. Both install with one command.
           </p>
-          <p class="lede hidden" id="local-lede-ollama-opencode" style="margin-top: 16px;">
-            The installer uses <strong>opencode</strong> (<a href="https://opencode.ai" target="_blank">opencode.ai</a>, MIT) as the agent harness and <strong>Ollama</strong> to serve the model locally on <code>127.0.0.1:11434</code>. Both install with one command.
-          </p>
-          <p class="lede hidden" id="local-lede-llamacpp-pi" style="margin-top: 16px;">
-            The installer uses <strong>Pi</strong> (<a href="https://pi.dev" target="_blank">pi.dev</a>, MIT) as the agent harness with <strong>llama-server</strong> serving the model on <code>127.0.0.1:8080</code>. The <code>pi-llama-cpp</code> extension lets you browse/load/switch models from inside Pi. Note: Pi has no native sub-agents, so investigator + fact-checker share context.
-          </p>
-          <p class="lede hidden" id="local-lede-ollama-pi" style="margin-top: 16px;">
-            The installer uses <strong>Pi</strong> (<a href="https://pi.dev" target="_blank">pi.dev</a>, MIT) as the agent harness with <strong>Ollama</strong> on <code>127.0.0.1:11434</code>. Pi's <code>pi-llama-cpp</code> extension speaks the same OpenAI-compatible API surface. Note: Pi has no native sub-agents.
+          <p class="lede hidden" id="local-lede-pi" style="margin-top: 16px;">
+            The installer uses <strong>Pi</strong> (<a href="https://pi.dev" target="_blank">pi.dev</a>, MIT) as the agent harness with <strong>llama.cpp</strong> (via the <code>pi-llama-cpp</code> extension) serving the model locally on <code>127.0.0.1:8080</code>. Pi lets you browse/load/switch models from inside the harness. Note: Pi has no native sub-agents, so investigator + fact-checker share context.
           </p>
 
           <div class="fit-row">
@@ -1107,45 +1089,47 @@
             </div>
           </div>
 
-          <!-- Model selector — two cards, one gets recommended after fit check -->
+          <!-- Model selector — two tiers. 9B is the default; 27B requires a
+               passed fit-check (auto-triggered on selection if not already
+               run; user is warned + downgrade-suggested if RAM < 32 GB). -->
           <div class="radio-group" id="model-group">
-            <label id="model-card-gemma">
-              <input type="radio" name="local_model" value="gemma" checked>
+            <label id="model-card-qwen9b">
+              <input type="radio" name="local_model" value="qwen9b" checked>
               <span class="opt-name">
-                <span class="name">Gemma 4 — 26B A4B MoE</span>
-                <span class="desc">Light option — only 3.8B active parameters. Needs 16+ GB RAM, but even then investigation quality degrades: no thinking mode, no vision, little headroom for orchestration. Better for quick queries than full investigations.</span>
+                <span class="name">Qwen 3.5 9B Journalist</span>
+                <span class="desc">Default. 9B dense, abliterated, investigative-journalism fine-tune by <a href="https://huggingface.co/tomvaillant" target="_blank" rel="noopener">@tomvaillant</a>. Fits 16 GB Macs comfortably (~6 GB on disk, ~8 GB at runtime). Bench-tested: 100% refusal-resistance on OSINT-grade prompts, leads with the answer 100% of the time.</span>
               </span>
             </label>
-            <label id="model-card-qwen">
+            <label id="model-card-qwen27b">
               <input type="radio" name="local_model" value="qwen27b">
               <span class="opt-name">
-                <span class="name">Qwen3.6 — 27B Uncensored</span>
-                <span class="desc">Quality option — all 27B parameters active per token. Thinking mode, zero refusals, multimodal vision. Better for deep investigations and complex reasoning. Needs 24+ GB RAM.</span>
+                <span class="name">Qwen 3.6 27B Abliterated <span class="badge req" style="margin-left:6px;">32 GB</span></span>
+                <span class="desc">Heavy tier. 27B dense, abliterated by <a href="https://huggingface.co/huihui-ai" target="_blank" rel="noopener">huihui-ai</a> (the team that pioneered the abliteration technique). Ollama-native tag, standard Q4_K quant. <strong>Needs 32 GB unified memory minimum</strong> — the fit-check below confirms your hardware before this option is enabled.</span>
               </span>
             </label>
           </div>
 
-          <input type="hidden" id="model_repo" value="unsloth/gemma-4-26B-A4B-it-GGUF">
+          <input type="hidden" id="model_repo" value="tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF">
 
-          <div class="model-info" id="model-info-gemma">
-            <div class="stat"><strong>26B A4B</strong>MoE — 3.8B active / 25.2B total</div>
-            <div class="stat"><strong>~8 GB</strong>disk</div>
-            <div class="stat"><strong>~10 GB</strong>RAM at runtime</div>
-            <div class="stat"><strong>16 GB+</strong>recommended</div>
+          <div class="model-info" id="model-info-qwen9b">
+            <div class="stat"><strong>9B</strong>Dense — all params active</div>
+            <div class="stat"><strong>~6 GB</strong>disk</div>
+            <div class="stat"><strong>~8 GB</strong>RAM at runtime</div>
+            <div class="stat"><strong>16 GB</strong>recommended</div>
           </div>
 
           <div class="model-info hidden" id="model-info-qwen27b">
             <div class="stat"><strong>27B</strong>Dense — all params active</div>
-            <div class="stat"><strong>~10 GB</strong>disk</div>
-            <div class="stat"><strong>~16 GB</strong>RAM at runtime</div>
-            <div class="stat"><strong>24 GB+</strong>recommended</div>
+            <div class="stat"><strong>~17 GB</strong>disk</div>
+            <div class="stat"><strong>~24 GB</strong>RAM at runtime</div>
+            <div class="stat"><strong>32 GB+</strong>required</div>
           </div>
 
           <p class="note-advisory" id="local-note-llamacpp">
-            Large download (~8 GB for Gemma, ~10 GB for Qwen). The installer streams the GGUF from Hugging Face via <code>curl</code>; resume-on-interrupt is supported. The model lives at <code>~/Models/&lt;repo-leaf&gt;/</code>; you can swap quants by re-running with <code>MODEL=...</code>.
+            Download size: ~6 GB for the 9B, ~17 GB for the 27B. The installer streams the GGUF from Hugging Face via <code>curl</code>; resume-on-interrupt is supported. The model lives at <code>~/Models/&lt;repo-leaf&gt;/</code>; you can swap quants by re-running with <code>MODEL=...</code>.
           </p>
           <p class="note-advisory hidden" id="local-note-ollama">
-            Large download (~8 GB for Gemma, ~10 GB for Qwen). Progress streams live in Terminal via Ollama's native UI. Spotlight uses Hugging Face's tagged Ollama artifacts, for example <code>hf.co/unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_M</code> or <code>hf.co/HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive:IQ2_M</code>. To use another installed Ollama model later, set <code>OLLAMA_MODEL</code> and <code>SPOTLIGHT_OLLAMA_ALIAS</code> in <code>.env</code>.
+            Download size: ~6 GB for the 9B, ~17 GB for the 27B. Progress streams live in Terminal via Ollama's native UI. Spotlight uses Hugging Face's tagged Ollama artifacts for the 9B (<code>hf.co/tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF:Q4_K_M</code>) and the Ollama-native tag for the 27B (<code>huihui_ai/Qwen3.6-abliterated:27b</code>). To use another installed Ollama model later, set <code>OLLAMA_MODEL</code> and <code>SPOTLIGHT_OLLAMA_ALIAS</code> in <code>.env</code>.
           </p>
         </section>
       </div>
@@ -1155,9 +1139,9 @@
         <div class="sec-header">
           <span class="chap" data-reveal="meta">02 — Runtime</span>
           <h2 data-reveal="title">Pick your AI agent.</h2>
-          <p class="lede" style="margin-top:8px;">Spotlight is a skill bundle — it runs inside an AI agent runtime you already have. Subscription runtimes (Claude Code, Gemini, Codex) authenticate via their own login: <strong>no API key needed</strong>. Only OpenCode requires a provider key (pay-per-token).</p>
         </div>
         <section class="card">
+          <p class="lede" style="margin-top:0; margin-bottom: 20px;">Spotlight is a skill bundle — it runs inside an AI agent runtime you already have. Subscription runtimes (Claude Code, Gemini, Codex) authenticate via their own login: <strong>no API key needed</strong>. Only OpenCode requires a provider key (pay-per-token).</p>
           <div class="radio-group" id="cloud-group">
             <label><input type="radio" name="cloud_runtime" value="claude" checked><span class="opt-name"><span class="name">Claude Code</span><span class="desc">Anthropic Claude (Opus / Sonnet) — covered by Claude Max or Claude Pro subscription. Strongest for methodology + fact-checking depth.</span></span></label>
             <label><input type="radio" name="cloud_runtime" value="gemini"><span class="opt-name"><span class="name">Gemini</span><span class="desc">Google Gemini — covered by Google AI / Gemini subscription. Good for long-context investigations.</span></span></label>
@@ -1510,45 +1494,50 @@
     renderInstallPath();
   });
 
-  // --- Model repo map ---
+  // --- Model repo map (HF repo path, used by the llamacpp install path) ---
   const MODEL_REPOS = {
-    gemma: 'unsloth/gemma-4-26B-A4B-it-GGUF',
-    qwen27b: 'HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive',
+    qwen9b:  'tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF',
+    qwen27b: 'huihui-ai/Huihui-Qwen3.6-27B-abliterated-MTP-GGUF',
   };
+  // RAM minimum per model (in GB) — used by fit-check enforcement on heavy tier.
+  const MODEL_MIN_RAM = { qwen9b: 16, qwen27b: 32 };
 
-  // --- Local model switching (Gemma vs Qwen27b) ---
+  // --- Local model switching ---
   function renderLocalModel() {
     const sel = document.querySelector('input[name="local_model"]:checked').value;
     document.getElementById('model_repo').value = MODEL_REPOS[sel];
-    document.getElementById('model-info-gemma').classList.toggle('hidden', sel !== 'gemma');
+    document.getElementById('model-info-qwen9b').classList.toggle('hidden', sel !== 'qwen9b');
     document.getElementById('model-info-qwen27b').classList.toggle('hidden', sel !== 'qwen27b');
-    // Update fit-check button text to reflect the recommended model
-    if (sel === 'gemma') {
-      fitBtn.textContent = 'Check my Mac and recommend';
-      fitBtn.disabled = false;
-    } else {
-      fitBtn.textContent = 'Check if my Mac can run this';
-      fitBtn.disabled = false;
+    fitBtn.textContent = sel === 'qwen9b'
+      ? 'Check my Mac and recommend'
+      : 'Check if my Mac can run this';
+    fitBtn.disabled = false;
+    // Heavy-tier enforcement: when the user picks the 27B, ensure the fit-check
+    // has run. If it hasn't (no fitPanel state yet), auto-trigger it so they
+    // don't accidentally proceed with a 32 GB-required model on a 16 GB Mac.
+    if (sel === 'qwen27b' && !fitPanel.classList.contains('green') &&
+        !fitPanel.classList.contains('amber') && !fitPanel.classList.contains('red')) {
+      runFitCheck();
     }
   }
   document.querySelectorAll('input[name="local_model"]').forEach(el => el.addEventListener('change', renderLocalModel));
 
   // --- Local server + agent switching ---
+  // Server is now derived from the chosen harness — opencode→ollama, pi→llamacpp.
+  // The user no longer picks a server; the install one-liner emits the matching
+  // SPOTLIGHT_LOCAL_SERVER value via envValues().
+  const SERVER_FOR_AGENT = { opencode: 'ollama', pi: 'llamacpp' };
   function renderLocalServer() {
-    const srv = document.querySelector('input[name="local_server"]:checked').value;
     const agentEl = document.querySelector('input[name="agent"]:checked');
     const agent = agentEl ? agentEl.value : 'opencode';
-    // Toggle the four lede variants — only the matching (server, agent) pair is shown.
-    ['llamacpp-opencode', 'ollama-opencode', 'llamacpp-pi', 'ollama-pi'].forEach(key => {
-      const want = `${srv}-${agent}`;
-      document.getElementById('local-lede-' + key).classList.toggle('hidden', key !== want);
-    });
+    const srv = SERVER_FOR_AGENT[agent] || 'ollama';
+    // Toggle the two lede variants — one per harness.
+    document.getElementById('local-lede-opencode').classList.toggle('hidden', agent !== 'opencode');
+    document.getElementById('local-lede-pi').classList.toggle('hidden', agent !== 'pi');
+    // Server notes mirror the derived server.
     document.getElementById('local-note-llamacpp').classList.toggle('hidden', srv !== 'llamacpp');
     document.getElementById('local-note-ollama').classList.toggle('hidden', srv !== 'ollama');
-    // opencode-interface picker is opencode-only.
-    document.getElementById('opencode-interface-wrap').classList.toggle('hidden', agent !== 'opencode');
   }
-  document.querySelectorAll('input[name="local_server"]').forEach(el => el.addEventListener('change', renderLocalServer));
   document.querySelectorAll('input[name="agent"]').forEach(el => el.addEventListener('change', renderLocalServer));
 
   // --- Runtime registry (single source of truth) ---
@@ -1650,9 +1639,13 @@
       mode: mode,
       runtime: mode === 'local' ? 'local' : cloudRt,
       local_model: mode === 'local' ? document.querySelector('input[name="local_model"]:checked').value : null,
-      local_server: mode === 'local' ? document.querySelector('input[name="local_server"]:checked').value : null,
+      // local_server is derived from the chosen harness, not user-picked
+      local_server: mode === 'local'
+        ? (SERVER_FOR_AGENT[document.querySelector('input[name="agent"]:checked').value] || 'ollama')
+        : null,
       agent: mode === 'local' ? document.querySelector('input[name="agent"]:checked').value : null,
-      opencode_interface: mode === 'local' ? document.querySelector('input[name="opencode_interface"]:checked').value : null,
+      // opencode interface is always CLI now; no UI picker.
+      opencode_interface: mode === 'local' ? 'cli' : null,
       opencode_provider: cloudRt === 'opencode' ? opencodeProv : null,
       cloud_key: mode === 'cloud' ? document.getElementById('cloud_key').value.trim() : '',
       cloud_key_var: cloudKeyVar,
@@ -1843,11 +1836,21 @@
       values.LOCAL_SERVER = cfg.local_server || 'llamacpp';
       values.LOCAL_ENDPOINT = cfg.local_server === 'llamacpp' ? 'http://127.0.0.1:8080/v1' : 'http://127.0.0.1:11434/v1';
       if (cfg.local_server === 'ollama') {
-        const isGemmaEnv = (cfg.model_repo || '').indexOf('gemma-4') >= 0;
-        values.OLLAMA_MODEL = isGemmaEnv
-          ? 'hf.co/unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_M'
-          : 'hf.co/HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive:IQ2_M';
-        values.SPOTLIGHT_OLLAMA_ALIAS = isGemmaEnv ? 'spotlight-gemma4-q4' : 'spotlight-qwen36-27b-q4';
+        const OLLAMA_TAGS = {
+          qwen9b: {
+            model: 'hf.co/tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF:Q4_K_M',
+            alias: 'spotlight-qwen9b',
+          },
+          qwen27b: {
+            // Native Ollama tag from the abliteration originators — standard
+            // Q4_K quant, no HF indirection, loads cleanly via Ollama.
+            model: 'huihui_ai/Qwen3.6-abliterated:27b',
+            alias: 'spotlight-qwen27b',
+          },
+        };
+        const tag = OLLAMA_TAGS[cfg.local_model] || OLLAMA_TAGS.qwen9b;
+        values.OLLAMA_MODEL = tag.model;
+        values.SPOTLIGHT_OLLAMA_ALIAS = tag.alias;
       }
     }
     return values;
@@ -2039,37 +2042,38 @@ Setup is complete. Open a new terminal and run \`spotlight\`. Then ask it to sta
   });
 
   // --- Model recommendation after fit check ---
-  const gemmaCard = document.getElementById('model-card-gemma');
-  const qwenCard = document.getElementById('model-card-qwen');
+  const qwen9bCard  = document.getElementById('model-card-qwen9b');
+  const qwen27bCard = document.getElementById('model-card-qwen27b');
+  const MODEL_CARDS = { qwen9b: qwen9bCard, qwen27b: qwen27bCard };
+  const NOT_RECOMMENDED_COPY = {
+    qwen9b:  '<em>Not recommended for your hardware — your machine can run a larger model (the 27B). You can still select it above.</em>',
+    qwen27b: '<em>Not recommended — the 27B needs 32 GB unified memory; your machine reports less. The 9B is the right pick. You can still select it above, but it will likely OOM.</em>',
+  };
+  const ORIGINAL_COPY = {
+    qwen9b:  'Default. 9B dense, abliterated, investigative-journalism fine-tune by <a href="https://huggingface.co/tomvaillant" target="_blank" rel="noopener">@tomvaillant</a>. Fits 16 GB Macs comfortably (~6 GB on disk, ~8 GB at runtime). Bench-tested: 100% refusal-resistance on OSINT-grade prompts, leads with the answer 100% of the time.',
+    qwen27b: 'Heavy tier. 27B dense, abliterated by <a href="https://huggingface.co/huihui-ai" target="_blank" rel="noopener">huihui-ai</a> (the team that pioneered the abliteration technique). Ollama-native tag, standard Q4_K quant. <strong>Needs 32 GB unified memory minimum</strong> — the fit-check below confirms your hardware before this option is enabled.',
+  };
 
   function recommendModel(recommended) {
-    const other = recommended === 'gemma' ? 'qwen27b' : 'gemma';
-    // Set the radio to the recommended model
     const radio = document.querySelector(`input[name="local_model"][value="${recommended}"]`);
     if (radio) { radio.checked = true; renderLocalModel(); }
-    // Style the cards
-    gemmaCard.classList.toggle('recommended', recommended === 'gemma');
-    gemmaCard.classList.toggle('not-recommended', recommended !== 'gemma');
-    qwenCard.classList.toggle('recommended', recommended === 'qwen27b');
-    qwenCard.classList.toggle('not-recommended', recommended !== 'qwen27b');
-    // Also clear any previous explicit recommendation on the "wrong" card
-    if (recommended === 'gemma') {
-      qwenCard.querySelector('.opt-name .desc').innerHTML =
-        '<em>Not recommended for your hardware — needs 24+ GB RAM. You can still select it above.</em>';
-    } else {
-      gemmaCard.querySelector('.opt-name .desc').innerHTML =
-        '<em>Not recommended — MoE with only 3.8B active params. Reasoning depth degrades. You can still select it above.</em>';
-    }
+    Object.entries(MODEL_CARDS).forEach(([key, card]) => {
+      const isRec = key === recommended;
+      card.classList.toggle('recommended', isRec);
+      card.classList.toggle('not-recommended', !isRec);
+      if (!isRec) {
+        card.querySelector('.opt-name .desc').innerHTML = NOT_RECOMMENDED_COPY[key];
+      } else {
+        card.querySelector('.opt-name .desc').innerHTML = ORIGINAL_COPY[key];
+      }
+    });
   }
 
   function clearModelRecommendation() {
-    gemmaCard.classList.remove('recommended', 'not-recommended');
-    qwenCard.classList.remove('recommended', 'not-recommended');
-    // Restore original descriptions
-    gemmaCard.querySelector('.opt-name .desc').innerHTML =
-      'Light option — only 3.8B active parameters. Fast on 16 GB Macs, but reasoning depth degrades vs dense models. No thinking mode, no vision. Good for quick queries and low-RAM machines.';
-    qwenCard.querySelector('.opt-name .desc').innerHTML =
-      'Quality option — all 27B parameters active per token. Thinking mode, zero refusals, multimodal vision. Better for deep investigations and complex reasoning. Needs 24+ GB RAM.';
+    Object.entries(MODEL_CARDS).forEach(([key, card]) => {
+      card.classList.remove('recommended', 'not-recommended');
+      card.querySelector('.opt-name .desc').innerHTML = ORIGINAL_COPY[key];
+    });
   }
 
   // --- LLM fit check ---
@@ -2140,43 +2144,48 @@ Setup is complete. Open a new terminal and run \`spotlight\`. Then ask it to sta
     let verdict = 'amber';
     let title = 'Model recommendation based on your hardware';
     let body = '';
-    let recommendedModel = null; // 'gemma' or 'qwen27b'
+    let recommendedModel = null; // 'qwen9b' | 'qwen27b' | null
 
-    if (deviceMemGB && deviceMemGB >= 24) {
+    const currentSel = document.querySelector('input[name="local_model"]:checked')?.value;
+
+    if (deviceMemGB && deviceMemGB >= 32) {
       verdict = 'green';
-      title = 'Qwen3.6 27B — fits comfortably on your hardware';
-      body = 'You have <b>' + deviceMemGB + ' GB+</b> RAM. The Qwen3.6 27B (dense, thinking mode, zero refusals) will run well here. Gemma 4 MoE also runs fine but offers less reasoning depth.';
+      title = 'Qwen 3.6 27B — your machine can run it';
+      body = 'You have <b>' + deviceMemGB + ' GB+</b> RAM. The 27B (~17 GB on disk, ~24 GB at runtime) loads cleanly with headroom for the orchestration pipeline. The 9B is also a fine pick if you want faster responses — both work here.';
       recommendedModel = 'qwen27b';
     } else if (deviceMemGB && deviceMemGB >= 16) {
-      verdict = 'amber';
-      title = 'Gemma 4 — works, but investigation quality degrades';
-      body = 'You have <b>~' + deviceMemGB + ' GB</b> RAM. Gemma 4 MoE (~10 GB at runtime) fits but leaves little headroom for Spotlight\'s orchestration (browser automation, search, vault writes). Reasoning depth degrades — no thinking mode, no vision. If your Mac supports it, we\'d recommend 24+ GB for the Qwen3.6 27B.';
-      recommendedModel = 'gemma';
+      verdict = currentSel === 'qwen27b' ? 'red' : 'green';
+      title = currentSel === 'qwen27b'
+        ? 'Insufficient RAM for the 27B — pick the 9B'
+        : 'Qwen 3.5 9B — fits your hardware';
+      body = currentSel === 'qwen27b'
+        ? 'You have <b>~' + deviceMemGB + ' GB</b> RAM. The 27B needs 32 GB minimum. Switch to the <strong>Qwen 3.5 9B Journalist</strong> above — same abliterated journalism corpus, much smaller footprint, bench-equivalent on refusal-resistance.'
+        : 'You have <b>~' + deviceMemGB + ' GB</b> RAM. The 9B Journalist (~6 GB on disk, ~8 GB at runtime) leaves plenty of headroom for the orchestration pipeline. The 27B needs 32 GB+ and will OOM on your machine — keep the 9B selected.';
+      recommendedModel = 'qwen9b';
     } else if (deviceMemGB) {
       verdict = 'red';
-      title = 'No local model — switch to Cloud mode';
-      body = 'You have <b>~' + deviceMemGB + ' GB</b> RAM. That\'s below the minimum for running any model that can handle Spotlight\'s orchestration pipeline. Switch to <strong>Cloud</strong> mode above — Claude/Gemini/Codex/OpenCode give you full investigation quality without local compute.';
+      title = 'No local model — switch to Frontier';
+      body = 'You have <b>~' + deviceMemGB + ' GB</b> RAM. That\'s below the minimum for any local model that can handle Spotlight\'s orchestration pipeline. Switch to <strong>Frontier</strong> mode above — Claude / Gemini / Codex / OpenCode give you full investigation quality without local compute.';
       recommendedModel = null;
     } else if (isAppleSilicon && cores >= 8) {
-      // Apple Silicon with 8+ cores typically has 16+ GB unified, but deviceMemory may not report it
       verdict = 'amber';
-      title = 'Confirm your RAM — 16 GB for Gemma, 24 GB for Qwen3.6 27B';
-      body = 'Apple Silicon with <b>' + cores + ' cores</b> typically has 16+ GB unified memory, but we can\'t confirm via the browser. Run the command below — if you\'re at 16 GB, Gemma 4 MoE works (with degraded quality). At 24 GB+, the Qwen3.6 27B is the recommended choice.';
-      recommendedModel = null;
+      title = 'Confirm your RAM — defaulting to the 9B';
+      body = 'Apple Silicon with <b>' + cores + ' cores</b> typically has 16+ GB unified memory, but we can\'t confirm via the browser. Defaulting to the <strong>Qwen 3.5 9B Journalist</strong> (safe on any 16 GB+ Mac). Run the command below to check your actual RAM — at 32+ GB you can use the 27B instead.';
+      recommendedModel = 'qwen9b';
     } else if (isMac && arch === 'x86') {
       verdict = 'red';
-      title = 'Intel Mac — use Cloud mode';
-      body = 'Intel Macs don\'t have Apple Silicon\'s unified memory advantage. Neither local model will handle Spotlight\'s orchestration well. We recommend switching to <strong>Cloud</strong> mode.';
+      title = 'Intel Mac — use Frontier mode';
+      body = 'Intel Macs don\'t have Apple Silicon\'s unified memory advantage. Neither local model will handle Spotlight\'s orchestration well. We recommend switching to <strong>Frontier</strong> mode.';
       recommendedModel = null;
     } else if (isLinux) {
       verdict = 'amber';
-      title = 'Check your GPU/VRAM — 16 GB RAM minimum for local';
-      body = 'On Linux, you need 16+ GB system RAM for Gemma 4 MoE, or 24+ GB for Qwen3.6 27B. With a 6+ GB NVIDIA/AMD GPU, both can work via VRAM offloading. Confirm your specs with the command below.';
-      recommendedModel = null;
+      title = 'Check your GPU/VRAM — defaulting to the 9B';
+      body = 'On Linux, the 9B (~6 GB) runs on 16 GB RAM CPU-only or any 8+ GB NVIDIA/AMD GPU. For the 27B (~17 GB) you need 32+ GB system RAM or 24+ GB VRAM. Confirm your specs with the command below.';
+      recommendedModel = 'qwen9b';
     } else {
       verdict = 'red';
-      title = 'Browser detection limited — use Cloud mode';
-      body = 'Your browser doesn\'t expose enough hardware info. We recommend switching to <strong>Cloud</strong> mode for a reliable investigation experience.';
+      title = 'Browser detection limited — use Frontier mode';
+      body = 'Your browser doesn\'t expose enough hardware info. We recommend switching to <strong>Frontier</strong> mode for a reliable investigation experience.';
       recommendedModel = null;
     }
 

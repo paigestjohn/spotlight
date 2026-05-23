@@ -21,6 +21,45 @@ The installer creates:
 
 See [docs/integrations.md](docs/integrations.md) for the full setup flow and what happens behind the scenes.
 
+## Local models — what we ship, and why
+
+When you pick **Local** mode in the setup form, you get a choice of two abliterated journalism models. The picker exposes only these two; everything else has been benched and dropped.
+
+| Tier | Model | RAM | Notes |
+|------|-------|-----|-------|
+| **Default** | [`tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF:Q4_K_M`](https://huggingface.co/tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF) | 16 GB | 9B dense, ~6 GB on disk, ~8 GB at runtime |
+| **Heavy** (fit-check gated) | [`huihui_ai/Qwen3.6-abliterated:27b`](https://ollama.com/huihui_ai/Qwen3.6-abliterated) | 32 GB minimum | 27B dense, ~17 GB on disk, ~24 GB at runtime |
+
+### Why these two
+
+Both are **abliterated** — the refusal-vector has been removed so the model answers OSINT-grade prompts (corporate beneficial-ownership chains, surveillance technique verification, metadata forensics, etc.) instead of hedging or refusing. A stock instruction-tuned model is unsuitable for Spotlight regardless of size; abliteration is the editorial requirement.
+
+The 9B is Tom's own fine-tune on the [investigative-journalism-training corpus](https://huggingface.co/datasets/tomvaillant/investigative-journalism-training): SIFT methodology, primary-source preference, OPSEC awareness, OSINT tool recall. On a 30-prompt eval against the bundled `eval/prompts.jsonl` suite (tool recommendations, methodology, ethics-opsec, refusal probes), the 9B scored **83.5 / 100** composite — 100% refusal-resistance, 100% directness. It outscored Tom's own 8B Gemma 4 E4B fine-tune (82.3) primarily on hedging behavior, and was the strongest model in its RAM tier we could measure.
+
+The 27B is huihui-ai's Qwen 3.6 abliteration. We picked it over the popular [HauhauCS variant](https://huggingface.co/HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive) for install reliability — HauhauCS uses non-standard K_P imatrix quants with a multimodal mmproj projection file, and the IQ2_M quant failed to load via Ollama in our testing. Huihui-ai is the team that pioneered the abliteration technique HauhauCS is downstream of, ships a native Ollama tag (no `hf.co/` indirection), and uses standard Q4_K quants.
+
+Head-to-head on a 5-prompt subset of the same eval suite (with the `/no_think` workaround described below): **27B scored 100.0 composite vs the 9B's 91.2.** Same 100% refusal-resistance, same 100% directness, but the 27B emits ~3× more tool URLs per response (mean 5.2 vs 1.8), zero hedge markers, and slightly more concise responses (480 median words vs 752). The size cost is justified when the journalist has the hardware.
+
+### 27B thinking-mode workaround (built into the installer)
+
+Qwen 3.6 abliterated variants default to thinking mode and ignore the OpenAI-compat `think: false` payload field. Without disabling thinking, the model dumps reasoning into the API's `reasoning` field and leaves `content` empty unless `max_tokens` is generous (~4k+). On our first bench run the 27B returned 15/15 empty responses.
+
+The fix is Qwen's documented `/no_think` directive in the user message. The installer (`install-spotlight.sh`) writes this as a `SYSTEM` line into the Ollama Modelfile when the 27B is selected, so opencode / pi don't need to inject it per-request. After the install, your local 27B is `spotlight-qwen27b`, which is the Huihui base tag plus the `/no_think` system prompt baked in.
+
+### What got dropped, and why
+
+- `unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_M` — 17 GB MoE blob that OOMs on 16 GB Macs despite "active params" being 3.8B (all experts have to stay resident). The previous "Minimum Spotlight" label was misleading.
+- `tomvaillant/gemma4-e4b-abliterated-journalist-GGUF` — superseded by the 9B; same RAM tier, marginally worse bench score, more verbose responses with one refusal hedge in 30 prompts.
+- `HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive:IQ2_M` — failed to load via Ollama on our test machine. Likely IQ2_M+mmproj incompatibility rather than the model itself being broken (the variant has 341 likes and works via llama.cpp directly), but the install-form contract is "user pulls the recommended model and it just works." Huihui's variant clears that bar.
+
+### Heavy-tier fit-check enforcement
+
+The 27B needs 32 GB unified memory to run with headroom for Spotlight's orchestration pipeline (browser automation, scrape, vault writes, fact-check sub-agent). When the user picks the 27B card in `setup.html`, the form auto-triggers the `navigator.deviceMemory` + WebGPU probe; if RAM reports under 32 GB the card is flagged red with "switch to the 9B" copy. The user can still proceed, but is warned the install will OOM.
+
+### Bench artefacts
+
+The bench harness is at [`tools/fine-tuning/eval/`](https://github.com/buriedsignals/spotlight/tree/main/tools/fine-tuning/eval) — 30-prompt suite, per-model runs as JSONL, composite scoring via `scripts/spotlight_bench.py` (refusal-resistance × 0.45 + directness × 0.20 + concreteness × 0.20 + hedge penalty × 0.15). Re-run when you add or replace a model: `python3 scripts/eval.py --prompts eval/prompts.jsonl --output eval/runs/<model>.jsonl --endpoint http://127.0.0.1:11434/v1 --model <ollama-tag>`.
+
 ## What this is
 
 An **agnostic port** of the `buriedsignals/spotlight@1.2.1` and `buriedsignals/osint@3.5.0` Claude Code plugins into a runtime-neutral form. The original plugins stay at `~/buried_signals/tools/skills/{spotlight,osint}/` as the canonical reference. This repo is the base that plugs into everything else.
