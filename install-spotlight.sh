@@ -371,15 +371,35 @@ if [ "$SPOTLIGHT_MODE" = "local" ]; then
       # (Huihui, HauhauCS) default to thinking mode and ignore the
       # OpenAI-compat `think:false` payload field. Without disabling
       # thinking, the model dumps reasoning into the `reasoning` field
-      # and leaves `content` empty until max_tokens is generous (~4k+).
-      # The /no_think directive in the user message is Qwen's documented
-      # soft-switch; we bake it into the alias as a system prompt so
-      # opencode / pi don't have to inject it per-request. Bench-verified:
-      # with /no_think the 27B scored 100.0 composite vs 91.2 for the 9B
-      # on a 5-prompt subset; without it, content was empty 15/15.
+      # and leaves `content` empty unless max_tokens is generous (~4k+).
+      #
+      # SYSTEM "/no_think" doesn't survive because opencode sends its
+      # own system message (skill prompts + AGENTS.md) which overrides
+      # the Modelfile's SYSTEM. The fix that DOES survive: override the
+      # chat TEMPLATE to inject /no_think at the START of every user
+      # message during rendering. The base Qwen 3.5 RENDERER is left in
+      # place (Ollama ignores TEMPLATE if RENDERER is set to a known
+      # value, but our explicit TEMPLATE here takes precedence in
+      # practice — verified end-to-end with a system+user request that
+      # mirrors opencode's actual traffic).
+      #
+      # The opencode config below also sets `limit.output: 16384` for
+      # this alias so requests carry enough max_tokens budget for the
+      # thinking + content to fit (Qwen burns ~10k tokens on reasoning
+      # for complex OSINT prompts even with /no_think).
       case "$SPOTLIGHT_LOCAL_MODEL" in
         qwen27b)
-          printf 'SYSTEM "/no_think"\n' >> "$TMP_MODELFILE"
+          cat >> "$TMP_MODELFILE" <<'NOMINK'
+TEMPLATE """{{- if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{- range .Messages }}<|im_start|>{{ .Role }}
+{{ if eq .Role "user" }}/no_think
+{{ end }}{{ .Content }}<|im_end|>
+{{ end }}<|im_start|>assistant
+"""
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|im_start|>"
+NOMINK
           ;;
       esac
       ollama create "$SPOTLIGHT_OLLAMA_ALIAS" -f "$TMP_MODELFILE"
@@ -491,9 +511,20 @@ if [ "$SPOTLIGHT_MODE" = "local" ]; then
           '.provider["llama.cpp"] = {"npm":"@ai-sdk/openai-compatible","name":"llama-server (local)","options":{"baseURL":$base},"models":{($id):{"name":$name}}}' \
           "$OC_CFG" > "$TMP" && mv "$TMP" "$OC_CFG"
       else
-        jq --arg base "$LOCAL_BASE_URL" --arg id "$OLLAMA_ALIAS_DEFAULT" --arg name "$MODEL_LEAF (local Ollama)" \
-          '.provider["ollama"] = {"npm":"@ai-sdk/openai-compatible","name":"Ollama (local OpenAI-compatible)","options":{"baseURL":$base},"models":{($id):{"name":$name}}}' \
-          "$OC_CFG" > "$TMP" && mv "$TMP" "$OC_CFG"
+        # Per-model `limit.output` for the 27B because Qwen 3.6 thinking
+        # burns ~10k tokens of reasoning even with /no_think injected;
+        # without a generous output budget, content comes back empty.
+        # The 9B doesn't need this (no thinking mode), so we leave its
+        # limit unset and inherit opencode's default.
+        if [ "$SPOTLIGHT_LOCAL_MODEL" = "qwen27b" ]; then
+          jq --arg base "$LOCAL_BASE_URL" --arg id "$OLLAMA_ALIAS_DEFAULT" --arg name "$MODEL_LEAF (local Ollama)" \
+            '.provider["ollama"] = {"npm":"@ai-sdk/openai-compatible","name":"Ollama (local OpenAI-compatible)","options":{"baseURL":$base},"models":{($id):{"name":$name,"limit":{"output":16384}}}}' \
+            "$OC_CFG" > "$TMP" && mv "$TMP" "$OC_CFG"
+        else
+          jq --arg base "$LOCAL_BASE_URL" --arg id "$OLLAMA_ALIAS_DEFAULT" --arg name "$MODEL_LEAF (local Ollama)" \
+            '.provider["ollama"] = {"npm":"@ai-sdk/openai-compatible","name":"Ollama (local OpenAI-compatible)","options":{"baseURL":$base},"models":{($id):{"name":$name}}}' \
+            "$OC_CFG" > "$TMP" && mv "$TMP" "$OC_CFG"
+        fi
       fi
       printf "%s✓%s opencode.json updated with %s provider\n" "$_c_green" "$_c_reset" "$SPOTLIGHT_LOCAL_SERVER"
     fi
