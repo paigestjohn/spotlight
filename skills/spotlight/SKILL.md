@@ -488,7 +488,7 @@ After approval, `invoke-skill("review")` to produce `cases/{project}/review.html
 
 Offer the user:
 
-> "Review artifact written to `cases/{project}/review.html`. Open it in any browser to inspect findings and submit feedback (optional). If you submit feedback, save the exported `review-feedback.json` into `cases/{project}/data/` and re-run `/spotlight` to process it. Or proceed to ingestion now."
+> "Review artifact written to `cases/{project}/review.html`. Open it in any browser to inspect findings and submit feedback (optional). If you submit feedback, save the exported `review-feedback.json` into `cases/{project}/data/` and re-run `/spotlight` to process it. Or proceed to drafting the public report now."
 
 ### Feedback processing (on resume)
 
@@ -496,9 +496,25 @@ When `/spotlight` is resumed and `cases/{project}/data/review-feedback.json` exi
 
 ---
 
-## Phase 5 — Ingestion
+## Phase 5 — Report drafting (public-facing)
 
-After Gate 1 approval:
+After Gate 1 approval, offer the user the public-facing report:
+
+> "Draft the public-facing journalist-grade report now?
+> (a) Yes — invoke report-drafting to produce report.html + findings-report.md + evidence-map.json.
+> (b) No — skip to ingestion. (`review.html` already covers editorial review.)"
+
+If (a): `invoke-skill("report-drafting")` — produces `cases/{project}/report.html` (designed deliverable), `findings-report.md` (narrative audit), and `evidence-map.json` (machine-readable ledger). See `skills/report-drafting/SKILL.md`.
+
+### Hybrid mode (data-detective handover)
+
+When `cases/{project}/data-detective-handover/` exists (i.e. this Spotlight run was triggered by a data-detective formal handover, not a standalone lead), `report-drafting` runs in hybrid mode: the methodology section spans both orchestrators in phase order — upstream data-detective phases (P0/P1 ingest, P3 detect, P6 handover) followed by Spotlight phases (P1 brief, P2 method, P3 cycles + fact-check, P4 Gate 1, P5 report-drafting). Each finding's `.path` block walks the actual trail from upstream detector to downstream fact-checker. Skip the offer above — drafting is the whole point of the handover. Invoke `report-drafting` automatically.
+
+---
+
+## Phase 6 — Ingestion
+
+After report drafting (or after Gate 1 if drafting was skipped):
 
 > "Investigation complete. Ingest confirmed findings into your knowledge base?"
 

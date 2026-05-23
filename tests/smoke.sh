@@ -9,7 +9,7 @@
 #   5. Monitoring registry helper runs cleanly
 #   6. No banned Claude-specific syntax in skills/agents
 #   7. No legacy local feed framework remains
-#   8. AGENTS.md has 15 entries in skill registry
+#   8. AGENTS.md has 16 entries in skill registry
 #   9. setup.html exists
 #  10. index.html exists
 #  11. DISCLAIMER.md + LICENSE present
@@ -31,7 +31,7 @@ cd "$ROOT"
 
 echo "── Structure ──"
 
-expected_skills=(spotlight review integrations ingest monitoring provenance-signing acquisition-graduation web-archiving content-access epistemic-grounding shell-safety osint investigate follow-the-money social-media-intelligence)
+expected_skills=(spotlight review integrations ingest report-drafting monitoring provenance-signing acquisition-graduation web-archiving content-access epistemic-grounding shell-safety osint investigate follow-the-money social-media-intelligence)
 for skill in "${expected_skills[@]}"; do
   if [ -f "skills/$skill/SKILL.md" ]; then
     ok "skills/$skill/SKILL.md present"
@@ -99,10 +99,10 @@ fi
 echo ""
 echo "── Contracts ──"
 skill_count=$(grep -cE '^\| `[a-z-]+` \| `skills/' AGENTS.md || echo 0)
-if [ "$skill_count" = "15" ]; then
-  ok "AGENTS.md skill registry has 15 entries"
+if [ "$skill_count" = "16" ]; then
+  ok "AGENTS.md skill registry has 16 entries"
 else
-  fail "AGENTS.md skill registry count off: got $skill_count, want 15"
+  fail "AGENTS.md skill registry count off: got $skill_count, want 16"
 fi
 
 echo ""
