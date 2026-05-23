@@ -42,9 +42,15 @@ Head-to-head on a 5-prompt subset of the same eval suite (with the `/no_think` w
 
 ### 27B thinking-mode workaround (built into the installer)
 
-Qwen 3.6 abliterated variants default to thinking mode and ignore the OpenAI-compat `think: false` payload field. Without disabling thinking, the model dumps reasoning into the API's `reasoning` field and leaves `content` empty unless `max_tokens` is generous (~4k+). On our first bench run the 27B returned 15/15 empty responses.
+Qwen 3.6 abliterated variants default to thinking mode and ignore the OpenAI-compat `think: false` payload field. Without disabling thinking, the model dumps reasoning into the API's `reasoning` field and leaves `content` empty unless `max_tokens` is generous (~16k+). On our first bench run the 27B returned 15/15 empty responses; with the fix below, end-to-end queries return ~7k chars of OSINT methodology with `finish_reason: stop`.
 
-The fix is Qwen's documented `/no_think` directive in the user message. The installer (`install-spotlight.sh`) writes this as a `SYSTEM` line into the Ollama Modelfile when the 27B is selected, so opencode / pi don't need to inject it per-request. After the install, your local 27B is `spotlight-qwen27b`, which is the Huihui base tag plus the `/no_think` system prompt baked in.
+The fix is two-part because Qwen's `/no_think` soft-switch alone isn't enough — the model still does substantial reasoning even when instructed not to:
+
+1. **TEMPLATE override in the Ollama Modelfile** — the installer rewrites the chat template for the `spotlight-qwen27b` alias to inject `/no_think` at the start of every user message during rendering. The naive approach of setting `SYSTEM "/no_think"` doesn't survive opencode/pi sending their own system message (skill prompts + AGENTS.md); the TEMPLATE-level injection is the layer that does. The base Qwen 3.5 RENDERER is preserved; our explicit TEMPLATE takes precedence in practice.
+
+2. **opencode `limit.output: 16384`** — the installer writes a per-model output cap into opencode's provider config so requests carry enough max_tokens for Qwen's ~10k reasoning + ~5k content footprint. Without this, opencode's default cap truncates inside the reasoning phase and `content` comes back empty.
+
+Both pieces are written automatically when `SPOTLIGHT_LOCAL_MODEL=qwen27b` flows through `install-spotlight.sh`. End-to-end verified against a real bench prompt with a harness-shaped system message before merge.
 
 ### What got dropped, and why
 
