@@ -16,6 +16,16 @@ This skill instructs; you execute. Read `references/report-template.html` before
 
 ---
 
+## Required AI assistance notice
+
+Every `report.html` MUST include this notice at the top of the page, after the byline/header material and before the TL;DR findings table:
+
+> **AI assistance notice:** Spotlight is designed to help surface, organize, and cross-check information, but AI can make mistakes. You are responsible for verifying sources, confirming authenticity, assessing risks, and deciding what is publishable.
+
+Use the template's `.honesty` block for this notice. Do not rewrite or soften the responsibility language.
+
+---
+
 ## Deliverables (all three required)
 
 | File | Audience | What it is |
@@ -172,7 +182,7 @@ This is what makes the case-trace defensible to an editor: not "we never made mi
 
 ```
 1. Read references/report-template.html. Copy to case/report.html.
-2. Fill the header (title, deck, byline, lede) and the TL;DR table from findings.json.
+2. Fill the header (title, deck, byline, lede), keep the required AI assistance notice directly below it, and fill the TL;DR table from findings.json.
 3. BEFORE drafting any finding, extract its citation manifest:
    - From data-detective: findings.json supporting_cards + external_sources + supporting_query_hashes
    - From spotlight (if promoted_from is set): case-trace/spotlight/results/<OS-NNN>/data/findings.json external_sources + research/*.md filenames + investigation-log.json urls_accessed

@@ -20,10 +20,11 @@
     5. Fill .path blocks (mandatory per finding) with archived URLs + source documents.
        Use Spotlight phase vocabulary in .step labels — see report-drafting SKILL.md.
     6. Fill .sources strips (mandatory per finding) with primary-source URLs.
-    7. Place the fact-check verdict table INSIDE the Phase 3 .phase block — never
+    7. Keep the AI assistance notice directly under the byline and before TL;DR.
+    8. Place the fact-check verdict table INSIDE the Phase 3 .phase block — never
        as a separate top-level section.
-    8. Do NOT add max-width overrides per element — the template enforces typography.
-    9. Edit with anchored read+edit. Never greedy regex.
+    9. Do NOT add max-width overrides per element — the template enforces typography.
+    10. Edit with anchored read+edit. Never greedy regex.
 -->
 <style>
   :root{
@@ -195,6 +196,10 @@
     <strong>By {{AUTHOR}}</strong> · {{ORGANIZATION}} · <a href="mailto:{{EMAIL}}">{{EMAIL}}</a><br>
     {{COMMIT_HASH}} · {{N}} verified findings · {{M}} primary-source citations
   </p>
+
+  <section class="honesty" aria-label="AI assistance notice">
+    <p><strong>AI assistance notice:</strong> Spotlight is designed to help surface, organize, and cross-check information, but AI can make mistakes. You are responsible for verifying sources, confirming authenticity, assessing risks, and deciding what is publishable.</p>
+  </section>
 
   <!-- ════════════════════════ TL;DR STRIP ════════════════════════ -->
   <section class="tldr" aria-label="findings summary">

@@ -259,6 +259,9 @@ When the agent completes:
 1. `read-file("cases/{project}/data/methodology.json")`
 2. Present a summary of the proposed methodology to the user
 3. **Gate: user approves the methodology.** Iterate if the user has changes.
+4. After approval and before Phase 3 research begins, remind the user:
+
+   > **AI assistance notice:** Spotlight is designed to help surface, organize, and cross-check information, but AI can make mistakes. You are responsible for verifying sources, confirming authenticity, assessing risks, and deciding what is publishable.
 
 ---
 
@@ -462,6 +465,10 @@ What was investigated and what was out of scope.
 
 The user can request follow-up cycles targeting specific findings. If so, re-enter the execution loop with targeted gap instructions.
 
+Before asking the user to approve the investigation as ready for report drafting and ingestion, remind them:
+
+> **AI assistance notice:** Spotlight is designed to help surface, organize, and cross-check information, but AI can make mistakes. You are responsible for verifying sources, confirming authenticity, assessing risks, and deciding what is publishable.
+
 **Gate: user approves the investigation.**
 
 ### Package provenance before HTML review
@@ -498,6 +505,10 @@ When `/spotlight` is resumed and `cases/{project}/data/review-feedback.json` exi
 
 ## Phase 5 — Report drafting (public-facing)
 
+Before asking whether to draft the public-facing report, remind the user:
+
+> **AI assistance notice:** Spotlight is designed to help surface, organize, and cross-check information, but AI can make mistakes. You are responsible for verifying sources, confirming authenticity, assessing risks, and deciding what is publishable.
+
 After Gate 1 approval, offer the user the public-facing report:
 
 > "Draft the public-facing journalist-grade report now?
@@ -515,6 +526,10 @@ When `cases/{project}/data-detective-handover/` exists (i.e. this Spotlight run 
 ## Phase 6 — Ingestion
 
 After report drafting (or after Gate 1 if drafting was skipped):
+
+Remind the user before asking for ingestion confirmation:
+
+> **AI assistance notice:** Spotlight is designed to help surface, organize, and cross-check information, but AI can make mistakes. You are responsible for verifying sources, confirming authenticity, assessing risks, and deciding what is publishable.
 
 > "Investigation complete. Ingest confirmed findings into your knowledge base?"
 
