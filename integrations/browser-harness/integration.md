@@ -1,6 +1,9 @@
 # browser-harness — Browser Acquisition Fallback
 
-Browser Harness is Spotlight v2's preferred browser fallback after Firecrawl cannot acquire a needed source.
+Browser Harness is a legacy browser fallback. Spotlight's default browser
+acquisition path is now `dev-browser`, which benchmarked better on the current
+Spotlight browser tasks. Use Browser Harness only when the user/runtime has a
+specific reason to prefer it and `dev-browser` is unavailable or unsuitable.
 
 ## Use After Firecrawl
 
@@ -12,7 +15,8 @@ Do not start here. First use `search` or `fetch`. Then run the missing-source ga
 - What is still missing?
 - Does the remaining gap require a browser, authenticated session, download, screenshot, visual verification, iframe/shadow DOM handling, or manual human verification?
 
-Use Browser Harness only when the static acquisition gap is material.
+Use Browser Harness only when the static acquisition gap is material and
+`dev-browser` is unavailable or unsuitable.
 
 ## Use For
 

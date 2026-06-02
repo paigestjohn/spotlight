@@ -1,6 +1,9 @@
 # browser-use — Agent-Driven Browser Automation
 
-**What:** Open-source Python library (MIT, 88k+ GitHub stars) that lets any LLM control a real Chromium browser. In Spotlight v2 this is optional/adjacent automation; Browser Harness is the preferred acquisition fallback when evidence preservation matters.
+**What:** Open-source Python library that lets an LLM control a real Chromium
+browser. In Spotlight this is a legacy/adjacent automation option. The default
+browser acquisition path is `dev-browser`, which benchmarked better on the
+current Spotlight browser tasks.
 
 **When to use:**
 
@@ -12,10 +15,11 @@
 **When NOT to use:**
 
 - Static pages → use `fetch` (firecrawl). Faster, cheaper, more reliable.
-- Authenticated / court-record / gov-portal captures needing chain-of-custody → use `browser-harness` plus `web-archiving` and record the run in `evidence-bundle.json`.
+- Authenticated / court-record / gov-portal captures needing evidence handling → use `dev-browser` plus `web-archiving` and record the run in `evidence-bundle.json`.
 - Bulk crawling → use firecrawl's crawl mode.
 
-**Complement, not replacement:** browser-use handles agent-driven automation where chain-of-custody is not the bar. Browser Harness handles acquisition fallback and evidence capture where it is.
+**Complement, not replacement:** browser-use can handle adjacent agent-driven
+automation, but it is not Spotlight's default acquisition path.
 
 ## Setup
 
@@ -60,7 +64,7 @@ Store the resulting JSON/markdown into `cases/{project}/research/` with a `brows
 
 - Record the exact task string (prompt) sent to browser-use in the source entry under a `task` field, for reproducibility.
 - Record the model used in the source entry.
-- browser-use output is NOT chain-of-custody-grade by default. If the evidence needs legal defensibility, follow up with Browser Harness and `web-archiving` to produce a canonical preserved copy and update `evidence-bundle.json`.
+- browser-use output is NOT chain-of-custody-grade by default. If the evidence needs legal defensibility, follow up with dev-browser and `web-archiving` to produce a canonical preserved copy and update `evidence-bundle.json`.
 
 ## Sensitive mode
 
@@ -71,6 +75,6 @@ In sensitive mode, browser-use SHOULD NOT run against live external sites (the s
 | Need | Prefer |
 |---|---|
 | Static scrape | `fetch` (firecrawl) |
-| Authenticated evidence capture | `browser-harness` + `web-archiving` |
+| Authenticated evidence capture | `dev-browser` + `web-archiving` |
 | Tool discovery for a niche platform | `osint-navigator` integration |
 | Bulk crawl | `firecrawl crawl` mode |

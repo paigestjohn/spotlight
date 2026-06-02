@@ -114,12 +114,12 @@ Skills are markdown playbooks loaded via `invoke-skill(skill_id)`. Each skill li
 |----------|------|-------------|--------------|
 | `spotlight` | `skills/spotlight/SKILL.md` | Investigation orchestrator — pipeline phases, gates, cycle evaluation | orchestrator (top-level) |
 | `review` | `skills/review/SKILL.md` | Post-Gate-1 HTML review artifact + structured feedback loop; re-spawns investigator on feedback submission | orchestrator, user |
-| `integrations` | `skills/integrations/SKILL.md` | Routing layer for external tool integrations — Browser Harness, browser-use, Junkipedia, Noosphere C2PA, OSINT Navigator, Unpaywall. Reads live preflight status, maps investigation tasks to integrations | investigator, fact-checker, orchestrator |
+| `integrations` | `skills/integrations/SKILL.md` | Routing layer for external tool integrations — dev-browser, Junkipedia, Noosphere C2PA, OSINT Navigator, Scoutpost, Unpaywall. Reads live preflight status, maps investigation tasks to integrations | investigator, fact-checker, orchestrator |
 | `ingest` | `skills/ingest/SKILL.md` | Knowledge archival — vault ingestion from case files | orchestrator, user |
 | `report-drafting` | `skills/report-drafting/SKILL.md` | Post-Gate-1 public-facing report.html drafting — phase-by-phase methodology, replication blocks, evidence ledger. Distinct from `review` (editorial loop) and `ingest` (vault archival). | orchestrator, user |
 | `monitoring` | `skills/monitoring/SKILL.md` | Monitoring orchestration — Mycroft passive signals, coJournalist projects/scouts, runtime-native fallbacks | orchestrator |
 | `provenance-signing` | `skills/provenance-signing/SKILL.md` | Build a case-level provenance manifest and optionally hand it to Noosphere C2PA signing before final report delivery | orchestrator, user |
-| `acquisition-graduation` | `skills/acquisition-graduation/SKILL.md` | Convert repeated Browser Harness acquisitions into durable source/domain guidance without secrets or brittle session details | investigator, fact-checker, orchestrator, user |
+| `acquisition-graduation` | `skills/acquisition-graduation/SKILL.md` | Convert repeated dev-browser acquisitions into durable source/domain guidance without secrets or brittle session details | investigator, fact-checker, orchestrator, user |
 | `web-archiving` | `skills/web-archiving/SKILL.md` | Wayback Machine, Archive.today, local archival with chain of custody | investigator, fact-checker |
 | `content-access` | `skills/content-access/SKILL.md` | Paywall access hierarchy, access_method classification | investigator, fact-checker |
 | `epistemic-grounding` | `skills/epistemic-grounding/SKILL.md` | Claim-to-evidence grounding, confidence caps, and failure routing for weak or adjacent evidence | investigator, fact-checker, orchestrator, user |

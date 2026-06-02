@@ -1,6 +1,6 @@
 ---
 name: integrations
-description: Routing table for external tool integrations — Browser Harness, browser-use, Junkipedia, Noosphere C2PA, OSINT Navigator, Scoutpost, and more. Agents invoke this skill to discover which integrations are live and which one fits a given investigation task.
+description: Routing table for external tool integrations — dev-browser, Junkipedia, Noosphere C2PA, OSINT Navigator, Scoutpost, and more. Agents invoke this skill to discover which integrations are live and which one fits a given investigation task.
 version: "1.0"
 invocable_by: [investigator, fact-checker, orchestrator]
 requires: []
@@ -24,9 +24,10 @@ The skill is cheap to load — it's a routing table, not a deep methodology guid
 
 | Integration | Category | Capabilities | When to pick |
 |---|---|---|---|
-| `browser-harness` | browser-automation | cdp-browser-control, dynamic-page-acquisition, screenshot-capture, download-capture, visual-verification | Preferred v2 browser fallback after Firecrawl misses material evidence. Use for portals, JS-rendered pages, screenshots, downloads, iframes/shadow DOM, and acquisition evidence bundles. |
-| `browse` | browser-automation | skill-catalog-navigation, selector-based-driver, ref-based-driver, accessibility-tree-snapshot, portal-navigation | Second-tier browser tool. Use when a curated browse.sh skill exists for the target portal (e.g. OpenCorporates filings, Wayback Machine snapshot search) — saves writing navigation logic from scratch. Default `--local`, no API key. Browser Harness remains primary for general portal work; see `integrations/browse/integration.md` for the routing rules. |
-| `browser-use` | browser-automation | form-navigation, search-export, login-driving, multi-step-browsing | Optional legacy/adjacent browser automation. Prefer Browser Harness for Spotlight acquisition evidence. |
+| `dev-browser` | browser-automation | dynamic-page-acquisition, form-navigation, screenshot-capture, download-capture, visual-verification, authenticated-browser-session | Use for specific investigative tasks that require browser automation after ordinary search/scrape is insufficient: portals, JS-rendered pages, forms, screenshots, downloads, visual verification, and acquisition evidence bundles. |
+| `browse` | browser-automation | skill-catalog-navigation, selector-based-driver, ref-based-driver, accessibility-tree-snapshot, portal-navigation | Second-tier browser tool. Use when a curated browse.sh skill exists for the target portal and dev-browser would require writing navigation logic from scratch. |
+| `browser-harness` | browser-automation | cdp-browser-control, dynamic-page-acquisition, screenshot-capture, download-capture, visual-verification | Legacy browser fallback. Do not pick as the default while dev-browser is green. |
+| `browser-use` | browser-automation | form-navigation, search-export, login-driving, multi-step-browsing | Legacy/adjacent browser automation. Do not pick as the default while dev-browser is green. |
 | `junkipedia` | social-osint | narrative-tracking, misinformation-search, social-media-monitoring, cross-platform-query | Tracking how a claim spread; finding social posts deleted from origin; cross-platform narrative investigation. |
 | `noosphere-c2pa` | provenance-signing | case-provenance-manifest, c2pa-content-credentials, optional-signing-receipt | After Gate 1, package and optionally sign the investigation trail. No API key; Noosphere controls signing credentials. |
 | `osint-navigator` | tool-discovery | tool-search-by-keyword, complex-query-synthesis, country-specific-tool-lookup | First tool-discovery pass during Phase 2 methodology when preflight is green and sensitive mode is false. Otherwise fallback to the curated 150-tool catalog. |
@@ -39,9 +40,9 @@ The skill is cheap to load — it's a routing table, not a deep methodology guid
 What's the task?
 │
 ├── "Navigate a form / click through a UI / extract from a JS-rendered page"
-│     → check `browse skills find <domain>` first — if a curated skill exists, prefer `browse` (saves writing nav logic from scratch; default `--local`)
-│     → otherwise browser-harness  (preferred general fallback if green — check preflight)
-│     → fallback: browser-use for non-evidence-grade automation if Browser Harness is unavailable
+│     → dev-browser if the task requires browser automation and preflight is green
+│     → fallback: browse if a curated browse.sh skill exists for the target portal
+│     → fallback: browser-harness or browser-use only as legacy options when dev-browser is unavailable
 │     → fallback: fetch() static scrape; may not work for JS-heavy pages
 │
 ├── "Find deleted social posts / track narrative spread / cross-platform search"
@@ -64,7 +65,7 @@ What's the task?
 │     → fallback: invoke-skill("content-access") and continue with CORE / Semantic Scholar
 │
 ├── "Chain-of-custody evidence capture (court records, gov portals)"
-│     → browser-harness + web-archiving, recorded in evidence-bundle.json
+│     → dev-browser + web-archiving, recorded in evidence-bundle.json
 │
 └── "Paywalled / gated content"
       → invoke-skill("content-access")  (hierarchy before marking inaccessible)
@@ -106,7 +107,7 @@ When `sensitive: true`, most integrations go dark:
 
 - Any integration that requires a remote API call becomes unavailable (the `fetch`/`search` verbs are stripped, and `execute-shell("curl …")` against remote hosts should be guarded at the skill layer)
 - Pre-cached integration responses in `cases/{project}/research/` remain readable via `read-file`
-- Local-only integrations (Browser Harness against local/pre-archived content or browser-use against a local file) may still work — check the integration's `integration.md` § Sensitive mode
+- Local-only browser runs against local/pre-archived content may still work through dev-browser — check the integration's `integration.md` § Sensitive mode
 
 The orchestrator flags sensitive-mode investigations at Gate 1 to note which integrations were unavailable during the work.
 

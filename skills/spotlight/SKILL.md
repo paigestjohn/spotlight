@@ -52,7 +52,7 @@ Confirm the following skills resolve via `invoke-skill`:
 - `follow-the-money` — financial investigation methodology
 - `epistemic-grounding` — claim-to-evidence grounding and confidence caps
 - `shell-safety` — safe command construction and destructive-operation probes
-- `acquisition-graduation` — reusable Browser Harness acquisition paths
+- `acquisition-graduation` — reusable dev-browser acquisition paths
 - `social-media-intelligence` — account authenticity, coordination detection
 
 These ship in `skills/` in this repo. If your runtime cannot resolve them, fix the skill-loading configuration before proceeding.
@@ -65,7 +65,7 @@ Agents have access to the following skills by their own `invoke-skill` calls:
 
 | Skill | Agent(s) | Purpose |
 |---|---|---|
-| `acquisition-graduation` | investigator, fact-checker | Graduate repeated Browser Harness acquisition paths into durable source/domain guidance |
+| `acquisition-graduation` | investigator, fact-checker | Graduate repeated dev-browser acquisition paths into durable source/domain guidance |
 | `web-archiving` | investigator, fact-checker | Archive all evidence before citing |
 | `content-access` | investigator, fact-checker | Work through paywall hierarchy before marking sources inaccessible |
 | `epistemic-grounding` | investigator, fact-checker | Test whether exact evidence actually supports exact claims; cap confidence when grounding is weak |
@@ -238,8 +238,7 @@ Display a combined summary to the user so they know which external integrations 
 Typical expectations:
 
 - `firecrawl` ready (checked in step 2 already — Spotlight cannot start without it)
-- Integration `browser-harness` green if the `browser-harness` CLI is available
-- Integration `browser-use` green if `pip install browser-use` was run during setup
+- Integration `dev-browser` green if the `dev-browser` CLI is available
 - Integration `osint-navigator` green if `OSINT_NAV_API_KEY` is set
 - Other integrations (junkipedia, future integrations like serus/thinkpol) green only if user has access
 
@@ -351,9 +350,9 @@ INTEGRATIONS:
   osint_navigator_status={config.integrations.osint_navigator.status}
   osint_navigator_required={config.integrations.osint_navigator.required_in_phase_2}
 CYCLE: {N}
-SKILLS: acquisition-graduation (graduate repeated Browser Harness paths only after repeatability is proven), web-archiving (archive all evidence before citing), content-access (paywalled sources — use before marking inaccessible), epistemic-grounding (fill grounding object and cap confidence when support is weak), shell-safety (validate untrusted values before execute-shell), social-media-intelligence (use for account authenticity, coordination detection, narrative tracking when social media is involved)
+SKILLS: acquisition-graduation (graduate repeated dev-browser paths only after repeatability is proven), web-archiving (archive all evidence before citing), content-access (paywalled sources — use before marking inaccessible), epistemic-grounding (fill grounding object and cap confidence when support is weak), shell-safety (validate untrusted values before execute-shell), social-media-intelligence (use for account authenticity, coordination detection, narrative tracking when social media is involved)
 
-ACQUISITION: Firecrawl first via search/fetch. After every Firecrawl result, run the missing-source gate. Use Browser Harness only when static acquisition is insufficient for dynamic pages, portals, downloads, screenshots, visual verification, iframes/shadow DOM, or legally appropriate authenticated/local-browser contexts.
+ACQUISITION: Firecrawl first via search/fetch. After every Firecrawl result, run the missing-source gate. Use dev-browser when static acquisition is insufficient for dynamic pages, portals, downloads, screenshots, visual verification, forms, or legally appropriate authenticated/local-browser contexts.
 
 {if N > 1: Previous findings gaps:
 {gaps}

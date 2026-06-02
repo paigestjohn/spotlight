@@ -1308,7 +1308,7 @@
       </div>
       <section class="card">
         <div class="checkbox-group">
-          <label><input type="checkbox" id="int_browseruse"><span class="opt-name"><span class="name">browser-use</span><span class="desc">Agent-driven browser automation for complex forms and JS-rendered pages. Open source (MIT). Installs via pip. No key required.</span></span></label>
+          <label><input type="checkbox" id="int_devbrowser" checked><span class="opt-name"><span class="name">dev-browser</span><span class="desc">Browser automation for specific investigative tasks: forms, JS-rendered pages, screenshots, downloads, and authenticated sessions. Installs via npm. No key required.</span></span></label>
         </div>
 
         <div class="checkbox-group" style="margin-top: 12px;">
@@ -1655,7 +1655,7 @@
       vault_app: document.querySelector('input[name="vault_app"]:checked').value,
       vault_path: document.getElementById('vault_path').value.trim(),
       model_repo: mode === 'local' ? document.getElementById('model_repo').value.trim() : null,
-      int_browseruse: document.getElementById('int_browseruse').checked,
+      int_devbrowser: document.getElementById('int_devbrowser').checked,
       int_junkipedia: document.getElementById('int_junkipedia').checked,
       junkipedia_key: document.getElementById('junkipedia_key').value.trim(),
       int_unpaywall: document.getElementById('int_unpaywall').checked,
@@ -1685,7 +1685,7 @@
       ['SPOTLIGHT_VAULT_INPUT',         cfg.vault_path || ''],
       ['SPOTLIGHT_VAULT_APP',           cfg.vault_app || 'obsidian'],
       ['SPOTLIGHT_MODEL_REPO',          cfg.model_repo || ''],
-      ['SPOTLIGHT_INT_BROWSERUSE',      cfg.int_browseruse ? 'true' : 'false'],
+      ['SPOTLIGHT_INT_DEVBROWSER',      cfg.int_devbrowser ? 'true' : 'false'],
       ['SPOTLIGHT_INT_JUNKIPEDIA',      cfg.int_junkipedia ? 'true' : 'false'],
       ['JUNKIPEDIA_API_KEY',            cfg.junkipedia_key || ''],
       ['SPOTLIGHT_INT_UNPAYWALL',       cfg.int_unpaywall ? 'true' : 'false'],
@@ -1884,7 +1884,7 @@
       },
       integrations: {
         osint_navigator: true,
-        browser_use: cfg.int_browseruse,
+        dev_browser: cfg.int_devbrowser,
         junkipedia: cfg.int_junkipedia,
         unpaywall: cfg.int_unpaywall,
       },
@@ -1928,7 +1928,7 @@ There are two supported setup paths:
 ## Setup Steps
 
 1. Install or update Spotlight source from \`https://github.com/buriedsignals/spotlight.git\` at \`${manifest.install_path || '<install_path>'}\`. If the repo exists, fetch \`origin main\` and fast-forward only. If the checkout is dirty or divergent, stop and report that manual review is required.
-2. Install required tools if missing: git, node/npm, Python 3, Firecrawl CLI, QMD. Install optional integration tools only when selected, for example browser-use.
+2. Install required tools if missing: git, node/npm, Python 3, Firecrawl CLI, QMD. Install optional integration tools only when selected, especially dev-browser for browser acquisition.
 3. Configure the selected runtime:
    - Claude Code: install \`@anthropic-ai/claude-code\` if missing and symlink \`CLAUDE.md -> AGENTS.md\`.
    - Codex: install \`@openai/codex\` if missing. Codex reads \`AGENTS.md\`.

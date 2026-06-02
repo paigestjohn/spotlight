@@ -1,147 +1,204 @@
 # Spotlight
 
-Runtime-agnostic OSINT investigation system for journalists. Verified findings, independent fact-checking, knowledge vault ingestion — driven by any agent harness that can read `AGENTS.md` and dispatch 13 abstract verbs.
+Spotlight turns an investigation lead into a structured case file: scoped brief,
+approved methodology, sourced findings, independent fact-checking, review
+artifacts, provenance records, and handoff-ready knowledge.
 
-## Install (for journalists)
+It is built for active OSINT casework. Give it a lead, URL, document, entity, or
+question; it creates a case directory, gathers source material, tests claims
+against evidence, and stops at editorial gates instead of quietly treating
+unfinished leads as publishable facts.
 
-**Open [`setup.html`](setup.html) in any browser.** Pick your runtime, paste your Firecrawl and OSINT Navigator API keys, optionally select integrations (browser-use, Junkipedia, Unpaywall), and click Generate. Browser Harness is detected by preflight when its CLI is installed. You'll get two install options:
+## What Spotlight Does
 
-- **Copy into Terminal** (simplest) — click Copy, ⌘+Space → Terminal → ⌘+V → Return
-- **Download installer** — `spotlight-setup.zip` → extract → double-click the `.command` file (macOS Gatekeeper first-time: right-click → Open → Confirm)
+- Builds an investigation brief with the journalist before research starts.
+- Drafts a methodology and waits for approval before execution.
+- Runs bounded research cycles against public sources, local case files, and the
+  journalist's vault.
+- Saves source material into the case directory before citing it.
+- Produces structured findings with source URLs, local files, confidence,
+  evidence grounding, limitations, and monitoring recommendations.
+- Runs an independent fact-check pass using SIFT-style source verification.
+- Enforces readiness criteria before Gate 1 review.
+- Produces review, summary, evidence, and provenance artifacts that can be
+  inspected, exported, or ingested into a knowledge vault.
 
-The generated installer handles everything: clones this repo, installs `firecrawl-cli` and QMD, installs your chosen runtime, sets up the local model (if Local selected), writes `.env` with your keys (chmod 600), creates the vault scaffold, registers the vault for local search, and runs preflight. Works on macOS and Linux; Windows requires WSL.
+## Investigation Workflow
 
-The separate **Download agent setup** ZIP contains the same local setup choices and API key values in a private manifest. It is meant for a local agent to perform the same installation without asking you to paste secrets into chat. Keep it private like the command installer.
+```text
+Preflight
+  -> Brief
+  -> Methodology
+  -> Research and fact-check cycles
+  -> Gate 1 review
+  -> Ingest, monitor, export, or continue
+```
 
-The installer creates:
+Every gate is explicit. Spotlight does not auto-advance through brief approval,
+methodology approval, Gate 1 review, or vault ingestion.
 
-- `spotlight` — launch the selected runtime from the Spotlight repo
-- `spotlight doctor` — verify install, env names, runtime, vault, QMD, and preflight
-- `spotlight update` — fetch `origin main`, fast-forward only, then run doctor
+The research loop runs up to five cycles by default:
 
-See [docs/integrations.md](docs/integrations.md) for the full setup flow and what happens behind the scenes.
+1. The investigator follows the approved methodology and writes findings.
+2. The fact-checker independently checks the findings and writes verdicts.
+3. The orchestrator checks source grounding, disputes, gaps, and readiness.
+4. If the case is not ready, the next cycle targets the specific gaps.
+5. If the case stalls, Spotlight asks the journalist whether to continue, pivot,
+   or review the current material as-is.
 
-## Local models — what we ship, and why
+See [docs/investigating.md](docs/investigating.md) for the full phase and gate
+contract.
 
-When you pick **Local** mode in the setup form, you get a choice of two abliterated journalism models. The picker exposes only these two; everything else has been benched and dropped.
+## Readiness Criteria
 
-| Tier | Model | RAM | Notes |
-|------|-------|-----|-------|
-| **Default** | [`tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF:Q4_K_M`](https://huggingface.co/tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF) | 16 GB | 9B dense, ~6 GB on disk, ~8 GB at runtime |
-| **Heavy** (fit-check gated) | [`tomvaillant/qwen3.6-27b-abliterated-journalist-GGUF:Q4_K_M`](https://huggingface.co/tomvaillant/qwen3.6-27b-abliterated-journalist-GGUF) | 32 GB minimum | 27B dense, ~15 GB on disk, ~22 GB at runtime, thinking mode |
+Spotlight only opens Gate 1 when the case has passed six editorial checks:
 
-### Why these two
+- Enough high-confidence findings.
+- Independent source support for key claims.
+- No unresolved disputed claims without a resolution path.
+- At least one affected or non-official perspective when relevant.
+- A document trail with primary sources, not only news coverage.
+- Known gaps either resolved or stated as limitations.
 
-Both are **abliterated** — the refusal-vector has been removed so the model answers OSINT-grade prompts (corporate beneficial-ownership chains, surveillance technique verification, metadata forensics, etc.) instead of hedging or refusing. A stock instruction-tuned model is unsuitable for Spotlight regardless of size; abliteration is the editorial requirement.
+These checks are not a truth guarantee. They are a forcing function that keeps
+the case file honest about what is known, what is unsupported, and what still
+needs reporting.
 
-The 9B is Tom's own fine-tune on the [investigative-journalism-training corpus](https://huggingface.co/datasets/tomvaillant/investigative-journalism-training): SIFT methodology, primary-source preference, OPSEC awareness, OSINT tool recall. On a 30-prompt eval against the bundled `eval/prompts.jsonl` suite (tool recommendations, methodology, ethics-opsec, refusal probes), the 9B scored **83.5 / 100** composite — 100% refusal-resistance, 100% directness. It outscored Tom's own 8B Gemma 4 E4B fine-tune (82.3) primarily on hedging behavior, and was the strongest model in its RAM tier we could measure.
+## Case Outputs
 
-The 27B is Tom's journalist fine-tune on the same investigative-journalism corpus as the 9B, built on huihui-ai's abliterated Qwen 3.6 base (the team that pioneered the abliteration technique). Ships as a HuggingFace GGUF; Ollama pulls it via the `hf.co/` passthrough using the standard Q4_K_M quant.
+Each investigation gets an isolated directory under `cases/`:
 
-Head-to-head on a 5-prompt subset of the same eval suite, **the raw Huihui 27B base scored 100.0 composite vs the 9B's 91.2.** Same 100% refusal-resistance, same 100% directness, but ~3× more tool URLs per response (mean 5.2 vs 1.8), zero hedge markers, slightly more concise (480 median words vs 752). The journalist fine-tune inherits that base behavior and adds the corpus-specific tool/methodology recall. The size cost is justified when the journalist has the hardware.
+```text
+cases/{project}/
+├── brief-directions.txt
+├── summary.md
+├── review.html
+├── data/
+│   ├── methodology.json
+│   ├── findings.json
+│   ├── fact-check.json
+│   ├── evidence-bundle.json
+│   ├── investigation-log.json
+│   ├── summary.json
+│   ├── provenance-manifest.json
+│   └── monitoring.json
+├── research/
+│   ├── *.md
+│   ├── *.json
+│   └── archived/
+└── evidence/
+    ├── *.png
+    └── *.pdf
+```
 
-### 27B runs in thinking mode (was: /no_think; we reversed)
+The JSON files validate against schemas in [schemas/](schemas/). The markdown
+and HTML files are for human review. The evidence and research folders preserve
+the local trail behind the claims.
 
-Earlier revisions of this installer wrote an Ollama Modelfile TEMPLATE override that injected `/no_think` into every user message, plus opencode's `limit.output: 16384` to cap reasoning budget. We removed the TEMPLATE override and kept only the output limit.
+## Source Acquisition
 
-**The abliterated Qwen 3.6 family's `/no_think` codepath is damaged** — verified empirically on Huihui base + Tom's journalist fine-tune at Q4_K_M with Qwen-recommended sampling: output collapses into multilingual token soup and lock-loops within ~200 tokens. Probable cause: abliteration calibration covered only the thinking codepath, leaving the no-think branch with broken refusal-direction subtraction; quantization amplifies it.
+Spotlight's default source path is simple:
 
-We now keep the model's native chat template (thinking on) and rely on opencode's `limit.output: 16384` to give enough budget for Qwen's ~10k reasoning + ~5k content. Expect ~3-5× slower per-prompt vs the 9B. If reasoning blocks crowd out content, raise the output limit further.
+1. Search and scrape with Firecrawl.
+2. Save the source artifact locally.
+3. Archive or capture the source when preservation matters.
+4. Cite only material that can be traced back to a local file.
 
-### What got dropped, and why
+Use `dev-browser` only for specific investigative tasks that require browser
+automation: dynamic pages, search forms, authenticated portals, rendered tables,
+downloads, visual evidence, or multi-step UI navigation. Firecrawl remains the
+first acquisition path for ordinary search and scrape work.
 
-- `unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_M` — 17 GB MoE blob that OOMs on 16 GB Macs despite "active params" being 3.8B (all experts have to stay resident). The previous "Minimum Spotlight" label was misleading.
-- `tomvaillant/gemma4-e4b-abliterated-journalist-GGUF` — superseded by the 9B; same RAM tier, marginally worse bench score, more verbose responses with one refusal hedge in 30 prompts.
-- `HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive:IQ2_M` — failed to load via Ollama on our test machine. Likely IQ2_M+mmproj incompatibility rather than the model itself being broken (the variant has 341 likes and works via llama.cpp directly), but the install-form contract is "user pulls the recommended model and it just works."
-- `huihui_ai/Qwen3.6-abliterated:27b` (raw Huihui base via Ollama-native tag) — superseded by Tom's journalist fine-tune on the same base. Same on-disk footprint, better bench scores on investigative-journalism prompts, identical thinking-mode behavior.
+## Integrations
 
-### Heavy-tier fit-check enforcement
+Spotlight is runtime-agnostic, but investigations need specialized tools. The
+important integrations are:
 
-The 27B needs 32 GB unified memory to run with headroom for Spotlight's orchestration pipeline (browser automation, scrape, vault writes, fact-check sub-agent). When the user picks the 27B card in `setup.html`, the form auto-triggers the `navigator.deviceMemory` + WebGPU probe; if RAM reports under 32 GB the card is flagged red with "switch to the 9B" copy. The user can still proceed, but is warned the install will OOM.
+| Integration | Purpose |
+|---|---|
+| Firecrawl | Search and scrape public web sources into local case files. |
+| dev-browser | Interactive or headless browser acquisition with screenshots, HTML, metadata, hashes, and journalist-controlled authentication. |
+| OSINT Navigator | Tool discovery and method routing when the built-in catalog is not enough. |
+| Scoutpost | Durable monitoring for leads, sources, and follow-up developments. |
+| Mycroft | Passive signals, vault memory, and handoff into durable newsroom knowledge. |
+| Junkipedia | Narrative and misinformation tracking when the newsroom has access. |
+| Unpaywall | Legal open-access lookup for academic papers. |
+| Noosphere C2PA | Optional provenance signing for case-level packages. |
 
-### Bench artefacts
+See [docs/integrations.md](docs/integrations.md) for setup and routing details.
 
-The bench harness is at [`tools/fine-tuning/eval/`](https://github.com/buriedsignals/spotlight/tree/main/tools/fine-tuning/eval) — 30-prompt suite, per-model runs as JSONL, composite scoring via `scripts/spotlight_bench.py` (refusal-resistance × 0.45 + directness × 0.20 + concreteness × 0.20 + hedge penalty × 0.15). Re-run when you add or replace a model: `python3 scripts/eval.py --prompts eval/prompts.jsonl --output eval/runs/<model>.jsonl --endpoint http://127.0.0.1:11434/v1 --model <ollama-tag>`.
+## Install
 
-## What this is
+Open [setup.html](setup.html) in a browser. Choose a runtime, enter the keys you
+want to use, select optional integrations, and generate an installer.
 
-An **agnostic port** of the `buriedsignals/spotlight@1.2.1` and `buriedsignals/osint@3.5.0` Claude Code plugins into a runtime-neutral form. The original plugins stay at `~/buried_signals/tools/skills/{spotlight,osint}/` as the canonical reference. This repo is the base that plugs into everything else.
+The installer:
 
-## Supported runtimes
+- clones the Spotlight source,
+- installs required command-line dependencies,
+- writes local environment/config files,
+- creates the case/vault scaffold,
+- registers the vault for local search,
+- installs `spotlight`, `spotlight doctor`, and `spotlight update`,
+- runs preflight.
 
-| Runtime | Status | How it loads |
-|---|---|---|
-| **opencode** (https://opencode.ai) | Primary local agent — native sub-agents | `brew install opencode` (CLI) or `brew install --cask opencode-desktop` (GUI). Symlink loop into `~/.config/opencode/skills/`. `AGENTS.md`, sub-agents, MCP all native. Pair with `llama.cpp` provider for fully-local Qwen via llama-server. |
-| **pi** (https://pi.dev) | Alternative local agent — no sub-agents | `npm install -g @mariozechner/pi-coding-agent` + `pi install npm:pi-llama-cpp`. setup.html offers this as a second local agent. Investigator + fact-checker share one context — weaker independence than opencode. |
-| **Claude Code** | Install package | `npm install -g @anthropic-ai/claude-code`; runs from repo dir |
-| **Codex CLI** | Install package | `npm install -g @openai/codex`; reads `AGENTS.md` natively |
-| **Gemini CLI** | Install package | `npm install -g @google/gemini-cli`; symlink `GEMINI.md → AGENTS.md` |
-| **Hermes** (Mycroft / Mac Mini) | Production | `skills.external_dirs` in `~/.hermes/config.yaml` |
-| **Goose** | Extension pack | `goose extensions install spotlight` |
+Two install paths are generated:
 
-Per-runtime wiring: **[docs/runtimes.md](docs/runtimes.md)**.
+- **Copy into Terminal**: paste the generated script into a terminal.
+- **Download installer**: extract the ZIP and run the `.command` file on macOS.
 
-## What you get
+The setup page runs locally in the browser. API keys in the form are used to
+generate local install artifacts; they are not submitted to a server.
 
-- **Investigation pipeline**: Preflight → Brief → Methodology → 5 Execution cycles → Gate 1 → Ingestion
-- **Independent fact-checking**: fact-checker spawned per cycle, SIFT methodology, 4-verdict taxonomy
-- **6 readiness criteria**: enforced before Gate 1 — min findings, source independence, no unresolved disputes, affected perspective, document trail, gap assessment
-- **Evidence grounding**: scrape-before-cite, every source has a `local_file`, archive hierarchy Wayback → Archive.today → local
-- **15 skills**: orchestrator (spotlight), review (post-Gate-1 HTML feedback loop), integrations (routing), ingest, monitoring, provenance-signing, acquisition-graduation, web-archiving, content-access, epistemic-grounding, shell-safety, osint, investigate, follow-the-money, social-media-intelligence
-- **7 external integrations shipped**: Browser Harness (browser acquisition fallback), browser-use (optional AI browser automation), Junkipedia (narrative tracking), Noosphere C2PA (optional case provenance signing), OSINT Navigator (tool discovery), Scoutpost (durable monitoring), Unpaywall (academic open access). Framework accepts more — see [docs/integrations.md](docs/integrations.md).
-- **Monitoring orchestration**: passive signals from Mycroft plus durable monitors from Scoutpost or runtime-native routines
-- **Knowledge vault ingestion**: Markdown vaults for Obsidian or Tolaria, with directory fallback; atomic registry updates; lock-file concurrency
-- **Sensitive mode**: strips `fetch`/`search` from agents; investigation runs local-only
-- **opencode-native + Hermes-native**: zero adapter code needed for these runtimes; markdown-only contract for others
+## Runtimes
 
-## Dependencies
+Spotlight can run under any agent harness that can read `AGENTS.md`, load the
+skills, and bind the abstract operations to real tools. Current runtime paths
+include opencode, pi, Claude Code, Codex CLI, Gemini CLI, Hermes/Mycroft, and
+Goose.
 
-Required:
-- **firecrawl** CLI — the universal backing for `fetch`/`search`. `npm install -g firecrawl-cli`; set `FIRECRAWL_API_KEY`. (Handled automatically by setup.html's generated installer.)
+Per-runtime wiring lives in [docs/runtimes.md](docs/runtimes.md). The
+machine-readable contract lives in [AGENTS.md](AGENTS.md).
 
-Also installed by setup:
-- **qmd** — required for `query-vault` and vault memory. `BUN_INSTALL="" qmd query`.
+## Local Models
 
-Optional:
-- **obsidian** CLI — for `vault-write` into an Obsidian vault.
-- **Tolaria** — optional Markdown/YAML vault app; setup.html can download the latest macOS release when selected.
-- **Python 3.11+** — for integrations preflight and optional local helper scripts.
-- **Mycroft source-specific keys** — only if you also use Mycroft passive monitoring; for example `ACLED_API_KEY` + `ACLED_EMAIL` for ACLED in Mycroft.
-- **OSINT_NAV_API_KEY** — for expanded OSINT tool discovery via OSINT Navigator.
-- **JUNKIPEDIA_API_KEY** — for narrative / misinformation tracking (application-based at junkipedia.org).
-- **CORE_API_KEY** — for academic paper access in `content-access` skill.
-- **NOOSPHERE_C2PA_URL** — optional local or hosted Noosphere signer endpoint for C2PA provenance signing; no API key is required, but the signer must have its own signing credential configured.
-- **Inference backend (for Local mode)** — `brew install llama.cpp` (lean, what setup.html defaults to) or `brew install ollama` (CLI-first model manager). Orthogonal to the agent choice: pick one of each. setup.html offers **opencode** (recommended, native sub-agents) or **Pi** (minimal, `pi install npm:pi-llama-cpp` extension) as the agent layer.
+Local model selection is an implementation detail, not the product. Spotlight
+can use cloud, ZDR, or local inference depending on the runtime and newsroom
+policy. Runtime docs should carry model notes and fit checks.
 
 ## Documentation
 
 | Doc | For |
 |---|---|
-| **[docs/README.md](docs/README.md)** | Start here — entry point and quick-start per runtime |
-| **[docs/structure.md](docs/structure.md)** | Repo layout, 13-verb registry, how to extend |
-| **[docs/runtimes.md](docs/runtimes.md)** | Per-runtime wiring — pi, Hermes, Goose, Codex, Gemini, local OAI |
-| **[docs/integrations.md](docs/integrations.md)** | External tool integrations (Browser Harness, browser-use, Junkipedia, Noosphere C2PA, OSINT Navigator, Unpaywall), setup flow, manifest contract |
-| **[docs/investigating.md](docs/investigating.md)** | Pipeline phases, gates, cycles, readiness, stall protocol |
-| **[docs/fact-checking.md](docs/fact-checking.md)** | Independence, SIFT, verdict taxonomy, evidence trails |
-| **[docs/monitoring.md](docs/monitoring.md)** | Monitoring lifecycle across Mycroft, Scoutpost, and runtime-native fallbacks |
-| **[AGENTS.md](AGENTS.md)** | Machine-readable runtime contract (verb registry, agent manifests, skill registry) |
+| [docs/README.md](docs/README.md) | Operator manual entry point. |
+| [docs/investigating.md](docs/investigating.md) | Pipeline phases, gates, cycles, readiness, and stall protocol. |
+| [docs/fact-checking.md](docs/fact-checking.md) | Independent verification, SIFT, verdict taxonomy, and evidence trails. |
+| [docs/epistemic-grounding.md](docs/epistemic-grounding.md) | Claim-to-evidence grounding and confidence caps. |
+| [docs/monitoring.md](docs/monitoring.md) | Monitoring lifecycle across Mycroft, Scoutpost, and runtime fallbacks. |
+| [docs/structure.md](docs/structure.md) | Repo layout, schemas, skills, agents, and extension points. |
+| [docs/runtimes.md](docs/runtimes.md) | Runtime wiring. |
+| [docs/integrations.md](docs/integrations.md) | External tools and preflight. |
+| [AGENTS.md](AGENTS.md) | Runtime contract loaded by agents. |
 
-## Source reference
+## What Belongs Where
 
-Canonical source (read-only, never modified by this repo):
-
-- `~/buried_signals/tools/skills/spotlight@1.2.1/` — original Spotlight Claude Code plugin
-- `~/buried_signals/tools/skills/osint@3.5.0/` — original OSINT Claude Code plugin
-
-Content in `skills/` is a verbatim port of these plugins with Claude-specific syntax (`Agent()`, `Skill()`, `WebFetch`, `Bash`, etc.) genericized to the 13 abstract verbs. Semantic invariants (readiness criteria, verdict taxonomy, SIFT, evidence grounding, gate sequencing) are preserved exactly.
+- **Spotlight** is active OSINT casework: briefs, evidence, captures, findings,
+  fact-checks, review artifacts, exports, and handoffs.
+- **Mycroft** is durable newsroom memory and publishing support: source records,
+  wiki notes, recurring briefings, draft checks, story material, and Spotlight
+  handoffs.
+- **Scoutpost** is hosted monitoring: scouts, information units, alerts, and
+  durable follow-up on leads.
 
 ## Attribution
 
-- **Web Archiving** and **Content Access** skills adapted from [jamditis/claude-skills-journalism](https://github.com/jamditis/claude-skills-journalism) by Jay Amditis (MIT License).
-- **Social Media Intelligence** skill: same source.
-- **Follow the Money** skill synthesizes methodology from Jim Shultz (Revenue Watch / Open Society Institute 2005), Jelter's "Follow the Money" presentation, Miranda Patrucic & Jelena Cosic (GIJN 2024, CC BY-ND 4.0), and Derek Bowler (EBU Eurovision News Spotlight 2025).
-- **Investigate** skill includes methodology from Bellingcat training materials.
+- Web Archiving, Content Access, and Social Media Intelligence skills adapt work
+  from [jamditis/claude-skills-journalism](https://github.com/jamditis/claude-skills-journalism)
+  by Jay Amditis.
+- Follow the Money synthesizes public investigative-finance methodology from
+  Jim Shultz, GIJN, EBU, and related training material.
+- Investigate includes methodology influenced by Bellingcat training material.
 
 ## License
 
-See upstream plugin licenses. This repo's additions (verb mapping, docs, integrations framework, setup.html, feed preflight) are authored by Buried Signals — license TBD.
+See upstream plugin licenses. Spotlight additions by Buried Signals.

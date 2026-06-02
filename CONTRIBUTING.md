@@ -36,7 +36,7 @@ A runtime is an agent CLI or SDK (pi, Claude Code, Gemini, Codex, OpenCode, etc.
 
 ### Add a new external tool integration
 
-An integration is a specific external OSINT tool (Junkipedia, browser-use, OSINT Navigator, etc.).
+An integration is a specific external OSINT tool (dev-browser, Junkipedia, OSINT Navigator, etc.).
 
 1. `mkdir integrations/<id>/`
 2. Write `integrations/<id>/manifest.json` per the contract in `integrations/README.md`.

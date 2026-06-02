@@ -1,13 +1,13 @@
 ---
 name: acquisition-graduation
-description: Convert repeated Browser Harness acquisition successes into durable Spotlight acquisition guidance. Use after a non-trivial browser acquisition works repeatedly and should become a reusable source/domain path without storing secrets, cookies, or fragile session details.
+description: Convert repeated dev-browser acquisition successes into durable Spotlight acquisition guidance. Use after a non-trivial browser acquisition works repeatedly and should become a reusable source/domain path without storing secrets, cookies, or fragile session details.
 version: "1.0"
 invocable_by: [investigator, fact-checker, orchestrator, user]
 ---
 
 # Acquisition Graduation
 
-Use this skill after Browser Harness solves a non-trivial source acquisition and the path appears reusable.
+Use this skill after dev-browser solves a non-trivial source acquisition and the path appears reusable.
 
 Do not graduate one-off browsing. Graduate only when the acquisition path is likely to recur and can be validated without secrets or brittle session state.
 

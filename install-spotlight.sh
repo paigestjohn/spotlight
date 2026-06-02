@@ -70,7 +70,7 @@ export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$PATH"
 : "${SPOTLIGHT_CLOUD_KEY:=}"
 : "${SPOTLIGHT_MODEL_REPO:=}"
 : "${SPOTLIGHT_VAULT_APP:=obsidian}"
-: "${SPOTLIGHT_INT_BROWSERUSE:=false}"
+: "${SPOTLIGHT_INT_DEVBROWSER:=true}"
 : "${SPOTLIGHT_INT_JUNKIPEDIA:=false}"
 : "${JUNKIPEDIA_API_KEY:=}"
 : "${SPOTLIGHT_INT_UNPAYWALL:=false}"
@@ -689,9 +689,17 @@ fi
 
 step "Python dependencies"
 spin "Installing jsonschema + requests" bash -c "pip3 install --user --quiet jsonschema requests 2>/dev/null || pip install --user --quiet jsonschema requests"
-if [ "$SPOTLIGHT_INT_BROWSERUSE" = "true" ]; then
-  spin "Installing browser-use" bash -c "pip3 install --user --quiet browser-use 2>/dev/null || pip install --user --quiet browser-use"
-  spin "Installing Chromium for browser-use" bash -c "python3 -m playwright install chromium 2>/dev/null || true"
+
+step "Browser acquisition"
+if [ "$SPOTLIGHT_INT_DEVBROWSER" = "true" ]; then
+  if ! command -v dev-browser >/dev/null 2>&1; then
+    spin "Installing dev-browser" npm install -g dev-browser
+  else
+    printf "%s✓%s dev-browser already installed\n" "$_c_green" "$_c_reset"
+  fi
+  spin "Installing dev-browser Chromium" bash -c "dev-browser install >/dev/null 2>&1 || true"
+else
+  printf "%s→%s dev-browser not selected; browser acquisition fallback disabled by setup choice\n" "$_c_yellow" "$_c_reset"
 fi
 
 # === Write .env ===
@@ -753,7 +761,7 @@ else
   "integrations": {
     "osint_navigator": true,
     "junkipedia": $SPOTLIGHT_INT_JUNKIPEDIA,
-    "browser_use": $SPOTLIGHT_INT_BROWSERUSE,
+    "dev_browser": $SPOTLIGHT_INT_DEVBROWSER,
     "unpaywall": $SPOTLIGHT_INT_UNPAYWALL
   },
   "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",

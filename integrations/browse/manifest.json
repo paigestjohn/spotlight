@@ -1,7 +1,7 @@
 {
   "id": "browse",
   "name": "Browse CLI",
-  "description": "Browserbase CLI for browser automation driven by a skill catalog (browse.sh). Use when a curated skill exists for the target portal; otherwise prefer Browser Harness.",
+  "description": "Browserbase CLI for browser automation driven by a skill catalog (browse.sh). Use when a curated skill exists for the target portal; otherwise prefer dev-browser.",
   "category": "browser-automation",
   "type": "cli",
   "requires_key": false,

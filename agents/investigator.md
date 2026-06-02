@@ -122,7 +122,7 @@ At the start of every investigation, invoke these skills to load your full toolk
 6. **`invoke-skill("content-access")`** — For paywalled sources: work through the access hierarchy before marking low confidence.
 7. **`invoke-skill("epistemic-grounding")`** — Test whether the exact evidence supports the exact claim before assigning confidence.
 8. **`invoke-skill("shell-safety")`** — Required before any `execute-shell` command that includes user, model, scraped, generated, config, or filesystem values.
-9. **`invoke-skill("acquisition-graduation")`** — Use only when a repeated Browser Harness acquisition path is durable enough to preserve as reusable source guidance.
+9. **`invoke-skill("acquisition-graduation")`** — Use only when a repeated dev-browser acquisition path is durable enough to preserve as reusable source guidance.
 10. **`invoke-skill("social-media-intelligence")`** *(when applicable)* — Load when the investigation touches social media accounts, viral content, or suspected coordination campaigns. Provides account authenticity assessment, coordination detection, and narrative tracking methodology.
 
 The `fetch` and `search` verbs are always available (universal backing: firecrawl). No skill load required for search/scrape.
@@ -133,7 +133,7 @@ These skills contain the full methodology. Follow them.
 
 1. **`search` / `fetch`** (primary) — web search and scraping. Output to `cases/{project}/research/`.
 2. **`invoke-skill("osint")`** — specialized tool recommendations. In PLANNING mode, if `osint_navigator_required=true`, Navigator is the first tool-discovery pass and the curated catalog is fallback.
-3. **Browser Harness fallback** — use only when Firecrawl cannot acquire the needed source because the page is dynamic, interactive, authenticated, download-based, iframe/shadow-DOM heavy, or requires visual verification. Save screenshots/downloads to `cases/{project}/evidence/`.
+3. **dev-browser fallback** — use only when Firecrawl cannot acquire the needed source because the page is dynamic, interactive, authenticated, form-driven, download-based, or requires visual verification. Save screenshots/downloads to `cases/{project}/evidence/`.
 4. **`execute-shell("curl ...")`** — direct API calls to public databases and registries. Save responses to `cases/{project}/research/`.
 5. **`grep-files` / `list-files` / `read-file`** — search local files, prior research, existing investigation data in `cases/{project}/research/`.
 
@@ -313,7 +313,7 @@ After every Firecrawl-backed `search` or `fetch`, answer these questions before 
 - Does the remaining gap require a browser, authenticated session, download, screenshot, or manual human verification?
 - Does the gap cap confidence or require a human-verification flag?
 
-If Firecrawl returned enough evidence, do not use Browser Harness. Browser Harness is the default browser fallback, not the first acquisition layer.
+If Firecrawl returned enough evidence, do not use dev-browser. dev-browser is for specific investigative tasks that require browser automation; it is not the first acquisition layer.
 
 ### Evidence Bundle
 
@@ -321,7 +321,7 @@ Create or update `cases/{project}/data/evidence-bundle.json` during every execut
 
 - `id` (`E1`, `E2`, ...),
 - `query_or_task`,
-- `acquisition_method`: `firecrawl|browser_harness|manual|api|other`,
+- `acquisition_method`: `firecrawl|dev_browser|manual|api|other`,
 - `source_url`,
 - `accessed`,
 - `raw_path` where available,

@@ -9,7 +9,7 @@ This doc is the operator overview. See `integrations/README.md` for the manifest
 | Concept | Lives at | Example | What it holds |
 |---|---|---|---|
 | **Skill** | `skills/<id>/SKILL.md` | `osint`, `follow-the-money`, `investigate` | Methodology playbook the agent follows. No credentials. |
-| **Integration** | `integrations/<id>/` | `browser-harness`, `browser-use`, `junkipedia`, `noosphere-c2pa`, `osint-navigator` | Specific external tool with its own API contract + credentials. |
+| **Integration** | `integrations/<id>/` | `dev-browser`, `junkipedia`, `noosphere-c2pa`, `osint-navigator` | Specific external tool with its own API contract + credentials. |
 
 An agent invokes a **skill** to get *guidance* and calls an **integration** to get *direct data from a specific vendor or platform*. Passive feed signals now live in Mycroft, not Spotlight.
 
@@ -17,8 +17,9 @@ An agent invokes a **skill** to get *guidance* and calls an **integration** to g
 
 | ID | Type | Category | Key needed | Purpose |
 |---|---|---|---|---|
-| `browser-harness` | cli | browser-automation | No | Preferred v2 browser acquisition fallback after Firecrawl misses material evidence. |
-| `browser-use` | library | browser-automation | No (optional cloud) | Optional/adjacent agent-driven browser automation. Prefer Browser Harness for acquisition evidence. |
+| `dev-browser` | cli | browser-automation | No | Browser automation for specific investigative tasks after ordinary search/scrape is insufficient: forms, portals, JS-rendered pages, screenshots, downloads, and authenticated sessions. |
+| `browser-harness` | cli | browser-automation | No | Legacy browser fallback. Do not use as default while dev-browser is green. |
+| `browser-use` | library | browser-automation | No (optional cloud) | Legacy/adjacent browser automation. Do not use as default while dev-browser is green. |
 | `junkipedia` | api | social-osint | `JUNKIPEDIA_API_KEY` | Narrative / misinformation tracking across social platforms. Application-based access. |
 | `noosphere-c2pa` | api | provenance-signing | `NOOSPHERE_C2PA_URL` | Optional case-level C2PA/content-credentials signing after Gate 1. |
 | `osint-navigator` | api | tool-discovery | `OSINT_NAV_API_KEY` | 10,000+ OSINT tools with AI-powered synthesized answers. Complements the curated 150-tool catalog in the `osint` skill. |
@@ -62,8 +63,7 @@ Example:
 ```
 ID                   Type       Status   Missing env
 ------------------------------------------------------------------------------
-browser-harness      cli        green    —
-browser-use          library    green    —
+dev-browser          cli        green    —
 junkipedia           api        red      JUNKIPEDIA_API_KEY
 osint-navigator      api        green    —
 
@@ -117,7 +117,7 @@ In sensitive mode (`AGENTS.md` → `sensitive: true`):
 - Integrations that require remote API calls (most of them) become unavailable — `fetch`/`search` verbs are stripped and `execute-shell("curl <remote>")` is guarded at the skill layer
 - Preflight still runs; integrations requiring remote APIs report normally (useful as a status check)
 - Pre-cached integration responses in `cases/{project}/research/` remain readable via `read-file`
-- Local-only integrations (e.g. Browser Harness against a local browser or browser-use against a local HTML file) may still function — see the individual `integration.md` § Sensitive mode
+- Local-only browser acquisition against cached or local files may still function through dev-browser — see the individual `integration.md` § Sensitive mode
 
 The orchestrator marks sensitive-mode investigations at Gate 1 noting which integrations were unavailable.
 
