@@ -151,7 +151,11 @@ def run_preflight(
     reports = []
     for manifest in manifests:
         extra = report_extra_fields(manifest) if report_extra_fields else None
-        effective_smoke = smoke_fn if args.smoke_test else None
+        # Local CLI integrations are not usable unless their binary resolves,
+        # so check them even in default no-network preflight. API/library smoke
+        # checks remain opt-in because they may touch the network or imports.
+        always_probe = manifest.get("type") == "cli" or bool(manifest.get("local_binary"))
+        effective_smoke = smoke_fn if (args.smoke_test or always_probe) else None
         reports.append(build_report(manifest, smoke_fn=effective_smoke, extra_fields=extra))
 
     summary = summarize(reports)

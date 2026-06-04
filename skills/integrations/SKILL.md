@@ -1,6 +1,6 @@
 ---
 name: integrations
-description: Routing table for external tool integrations — dev-browser, Junkipedia, Noosphere C2PA, OSINT Navigator, Scoutpost, and more. Agents invoke this skill to discover which integrations are live and which one fits a given investigation task.
+description: Use when an investigation step may need an external integration such as browser acquisition, Maigret account discovery, Junkipedia narrative tracking, Scoutpost monitoring, OSINT Navigator tool discovery, Noosphere C2PA signing, or Unpaywall access lookup.
 version: "1.0"
 invocable_by: [investigator, fact-checker, orchestrator]
 requires: []
@@ -29,6 +29,7 @@ The skill is cheap to load — it's a routing table, not a deep methodology guid
 | `browser-harness` | browser-automation | cdp-browser-control, dynamic-page-acquisition, screenshot-capture, download-capture, visual-verification | Legacy browser fallback. Do not pick as the default while dev-browser is green. |
 | `browser-use` | browser-automation | form-navigation, search-export, login-driving, multi-step-browsing | Legacy/adjacent browser automation. Do not pick as the default while dev-browser is green. |
 | `junkipedia` | social-osint | narrative-tracking, misinformation-search, social-media-monitoring, cross-platform-query | Tracking how a claim spread; finding social posts deleted from origin; cross-platform narrative investigation. |
+| `maigret` | social-osint | username-search, account-discovery, profile-url-collection | Username-led account discovery. Produces candidate profile leads only; never use as attribution proof. |
 | `noosphere-c2pa` | provenance-signing | case-provenance-manifest, c2pa-content-credentials, optional-signing-receipt | After Gate 1, package and optionally sign the investigation trail. No API key; Noosphere controls signing credentials. |
 | `osint-navigator` | tool-discovery | tool-search-by-keyword, complex-query-synthesis, country-specific-tool-lookup | First tool-discovery pass during Phase 2 methodology when preflight is green and sensitive mode is false. Otherwise fallback to the curated 150-tool catalog. |
 | `scoutpost` | monitoring | project-scoped-monitoring, scout-creation, information-unit-retrieval, scheduled-monitoring | Approved monitoring that should keep running after the current investigation cycle. |
@@ -48,6 +49,11 @@ What's the task?
 ├── "Find deleted social posts / track narrative spread / cross-platform search"
 │     → junkipedia  (if green — check preflight)
 │     → fallback: search() + social-media-intelligence skill (limited without Junkipedia's archive)
+│
+├── "Find accounts from one or more usernames / handles / aliases"
+│     → maigret if preflight is green and the operator accepts account-discovery noise
+│     → output is unverified account-discovery leads only
+│     → fallback: search() + social-media-intelligence skill
 │
 ├── "Phase 2 methodology tool selection" / "Need a tool I don't know for category X" / "Compare tools" / "Niche country-specific tool"
 │     → osint-navigator  (mandatory first pass if green and sensitive mode is false)
@@ -100,6 +106,7 @@ Any data retrieved through an integration follows the usual evidence-grounding r
 - Cite the integration explicitly in the source entry: `"access_method": "<appropriate enum>", "access_notes": "Retrieved via <integration-name> API"`
 - Record the exact query / parameters in the source entry so the retrieval is reproducible
 - Archive the underlying origin URLs per `invoke-skill("web-archiving")` — an integration's copy is supplementary, not primary
+- Treat Maigret and model-derived artifacts as leads only. They must not write `verified`, `confirmed`, or `publishable` statuses.
 
 ## Sensitive mode
 

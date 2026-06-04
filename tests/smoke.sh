@@ -9,7 +9,7 @@
 #   5. Monitoring registry helper runs cleanly
 #   6. No banned Claude-specific syntax in skills/agents
 #   7. No legacy local feed framework remains
-#   8. AGENTS.md has 16 entries in skill registry
+#   8. AGENTS.md skill registry matches skills-manifest.json count
 #   9. setup.html exists
 #  10. index.html exists
 #  11. DISCLAIMER.md + LICENSE present
@@ -99,10 +99,23 @@ fi
 echo ""
 echo "── Contracts ──"
 skill_count=$(grep -cE '^\| `[a-z-]+` \| `skills/' AGENTS.md || echo 0)
-if [ "$skill_count" = "16" ]; then
-  ok "AGENTS.md skill registry has 16 entries"
+manifest_count=$(python3 - <<'PY'
+import json
+print(len(json.load(open("skills-manifest.json"))["skills"]))
+PY
+)
+if [ "$skill_count" = "$manifest_count" ]; then
+  ok "AGENTS.md skill registry has $skill_count entries"
 else
-  fail "AGENTS.md skill registry count off: got $skill_count, want 16"
+  fail "AGENTS.md skill registry count off: got $skill_count, want $manifest_count"
+fi
+
+python3 tests/integrations-routing-check.py >/dev/null 2>&1
+rc=$?
+if [ $rc -eq 0 ]; then
+  ok "integration routing rows resolve"
+else
+  fail "integration routing rows drifted"
 fi
 
 echo ""
