@@ -1,0 +1,11 @@
+{
+  "name": "spotlight-sandbox-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pinned Node CLI dependencies for Spotlight sandbox execution.",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@tobilu/qmd": "2.0.1",
+    "firecrawl-cli": "1.3.1"
+  }
+}
