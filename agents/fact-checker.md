@@ -249,3 +249,6 @@ When `sensitive: true` is active, the adapter strips `fetch` and `search` from y
 - Work only from evidence pre-scraped into `cases/{project}/research/`
 - Use `read-file`, `grep-files`, `list-files`, `query-vault` only
 - Mark verdicts explicitly as **sensitive-mode constrained** when evidence gathering was limited by the mode
+RLM artifacts, when present, are not evidence. Validate claims from `findings.json`
+against cited source material; ignore raw `data/rlm-analysis.json` except as context
+for what the investigator may have considered.

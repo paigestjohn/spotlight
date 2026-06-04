@@ -1,0 +1,7 @@
+{
+  "project": "fixture-rlm-001",
+  "run_id": "fixture-001",
+  "corpus_paths": [
+    "research/source-a.md"
+  ]
+}

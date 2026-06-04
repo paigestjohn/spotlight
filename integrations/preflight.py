@@ -65,8 +65,9 @@ def smoke_test(manifest: dict) -> tuple[bool, str | None]:
         return found, None if found else f"python import '{mod}' failed"
 
     if kind == "cli":
-        return shutil.which(manifest["id"]) is not None, \
-               None if shutil.which(manifest["id"]) else f"{manifest['id']} not on PATH"
+        binary = manifest.get("local_binary") or manifest["id"]
+        return shutil.which(binary) is not None, \
+               None if shutil.which(binary) else f"{binary} not on PATH"
 
     return True, None
 

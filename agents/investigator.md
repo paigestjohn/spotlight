@@ -516,3 +516,6 @@ When `sensitive: true` is active, the adapter strips `fetch` and `search` from y
 - Use `read-file`, `grep-files`, `list-files`, `query-vault` only
 - Mark findings explicitly as **sensitive-mode constrained** when evidence gathering was limited by the mode
 - A sensitive investigation cannot satisfy the "document trail" readiness criterion from external sources — work with existing material or flag the gap
+Optional RLM case-corpus artifacts may exist at `cases/{project}/data/rlm-analysis.json`.
+Treat them as leads only. Do not copy an RLM artifact into `findings.json` unless the
+underlying source references have been inspected and grounded independently.

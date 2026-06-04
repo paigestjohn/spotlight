@@ -60,11 +60,13 @@ const baseCfg = {
   install_path: "~/Documents/Spotlight",
   vault_app: "obsidian",
   vault_path: "~/Intelligence",
-  int_browseruse: false,
+  int_devbrowser: true,
   int_junkipedia: false,
   junkipedia_key: "",
   int_unpaywall: false,
   unpaywall_email: "",
+  int_rlm: false,
+  rlm_mode: "off",
 };
 
 const configs = [
@@ -187,6 +189,14 @@ for (const c of configs) {
         ok = false;
       }
     }
+    if (!hasExport(block, "SPOTLIGHT_INT_RLM", cfg.int_rlm ? "true" : "false")) {
+      console.log(`✗ ${c.label.padEnd(28)} block missing SPOTLIGHT_INT_RLM`);
+      ok = false;
+    }
+    if (!hasExport(block, "SPOTLIGHT_RLM_MODE", cfg.int_rlm ? cfg.rlm_mode : "off")) {
+      console.log(`✗ ${c.label.padEnd(28)} block missing SPOTLIGHT_RLM_MODE`);
+      ok = false;
+    }
   }
 
   if (ok) {
@@ -234,6 +244,7 @@ const manifestCfg = {
   opencode_provider: "fireworks", cloud_key: "fw-secret-test",
   cloud_key_var: "FIREWORKS_API_KEY",
   int_junkipedia: true, junkipedia_key: "junk-secret-test",
+  int_rlm: true, rlm_mode: "local_gemma4_e4b",
 };
 const manifest = buildAgentManifest(manifestCfg);
 const prompt = buildAgentPrompt(manifest);
@@ -241,7 +252,12 @@ if (
   manifest.env.values.FIRECRAWL_API_KEY !== "fc-test" ||
   manifest.env.values.OSINT_NAV_API_KEY !== "on-test" ||
   manifest.env.values.FIREWORKS_API_KEY !== "fw-secret-test" ||
-  manifest.env.values.JUNKIPEDIA_API_KEY !== "junk-secret-test"
+  manifest.env.values.JUNKIPEDIA_API_KEY !== "junk-secret-test" ||
+  manifest.env.values.SPOTLIGHT_RLM_MODE !== "local_gemma4_e4b" ||
+  manifest.env.values.SPOTLIGHT_RLM_MODEL !== "gemma4:e4b" ||
+  manifest.integrations.rlm.enabled !== true ||
+  manifest.integrations.rlm.prefilter !== true ||
+  manifest.integrations.rlm.hybrid !== true
 ) {
   console.log("✗ agent manifest missing local secret values");
   fail++;

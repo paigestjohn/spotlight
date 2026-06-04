@@ -1,0 +1,11 @@
+{
+  "project": "fixture-rlm-flow-sparse-001",
+  "lead": "Eastgate mobile triage procurement notice",
+  "corpus_paths": ["research/source-a.md"],
+  "expected_artifacts": [
+    {"text": "2026-05-22", "source_path": "research/source-a.md", "line": 2},
+    {"text": "triage@eastgate-health.example", "source_path": "research/source-a.md", "line": 3},
+    {"text": "https://example.org/eastgate/triage", "source_path": "research/source-a.md", "line": 3}
+  ],
+  "expected_absent": ["cafeteria staffing", "approved minutes"]
+}
