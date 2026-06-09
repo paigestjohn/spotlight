@@ -275,6 +275,105 @@
     font-size: 15px;
     line-height: 1.2;
   }
+  .pipeline-flow {
+    margin: 28px 0 30px;
+    border: 1px solid var(--muted-faint-dark);
+    border-left: 2px solid var(--accent-warm);
+    background: rgba(237, 232, 220, 0.035);
+    border-radius: 4px;
+    padding: 18px;
+  }
+  .flow-label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--accent-warm);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .flow-stack {
+    display: grid;
+    gap: 10px;
+    position: relative;
+  }
+  .flow-stack::before {
+    content: "";
+    position: absolute;
+    left: 18px;
+    top: 18px;
+    bottom: 18px;
+    width: 1px;
+    background: var(--muted-faint-dark);
+  }
+  .flow-item {
+    display: grid;
+    grid-template-columns: 38px 1fr;
+    gap: 12px;
+    position: relative;
+  }
+  .flow-num {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--muted-faint-dark);
+    background: var(--ink);
+    color: var(--accent-warm);
+    border-radius: 50%;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    z-index: 1;
+  }
+  .flow-card {
+    border: 1px solid var(--muted-faint-dark);
+    background: rgba(7, 7, 10, 0.35);
+    border-radius: 4px;
+    padding: 12px 14px;
+  }
+  .flow-card strong {
+    display: block;
+    font-family: "Fraunces", serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.25;
+    margin-bottom: 4px;
+  }
+  .flow-card span {
+    display: block;
+    color: var(--muted-dark);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .flow-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .flow-tag {
+    border: 1px solid var(--muted-faint-dark);
+    border-radius: 999px;
+    padding: 2px 7px;
+    color: var(--muted-dark);
+    font-size: 10px;
+    line-height: 1.4;
+  }
+  .flow-tag.review { color: #d58a7f; }
+  .flow-tag.rlm { color: #d9a65f; }
+  .flow-tag.ingest { color: #8fbf86; }
+  @media (max-width: 700px) {
+    .pipeline-flow { padding: 14px; }
+    .flow-card { padding: 11px 12px; }
+  }
+  .spec-flow-frame {
+    width: 100%;
+    aspect-ratio: 1180 / 1660;
+    height: auto;
+    border: 1px solid var(--muted-faint-dark);
+    border-radius: 4px;
+    background: var(--ink-2);
+    margin: 24px 0;
+    display: block;
+  }
 
   /* Skill cards */
   .skill-grid {
@@ -456,6 +555,13 @@
         <h2><span class="num">02 — The pipeline</span>Six stages, one editorial loop.</h2>
         <p>Every investigation runs through the same six stages. The agent moves between them under explicit gates — no silent transitions, no half-finished cases.</p>
 
+        <iframe
+          class="spec-flow-frame"
+          src="spotlight-flow-vertical-visual.html"
+          title="Spotlight vertical investigation flow diagram"
+          loading="lazy"
+        ></iframe>
+
         <div class="pipeline">
           <div class="pipeline-step"><div class="step-n">01</div><div class="step-name">Preflight</div></div>
           <div class="pipeline-step"><div class="step-n">02</div><div class="step-name">Brief</div></div>
@@ -490,7 +596,7 @@
         <p>If a criterion fails, the agent loops back. If it persists past cycle five, the stall protocol triggers — the investigation is paused and the journalist decides whether to continue, change scope, or shelf.</p>
 
         <h3>Ingestion</h3>
-        <p>Findings, fact-check verdicts, methodology, and source archives are written into your knowledge vault as structured markdown with wikilinks. Future investigations search the vault via QMD and build on prior work without rediscovering the same entities from scratch.</p>
+        <p>During a case, source archives and working JSON stay in the active case workspace. After explicit approval, verified or clearly caveated findings, fact-check verdicts, methodology lessons, and entity notes can be ingested into your knowledge vault as structured markdown with wikilinks. Future investigations search the vault via QMD and build on prior work without rediscovering the same entities from scratch.</p>
       </section>
 
       <!-- ── 03 Skills ───────────────────────────────── -->
@@ -543,10 +649,11 @@
       <!-- ── 05 Config ──────────────────────────────── -->
       <section id="config">
         <h2><span class="num">05 — Configuration</span>One install, a handful of env vars.</h2>
-        <p>The <a href="../setup.html">install form</a> generates a single Terminal one-liner that writes your config and runs the installer. Everything lives in <code>~/.config/spotlight/.env</code>; you can edit it after install to reconfigure.</p>
+        <p>The <a href="../setup.html">install form</a> generates a single Terminal one-liner that writes your config and runs the installer. Runtime config lives in <code>$SPOTLIGHT_DIR/.env</code>; you can edit it after install to reconfigure.</p>
 
         <h3>Required</h3>
-<pre><code>SPOTLIGHT_VAULT_PATH=~/Obsidian/main          # where investigations get archived
+<pre><code>SPOTLIGHT_VAULT_PATH=~/Obsidian/main          # durable knowledge vault for search/ingest
+SPOTLIGHT_CASES_ROOT=~/Documents/Spotlight/cases  # active case workspace
 FIRECRAWL_API_KEY=fc-...                      # web scraping (free tier ok)
 OSINT_NAV_API_KEY=on_...                      # tool lookup (free tier ok)</code></pre>
 
@@ -555,13 +662,10 @@ OSINT_NAV_API_KEY=on_...                      # tool lookup (free tier ok)</code
 SPOTLIGHT_LOCAL_MODEL=qwen9b                  # qwen9b (16 GB) / qwen27b (32 GB+)
 SPOTLIGHT_LOCAL_SERVER=ollama                 # ollama / llamacpp</code></pre>
 
-        <h3>Optional — sensitive vault</h3>
-<pre><code>SPOTLIGHT_SENSITIVE_ENABLED=1                 # opt-in; default off
-
-# Both of these are derived by convention if SPOTLIGHT_SENSITIVE_ENABLED=1.
-# Override them only if you want the sensitive vault on an unusual path.
-# SPOTLIGHT_SENSITIVE_VAULT_PATH=~/Obsidian/main-sensitive
-# SPOTLIGHT_SENSITIVE_INDEX=main-sensitive</code></pre>
+        <h3>Optional — sensitive mode</h3>
+<pre><code># Runtime-level sensitive mode is controlled by AGENTS.md.
+# A separate sensitive-vault install path is documented as a design target,
+# but it is not enabled by the current installer.</code></pre>
 
         <h3>Optional — integrations</h3>
 <pre><code>JUNKIPEDIA_API_KEY=...     # disinformation monitoring (optional)
@@ -571,23 +675,23 @@ SPOTLIGHT_INT_DEVBROWSER=true   # dev-browser for interactive browser acquisitio
 
       <!-- ── 06 Sensitive ──────────────────────────── -->
       <section id="sensitive">
-        <h2><span class="num">06 — Sensitive vault</span>Two ingest targets, one union query.</h2>
-        <p>Spotlight investigations default to open material. If you also work with sensitive material — source-protected documents, off-record interview notes, unpublished tip identities — you can opt in to a second, parallel knowledge vault that lives next to the main one with a <code>-sensitive</code> suffix.</p>
+        <h2><span class="num">06 — Sensitive mode</span>Local-only investigations first.</h2>
+        <p>Spotlight investigations default to open material. For source-protected documents, off-record interview notes, unpublished tip identities, or other sensitive material, use runtime-level sensitive mode so agents work from local case files and vault context instead of live network acquisition.</p>
 
         <div class="callout">
-          <div class="callout-tag">Convention</div>
-          <p>Set <code>SPOTLIGHT_SENSITIVE_ENABLED=1</code>. That's it. The sensitive vault path defaults to <code>${SPOTLIGHT_VAULT_PATH}-sensitive</code> and the sensitive QMD index name follows the same suffix. No second name field to maintain.</p>
+          <div class="callout-tag">Current support</div>
+          <p>The current installer does not create a second sensitive vault or install a <code>qmd-spotlight</code> wrapper. The implemented control is the runtime contract's sensitive mode: when enabled, adapters strip live <code>fetch</code> and <code>search</code> access and the case must be worked from local material.</p>
         </div>
 
         <h3>How it works</h3>
         <ul>
-          <li>The ingest skill accepts <code>--target sensitive</code>. With the flag, notes land in the sensitive vault and get indexed into a separate QMD database. Without the flag, ingestion is unchanged.</li>
-          <li>A local-runtime wrapper (<code>qmd-spotlight</code>) is installed on PATH only when <code>SPOTLIGHT_RUNTIME=local</code>. Pass <code>--with-sensitive</code> and the wrapper queries both the open and sensitive indices and unions the results.</li>
-          <li>Frontier-runtime sessions don't get the wrapper installed. If the wrapper is somehow invoked from a frontier session anyway, an env-var check refuses with a clear error.</li>
+          <li>Set <code>sensitive: true</code> in <code>AGENTS.md</code> or use the equivalent runtime command when your adapter supports it.</li>
+          <li>Preload material into the resolved <code>{CASE_DIR}/research/</code> workspace and the local vault before starting the sensitive investigation.</li>
+          <li>Do not rely on sensitive-vault commands from the design spec until they are implemented in setup, ingest, and doctor checks.</li>
         </ul>
 
         <h3>What this is — and what it isn't</h3>
-        <p>This is <strong>plumbing</strong>, not enforcement. The flag lets a local-model session reach material the journalist deliberately put in a separate vault, without making that material discoverable from a frontier-model session that just calls bare <code>qmd</code>. It does not prevent a frontier agent on the same machine from running <code>qmd --index &lt;name&gt;-sensitive</code> directly and reading the sensitive vault that way.</p>
+        <p>This is <strong>plumbing</strong>, not enforcement. Sensitive mode reduces accidental network use by the Spotlight adapter, but it is not a host security boundary. It does not stop a sufficiently privileged local agent from using unrelated shell or search tools outside the Spotlight contract.</p>
 
         <p>If your threat model requires that level of guarantee, run sensitive work on a separate machine and treat the sensitive vault on the laptop as a <em>summary archive</em> of work done elsewhere — not as the workspace for the sensitive investigation itself. The <a href="https://github.com/buriedsignals/spotlight/blob/main/docs/sensitivity.md">design spec on GitHub</a> walks through why earlier drafts proposed UID separation and air-gap phases, why those were cut, and what's left.</p>
 
@@ -595,7 +699,7 @@ SPOTLIGHT_INT_DEVBROWSER=true   # dev-browser for interactive browser acquisitio
         <ol>
           <li>Open research happens via the normal Spotlight pipeline against the default vault, under whichever runtime is best for the material (usually cloud).</li>
           <li>If a sensitive piece arrives, work on it in your own environment — local model on an isolated machine, encrypted disk, paper, whatever matches your operational layer.</li>
-          <li>When you're ready, the output of that work can be ingested into the sensitive vault (<code>invoke-skill ingest --target sensitive</code>) so future local-runtime Spotlight sessions can search it alongside the open knowledge base.</li>
+          <li>When you're ready, write sanitized outputs into the normal case files or keep them in a separately managed local vault until the sensitive-vault workflow is implemented.</li>
           <li>Declassification (moving a finding from sensitive to open) is a manual file copy + re-ingest — no special command, by design.</li>
         </ol>
       </section>

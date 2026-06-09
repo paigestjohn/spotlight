@@ -1,7 +1,7 @@
 // Generator check: extracts buildExportBlock / buildOneLiner / buildCommandScript
 // from setup.html and verifies the install one-liner + .command wrapper shape
-// for every supported runtime/agent combo. Also validates the agent-manifest
-// path (separate "let an agent install for you" zip).
+// for every supported runtime/agent combo. Also asserts the old agent-prompt
+// setup path stays removed.
 //
 // Run via: node tests/setup-generator-check.js
 //
@@ -29,10 +29,6 @@ const fnSources = {
   utf8Base64:         grabFn("utf8Base64"),
   buildOneLiner:      grabFn("buildOneLiner"),
   buildCommandScript: grabFn("buildCommandScript"),
-  buildAgentManifest: grabFn("buildAgentManifest"),
-  buildAgentPrompt:   grabFn("buildAgentPrompt"),
-  providerEnvVars:    grabFn("providerEnvVars"),
-  envValues:          grabFn("envValues"),
 };
 const installerUrlMatch = html.match(/const INSTALLER_URL = '[^']+';/);
 const runtimesMatch     = html.match(/const RUNTIMES = \{[\s\S]*?\n  \};/);
@@ -238,37 +234,34 @@ if (utf8Block && utf8Block.includes("Schräge·Münzen")) {
   fail++;
 }
 
-// --- Agent manifest path (unchanged from previous test) ---
-const manifestCfg = {
-  ...baseCfg, mode: "cloud", runtime: "opencode",
-  opencode_provider: "fireworks", cloud_key: "fw-secret-test",
-  cloud_key_var: "FIREWORKS_API_KEY",
-  int_junkipedia: true, junkipedia_key: "junk-secret-test",
-  int_rlm: true, rlm_mode: "local_gemma4_e4b",
-};
-const manifest = buildAgentManifest(manifestCfg);
-const prompt = buildAgentPrompt(manifest);
-if (
-  manifest.env.values.FIRECRAWL_API_KEY !== "fc-test" ||
-  manifest.env.values.OSINT_NAV_API_KEY !== "on-test" ||
-  manifest.env.values.FIREWORKS_API_KEY !== "fw-secret-test" ||
-  manifest.env.values.JUNKIPEDIA_API_KEY !== "junk-secret-test" ||
-  manifest.env.values.SPOTLIGHT_RLM_MODE !== "local_gemma4_e4b" ||
-  manifest.env.values.SPOTLIGHT_RLM_MODEL !== "gemma4:e4b" ||
-  manifest.integrations.rlm.enabled !== true ||
-  manifest.integrations.rlm.prefilter !== true ||
-  manifest.integrations.rlm.hybrid !== true
-) {
-  console.log("✗ agent manifest missing local secret values");
+// --- RLM benchmark/audit copy ---
+if (!html.includes("docs/rlm-benchmark-audit.md")) {
+  console.log("✗ RLM audit notice             setup page missing benchmark audit reference");
   fail++;
-} else if (prompt.includes("fw-secret-test") || prompt.includes("junk-secret-test")) {
-  console.log("✗ agent prompt printed secret values");
-  fail++;
-} else if (!prompt.includes("Handle the setup for the user") || !prompt.includes("env.values")) {
-  console.log("✗ agent prompt does not instruct agent setup from manifest values");
+} else if (!html.includes("needs_verification</code> leads")) {
+  console.log("✗ RLM evidence boundary        setup page missing lead-only boundary");
   fail++;
 } else {
-  console.log("✓ agent manifest/prompt        values included, prompt redacted");
+  console.log("✓ RLM audit notice             setup page links benchmark and lead-only boundary");
+  pass++;
+}
+
+// --- Removed agent setup prompt path ---
+const removedAgentSetupTokens = [
+  "agent-setup-btn",
+  "buildAgentManifest",
+  "buildAgentPrompt",
+  "spotlight-agent-manifest.json",
+  "spotlight-agent-prompt.md",
+  "spotlight-agent-setup.zip",
+  "# Spotlight Agent Setup",
+];
+const foundAgentSetupToken = removedAgentSetupTokens.find(token => html.includes(token));
+if (foundAgentSetupToken) {
+  console.log(`✗ agent setup prompt removed   found stale token: ${foundAgentSetupToken}`);
+  fail++;
+} else {
+  console.log("✓ agent setup prompt removed   no prompt/manifest generator remains");
   pass++;
 }
 

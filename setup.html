@@ -520,19 +520,7 @@
     min-height: 58px;
     padding: 18px 24px;
   }
-  .generate-actions #generate-btn { flex: 1.1; }
-  #agent-setup-btn {
-    flex: 0.9;
-    justify-content: center;
-    color: var(--paper);
-    transition: color 0.2s, border-color 0.2s, transform 0.2s;
-  }
-  button#agent-setup-btn:hover {
-    background: transparent;
-    color: var(--accent-warm);
-    border-color: var(--accent-warm);
-    transform: translateY(-1px);
-  }
+  .generate-actions #generate-btn { flex: 1; }
 
   /* ── INSTALL OUTPUT (dark reveal) ─────────────────────── */
   #install-output {
@@ -1212,9 +1200,31 @@
         </section>
       </div>
 
-      <!-- 03 — Web scraping -->
+      <!-- 03 — Case analysis -->
       <div class="sec-header">
-        <span class="chap" data-reveal="meta">03 — Web scraping <span class="req">Required</span></span>
+        <span class="chap" data-reveal="meta">03 — Case analysis <span class="opt">optional local helper</span></span>
+        <h2 data-reveal="title">Find hidden links in case files.</h2>
+      </div>
+      <section class="card">
+        <div class="checkbox-group">
+          <label><input type="checkbox" id="int_rlm"><span class="opt-name"><span class="name">Case-corpus lead extraction</span><span class="desc">Optional local analysis for relationship, timeline, and contradiction leads. Default is off; if installed, Spotlight asks during methodology before using it for a case.</span></span></label>
+        </div>
+        <p class="lede" style="margin-top: 14px;">
+          A recursive language model is a local helper that repeatedly reads the case files Spotlight has already saved, extracts possible connections, and feeds only the useful leads back into the investigation plan. It does not browse the web, verify claims, or create publishable facts.
+        </p>
+        <div id="rlm_options" class="hidden" style="margin-top: 16px;">
+          <label class="block">Analysis mode <span class="hint">— keep off unless you want local lead extraction during methodology.</span></label>
+          <div class="provider-grid">
+            <label><input type="radio" name="rlm_mode" value="lite" checked><span class="opt">Lite</span></label>
+            <label><input type="radio" name="rlm_mode" value="local_gemma4_e4b"><span class="opt">Gemma4 E4B</span></label>
+          </div>
+          <p class="hint" style="margin-top: 12px;">Benchmark note: on the synthetic context-rot suite, hybrid Gemma4 E4B improved average recall from 0.75 to 1.0, removed decoy hits from 4 to 0, and reduced average downstream lines from 10.25 to 3.0. See <code>docs/rlm-benchmark-audit.md</code>. Output stays in <code>data/rlm-analysis.json</code> as <code>needs_verification</code> leads.</p>
+        </div>
+      </section>
+
+      <!-- 04 — Web scraping -->
+      <div class="sec-header">
+        <span class="chap" data-reveal="meta">04 — Web scraping <span class="req">Required</span></span>
         <h2 data-reveal="title">Firecrawl key.</h2>
       </div>
       <section class="card">
@@ -1223,9 +1233,9 @@
         <p id="firecrawl_err" class="error hidden">Firecrawl key is required.</p>
       </section>
 
-      <!-- 04 — OSINT Navigator -->
+      <!-- 05 — OSINT Navigator -->
       <div class="sec-header">
-        <span class="chap" data-reveal="meta">04 — Tool discovery <span class="req">Required</span></span>
+        <span class="chap" data-reveal="meta">05 — Tool discovery <span class="req">Required</span></span>
         <h2 data-reveal="title">OSINT Navigator.</h2>
       </div>
       <section class="card">
@@ -1237,9 +1247,9 @@
         <p id="nav_err" class="error hidden">OSINT Navigator key is required.</p>
       </section>
 
-      <!-- 05 — Vault -->
+      <!-- 06 — Vault -->
       <div class="sec-header">
-        <span class="chap" data-reveal="meta">05 — Vault <span class="req">Required</span></span>
+        <span class="chap" data-reveal="meta">06 — Vault <span class="req">Required</span></span>
         <h2 data-reveal="title">Your investigative memory.</h2>
       </div>
       <section class="card">
@@ -1276,7 +1286,7 @@
 
         <div id="tolaria_vault_note" class="hidden">
           <p class="lede" style="margin-top:18px;">
-            <strong>The installer downloads Tolaria on macOS</strong> if it isn't already installed, then opens it. Spotlight writes standard Markdown files with YAML frontmatter, so the same vault remains readable from Tolaria, Git, and your agent tools.
+            <strong>Tolaria must already be installed from a build you trust.</strong> Spotlight no longer downloads Tolaria from a moving latest-release URL. It writes standard Markdown files with YAML frontmatter, so the same vault remains readable from Tolaria, Git, and your agent tools.
           </p>
         </div>
 
@@ -1294,6 +1304,7 @@
           <input type="text" id="install_custom_base" placeholder="~/Work" autocomplete="off">
         </div>
         <p class="hint" style="margin-top: 14px;">Final install path: <code id="install_path_preview">~/Documents/Spotlight</code></p>
+        <p class="hint" style="margin-top: 8px;">Active case files stay under this install folder in <code>cases/</code> until you explicitly ingest approved material into the vault.</p>
         <p id="install_err" class="error hidden">Install folder is required.</p>
 
         <label class="block" style="margin-top: 18px;">Vault path <span class="hint">— full path to your Markdown vault folder (or where to create one)</span></label>
@@ -1301,14 +1312,14 @@
         <p id="vault_err" class="error hidden">Vault path is required.</p>
       </section>
 
-      <!-- 06 — Integrations -->
+      <!-- 07 — Integrations -->
       <div class="sec-header">
-        <span class="chap" data-reveal="meta">06 — Integrations <span class="opt">optional external tools</span></span>
+        <span class="chap" data-reveal="meta">07 — Integrations <span class="opt">optional external tools</span></span>
         <h2 data-reveal="title">Plug-ins.</h2>
       </div>
       <section class="card">
         <div class="checkbox-group">
-          <label><input type="checkbox" id="int_devbrowser" checked><span class="opt-name"><span class="name">dev-browser</span><span class="desc">Browser automation for specific investigative tasks: forms, JS-rendered pages, screenshots, downloads, and authenticated sessions. Installs via npm. No key required.</span></span></label>
+          <label><input type="checkbox" id="int_devbrowser" checked><span class="opt-name"><span class="name">dev-browser</span><span class="desc">Browser automation for specific investigative tasks: forms, JS-rendered pages, screenshots, downloads, and authenticated sessions. Installs the reviewed npm pin only. No key required.</span></span></label>
         </div>
 
         <div class="checkbox-group" style="margin-top: 12px;">
@@ -1327,24 +1338,12 @@
           <input type="text" id="unpaywall_email" placeholder="you@example.com" autocomplete="off">
         </div>
 
-        <div class="checkbox-group" style="margin-top: 12px;">
-          <label><input type="checkbox" id="int_rlm"><span class="opt-name"><span class="name">RLM case-corpus helper</span><span class="desc">Experimental relationship-lead extraction. Default is off; local mode uses Ollama gemma4:e4b with hybrid prefiltering and never writes verified facts.</span></span></label>
-        </div>
-        <div id="rlm_options" class="hidden" style="margin-top: 16px;">
-          <label class="block">RLM mode <span class="hint">— keep off unless you have reviewed the benchmark and want local lead extraction.</span></label>
-          <div class="provider-grid">
-            <label><input type="radio" name="rlm_mode" value="lite" checked><span class="opt">Lite</span></label>
-            <label><input type="radio" name="rlm_mode" value="local_gemma4_e4b"><span class="opt">Gemma4 E4B</span></label>
-          </div>
-          <p class="hint" style="margin-top: 12px;">Gemma4 E4B uses hybrid prefiltering by default: deterministic extraction first, then semantic contradiction chunks only. Output stays in <code>data/rlm-analysis.json</code> as <code>needs_verification</code> leads.</p>
-        </div>
-
       </section>
 
       <div class="generate-bar">
         <p class="lbl"><em>All set?</em> Generate your installer.</p>
+        <p class="hint" style="margin: 8px 0 0;">The installer uses exact reviewed package versions from <code>VALIDATED_DEPENDENCIES.md</code>; it does not install npm/PyPI <code>latest</code>.</p>
         <div class="generate-actions">
-          <button type="button" class="btn-ghost" id="agent-setup-btn">Download agent setup <span aria-hidden="true">↓</span></button>
           <button type="button" class="btn-primary" id="generate-btn">Generate installer <span aria-hidden="true">→</span></button>
         </div>
       </div>
@@ -1427,7 +1426,6 @@
   const cloudKeyLabel = document.getElementById('cloud_key_label');
   const cloudKeyInput = document.getElementById('cloud_key');
   const generateBtn = document.getElementById('generate-btn');
-  const agentSetupBtn = document.getElementById('agent-setup-btn');
   const installOutput = document.getElementById('install-output');
   const scriptPreview = document.getElementById('script-preview');
   const copyBtn = document.getElementById('copy-btn');
@@ -1565,25 +1563,25 @@
     claude: {
       name: 'Claude Code',
       bin: 'claude',
-      installPkg: '@anthropic-ai/claude-code',
+      installPkg: '@anthropic-ai/claude-code@2.1.169',
       contextFile: 'CLAUDE.md',
     },
     gemini: {
       name: 'Gemini',
       bin: 'gemini',
-      installPkg: '@google/gemini-cli',
+      installPkg: '@google/gemini-cli@0.45.2',
       contextFile: 'GEMINI.md',
     },
     codex: {
       name: 'Codex',
       bin: 'codex',
-      installPkg: '@openai/codex',
+      installPkg: '@openai/codex@0.138.0',
       contextFile: null,
     },
     opencode: {
       name: 'OpenCode',
       bin: 'opencode',
-      installPkg: 'opencode-ai',
+      installPkg: 'opencode-ai@1.16.2',
       contextFile: null,
     },
   };
@@ -1838,164 +1836,6 @@
     return buildZipEntries([{ filename, contents, executable: true }]);
   }
 
-  function providerEnvVars(cfg) {
-    const vars = ['FIRECRAWL_API_KEY', 'OSINT_NAV_API_KEY'];
-    if (cfg.mode === 'cloud' && cfg.cloud_key_var) vars.push(cfg.cloud_key_var);
-    return vars;
-  }
-
-  function envValues(cfg) {
-    const values = {
-      FIRECRAWL_API_KEY: cfg.firecrawl_key || '',
-      OSINT_NAV_API_KEY: cfg.nav_key || '',
-      SPOTLIGHT_VAULT_PATH: cfg.vault_path || '',
-    };
-    if (cfg.mode === 'cloud' && cfg.cloud_key_var) values[cfg.cloud_key_var] = cfg.cloud_key || '';
-    if (cfg.int_junkipedia) values.JUNKIPEDIA_API_KEY = cfg.junkipedia_key || '';
-    if (cfg.int_unpaywall) values.UNPAYWALL_EMAIL = cfg.unpaywall_email || '';
-    if (cfg.int_rlm) {
-      values.SPOTLIGHT_RLM_MODE = cfg.rlm_mode || 'lite';
-      if (cfg.rlm_mode === 'local_gemma4_e4b') {
-        values.SPOTLIGHT_RLM_MODEL = 'gemma4:e4b';
-        values.SPOTLIGHT_RLM_PREFILTER = 'true';
-        values.SPOTLIGHT_RLM_HYBRID = 'true';
-      }
-    }
-    if (cfg.mode === 'local') {
-      values.MODEL_REPO = cfg.model_repo || '';
-      values.LOCAL_SERVER = cfg.local_server || 'llamacpp';
-      values.LOCAL_ENDPOINT = cfg.local_server === 'llamacpp' ? 'http://127.0.0.1:8080/v1' : 'http://127.0.0.1:11434/v1';
-      if (cfg.local_server === 'ollama') {
-        const OLLAMA_TAGS = {
-          qwen9b: {
-            model: 'hf.co/tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF:Q4_K_M',
-            alias: 'spotlight-qwen9b',
-          },
-          qwen27b: {
-            // Tom's journalist fine-tune on Huihui's abliterated Qwen 3.6
-            // base — same investigative-journalism corpus as the 9B,
-            // standard Q4_K_M quant via Ollama's HF passthrough.
-            model: 'hf.co/tomvaillant/qwen3.6-27b-abliterated-journalist-GGUF:Q4_K_M',
-            alias: 'spotlight-qwen27b',
-          },
-        };
-        const tag = OLLAMA_TAGS[cfg.local_model] || OLLAMA_TAGS.qwen9b;
-        values.OLLAMA_MODEL = tag.model;
-        values.SPOTLIGHT_OLLAMA_ALIAS = tag.alias;
-      }
-    }
-    return values;
-  }
-
-  function buildAgentManifest(cfg) {
-    return {
-      schema_version: 'spotlight-agent-setup/v1',
-      generated_at: new Date().toISOString(),
-      startup_command: 'spotlight',
-      install_path: cfg.install_path,
-      runtime: {
-        mode: cfg.mode,
-        name: cfg.runtime,
-        local_server: cfg.local_server,
-        opencode_provider: cfg.opencode_provider,
-      },
-      vault: {
-        app: cfg.vault_app,
-        type: cfg.vault_app === 'tolaria' ? 'tolaria' : 'obsidian',
-        path: cfg.vault_path,
-      },
-      env: {
-        required: providerEnvVars(cfg),
-        optional: [
-          ...(cfg.int_junkipedia ? ['JUNKIPEDIA_API_KEY'] : []),
-          ...(cfg.int_unpaywall ? ['UNPAYWALL_EMAIL'] : []),
-          ...(cfg.int_rlm ? ['SPOTLIGHT_RLM_MODE'] : []),
-        ],
-        values: envValues(cfg),
-      },
-      integrations: {
-        osint_navigator: true,
-        dev_browser: cfg.int_devbrowser,
-        junkipedia: cfg.int_junkipedia,
-        unpaywall: cfg.int_unpaywall,
-        rlm: {
-          enabled: cfg.int_rlm,
-          mode: cfg.int_rlm ? (cfg.rlm_mode || 'lite') : 'off',
-          model: cfg.int_rlm && cfg.rlm_mode === 'local_gemma4_e4b' ? 'gemma4:e4b' : null,
-          prefilter: cfg.int_rlm && cfg.rlm_mode === 'local_gemma4_e4b',
-          hybrid: cfg.int_rlm && cfg.rlm_mode === 'local_gemma4_e4b',
-          evidence_boundary: 'lead-only; never verified or publishable',
-        },
-      },
-      notes: [
-        'This manifest contains local secret values from the setup form.',
-        'Keep this ZIP private. Agents must write secrets to .env without printing them.',
-      ],
-    };
-  }
-
-  function buildAgentPrompt(manifest) {
-    return `# Spotlight Agent Setup
-
-Use \`spotlight-agent-manifest.json\` as the source of truth. Handle the setup for the user, then verify it.
-
-The manifest contains local secret values under \`env.values\`. Do not ask the user to paste secrets into chat. Do not print, log, summarize, or expose secret values.
-
-There are two supported setup paths:
-
-1. Agent setup: use this manifest to install or update Spotlight, configure the selected runtime, create the vault scaffold, write local config, and run verification.
-2. Command setup: if the user explicitly prefers the generated \`spotlight-setup.command\`, stop and let that script handle setup instead.
-
-## Rules
-
-- Do not ask the user to paste secrets into chat.
-- Do not print secret values from \`env.values\`, \`.env\`, shell history, or provider CLIs.
-- Verify env vars by variable name only.
-- Keep Spotlight runtime-agnostic. Configure the selected runtime; do not force Goose.
-- Write generated config only into the install path selected by the user.
-- Once setup is ready, start from the install folder and launch \`${manifest.startup_command}\`.
-
-## Manifest Summary
-
-- Runtime: ${manifest.runtime.mode} / ${manifest.runtime.name}${manifest.runtime.local_server ? ' / ' + manifest.runtime.local_server : ''}
-- Install path: \`${manifest.install_path || '<install_path>'}\`
-- Vault: ${manifest.vault.app} at \`${manifest.vault.path || '<vault_path>'}\`
-- Required env vars: ${manifest.env.required.join(', ')}
-- Optional env vars: ${manifest.env.optional.length ? manifest.env.optional.join(', ') : 'none selected'}
-- Selected integrations: ${Object.entries(manifest.integrations).filter(([, enabled]) => enabled).map(([id]) => id).join(', ')}
-
-## Setup Steps
-
-1. Install or update Spotlight source from \`https://github.com/buriedsignals/spotlight.git\` at \`${manifest.install_path || '<install_path>'}\`. If the repo exists, fetch \`origin main\` and fast-forward only. If the checkout is dirty or divergent, stop and report that manual review is required.
-2. Install required tools if missing: git, node/npm, Python 3, Firecrawl CLI, QMD. Install optional integration tools only when selected, especially dev-browser for browser acquisition.
-3. Configure the selected runtime:
-   - Claude Code: install \`@anthropic-ai/claude-code\` if missing and symlink \`CLAUDE.md -> AGENTS.md\`.
-   - Codex: install \`@openai/codex\` if missing. Codex reads \`AGENTS.md\`.
-   - Gemini: install \`@google/gemini-cli\` if missing and symlink \`GEMINI.md -> AGENTS.md\`.
-   - OpenCode cloud: install OpenCode, symlink Spotlight skills into \`~/.config/opencode/skills\`, and rely on the selected provider key from \`.env\`.
-   - Local: install OpenCode plus the selected local server, create or repair \`~/.local/bin/spotlight-local\`, and ensure \`spotlight\` launches it.
-4. Create the vault scaffold at \`${manifest.vault.path || '<vault_path>'}\`: \`cases\`, \`evidence\`, \`captures\`, \`briefs\`, \`exports\`, \`handoff-to-mycroft\`, \`_schema\`, and \`_index.md\`.
-5. Write \`.env\` inside the Spotlight install folder from \`env.values\`. Include required and selected optional variable names. Set file mode \`600\`. Never print values.
-6. Write \`.spotlight-config.json\` with runtime, vault path, cases root, selected integrations, and install path.
-7. Configure QMD with \`qmd collection add <vault_path> --name spotlight\` and run \`qmd update\`.
-8. Install or repair \`~/.local/bin/spotlight-doctor\`, \`~/.local/bin/spotlight-update\`, and the replaceable shell startup block for the \`spotlight\` command.
-
-## Verification Steps
-
-1. Confirm the install path exists.
-2. Confirm \`.spotlight-config.json\` exists and matches the manifest choices.
-3. Confirm \`.env\` exists and contains required and selected optional variable names, without exposing values.
-4. Confirm QMD exists and can run \`qmd status\`.
-5. Run \`spotlight doctor\` or \`~/.local/bin/spotlight-doctor\`.
-6. Run \`python3 integrations/preflight.py --text\` from the Spotlight install folder.
-7. Launch \`${manifest.startup_command}\` and tell the user to start with: "Start a Spotlight investigation on <your lead>".
-
-## Tell The User Next
-
-Setup is complete. Open a new terminal and run \`spotlight\`. Then ask it to start a Spotlight investigation on the lead, claim, entity, document, or website you want to investigate.
-`;
-  }
-
   generateBtn.addEventListener('click', () => {
     const cfg = collectForm();
 
@@ -2043,40 +1883,6 @@ Setup is complete. Open a new terminal and run \`spotlight\`. Then ask it to sta
     const a = document.createElement('a');
     a.href = url;
     a.download = 'spotlight-setup.zip';
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 3000);
-  });
-
-  agentSetupBtn.addEventListener('click', () => {
-    const cfg = collectForm();
-    let hasErr = false;
-    if (!cfg.firecrawl_key) { firecrawlErr.classList.remove('hidden'); hasErr = true; } else firecrawlErr.classList.add('hidden');
-    if (!cfg.nav_key) { navErr.classList.remove('hidden'); hasErr = true; } else navErr.classList.add('hidden');
-    if (cfg.runtime === 'opencode' && !cfg.cloud_key) { cloudKeyErr.classList.remove('hidden'); hasErr = true; } else cloudKeyErr.classList.add('hidden');
-    if (!cfg.install_path) { installErr.classList.remove('hidden'); hasErr = true; } else installErr.classList.add('hidden');
-    if (!cfg.vault_path) { vaultErr.classList.remove('hidden'); hasErr = true; } else vaultErr.classList.add('hidden');
-    if (hasErr) {
-      document.querySelector('.error:not(.hidden)').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-    const manifest = buildAgentManifest(cfg);
-    const zip = buildZipEntries([
-      {
-        filename: 'spotlight-agent-manifest.json',
-        contents: JSON.stringify(manifest, null, 2) + '\n',
-        executable: false,
-      },
-      {
-        filename: 'spotlight-agent-prompt.md',
-        contents: buildAgentPrompt(manifest),
-        executable: false,
-      },
-    ]);
-    const blob = new Blob([zip], { type: 'application/zip' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'spotlight-agent-setup.zip';
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 3000);
   });

@@ -54,9 +54,28 @@ else
 fi
 SPOTLIGHT_VAULT_INPUT="${SPOTLIGHT_VAULT_INPUT:?vault path missing from config}"
 SPOTLIGHT_VAULT_PATH="$(expand_path "$SPOTLIGHT_VAULT_INPUT")"
-SPOTLIGHT_CASES_ROOT="$SPOTLIGHT_VAULT_PATH/cases"
+if [ -n "${SPOTLIGHT_CASES_ROOT:-}" ]; then
+  SPOTLIGHT_CASES_ROOT="$(expand_path "$SPOTLIGHT_CASES_ROOT")"
+else
+  SPOTLIGHT_CASES_ROOT="$SPOTLIGHT_DIR/cases"
+fi
 REPO_URL="https://github.com/buriedsignals/spotlight.git"
 export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$PATH"
+
+# Reviewed dependency pins. Keep this list in sync with
+# VALIDATED_DEPENDENCIES.md. The installer never asks npm or pip for "latest"
+# on packages managed by Spotlight setup.
+FIRECRAWL_CLI_VERSION="1.3.1"
+QMD_VERSION="2.0.1"
+DEV_BROWSER_VERSION="0.2.8"
+CLAUDE_CODE_VERSION="2.1.169"
+GEMINI_CLI_VERSION="0.45.2"
+OPENAI_CODEX_VERSION="0.138.0"
+OPENCODE_AI_VERSION="1.16.2"
+PI_CODING_AGENT_VERSION="0.73.1"
+JSONSCHEMA_VERSION="4.25.1"
+REQUESTS_VERSION="2.32.5"
+MAIGRET_VERSION="0.4.4"
 
 # Defaults for optional config fields
 : "${SPOTLIGHT_MODE:=cloud}"
@@ -154,7 +173,7 @@ if [ -n "$SPOTLIGHT_MODEL_REPO" ]; then
 fi
 
 # === Colors + spinner + step headers (verbatim from buildScript) ===
-_c_reset=$'\033[0m'; _c_cyan=$'\033[36m'; _c_green=$'\033[32m'; _c_red=$'\033[31m'; _c_dim=$'\033[2m'; _c_bold=$'\033[1m'
+_c_reset=$'\033[0m'; _c_cyan=$'\033[36m'; _c_green=$'\033[32m'; _c_red=$'\033[31m'; _c_yellow=$'\033[33m'; _c_dim=$'\033[2m'; _c_bold=$'\033[1m'
 _spin_frames=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏)
 
 spin() {
@@ -224,6 +243,107 @@ ensure_tool() {
   spin "Installing $cmd via brew" brew install "$pkg"
 }
 
+reviewed_npm_version() {
+  case "$1" in
+    firecrawl-cli) echo "$FIRECRAWL_CLI_VERSION" ;;
+    @tobilu/qmd) echo "$QMD_VERSION" ;;
+    dev-browser) echo "$DEV_BROWSER_VERSION" ;;
+    @anthropic-ai/claude-code) echo "$CLAUDE_CODE_VERSION" ;;
+    @google/gemini-cli) echo "$GEMINI_CLI_VERSION" ;;
+    @openai/codex) echo "$OPENAI_CODEX_VERSION" ;;
+    opencode-ai) echo "$OPENCODE_AI_VERSION" ;;
+    @mariozechner/pi-coding-agent) echo "$PI_CODING_AGENT_VERSION" ;;
+    *) return 1 ;;
+  esac
+}
+
+npm_global_version() {
+  local package="$1" prefix="${2:-}"
+  if [ -n "$prefix" ]; then
+    npm root -g --prefix "$prefix" >/tmp/spotlight-npm-root.$$ 2>/dev/null || return 1
+  else
+    npm root -g >/tmp/spotlight-npm-root.$$ 2>/dev/null || return 1
+  fi
+  local npm_root; npm_root="$(cat /tmp/spotlight-npm-root.$$)"
+  rm -f /tmp/spotlight-npm-root.$$
+  node - "$npm_root" "$package" <<'NODE'
+const fs = require("fs");
+const path = require("path");
+const root = process.argv[2];
+const pkg = process.argv[3];
+const parts = pkg.startsWith("@") ? pkg.split("/") : [pkg];
+const manifest = path.join(root, ...parts, "package.json");
+try {
+  const data = JSON.parse(fs.readFileSync(manifest, "utf8"));
+  process.stdout.write(data.version);
+} catch {
+  process.exit(1);
+}
+NODE
+}
+
+verify_npm_global_exact() {
+  local binary="$1" package="$2" expected="$3" prefix="${4:-}" actual=""
+  command -v "$binary" >/dev/null 2>&1 || {
+    echo "$binary missing after installing $package@$expected" >&2
+    return 1
+  }
+  actual="$(npm_global_version "$package" "$prefix" 2>/dev/null || true)"
+  if [ "$actual" != "$expected" ]; then
+    echo "$package version mismatch: expected $expected, found ${actual:-unknown}" >&2
+    return 1
+  fi
+}
+
+ensure_npm_global_exact() {
+  local binary="$1" package="$2" prefix="${3:-}" version install_spec installed=""
+  version="$(reviewed_npm_version "$package")" || {
+    echo "No reviewed npm version pin for $package. Refusing to install." >&2
+    exit 1
+  }
+  install_spec="$package@$version"
+  installed="$(npm_global_version "$package" "$prefix" 2>/dev/null || true)"
+  if command -v "$binary" >/dev/null 2>&1 && [ "$installed" = "$version" ]; then
+    printf "%s✓%s %s already installed at reviewed version %s\n" "$_c_green" "$_c_reset" "$binary" "$version"
+    return 0
+  fi
+  if [ -n "$installed" ] && [ "$installed" != "$version" ]; then
+    printf "%s!%s %s is installed at %s; replacing with reviewed %s\n" "$_c_yellow" "$_c_reset" "$package" "$installed" "$version"
+  fi
+  if [ -n "$prefix" ]; then
+    spin "Installing $install_spec" npm install -g --prefix "$prefix" "$install_spec"
+    export PATH="$prefix/bin:$PATH"
+  else
+    spin "Installing $install_spec" npm install -g "$install_spec"
+  fi
+  if [ "$DRY_RUN" != "1" ]; then
+    verify_npm_global_exact "$binary" "$package" "$version" "$prefix"
+  fi
+}
+
+install_python_reviewed_deps() {
+  if [ "$DRY_RUN" = "1" ]; then
+    printf 'DRY-RUN: python3 -m pip install --user --quiet jsonschema==%s requests==%s\n' "$JSONSCHEMA_VERSION" "$REQUESTS_VERSION"
+    return 0
+  fi
+  spin "Installing reviewed Python deps" python3 -m pip install --user --quiet \
+    "jsonschema==$JSONSCHEMA_VERSION" \
+    "requests==$REQUESTS_VERSION"
+  python3 - "$JSONSCHEMA_VERSION" "$REQUESTS_VERSION" <<'PY'
+import importlib.metadata as metadata
+import sys
+
+expected = {
+    "jsonschema": sys.argv[1],
+    "requests": sys.argv[2],
+}
+for package, version in expected.items():
+    actual = metadata.version(package)
+    if actual != version:
+        raise SystemExit(f"{package} version mismatch: expected {version}, found {actual}")
+PY
+}
+
 update_repo_ff_only() {
   local dir="$1" name="$2" branch="main"
   [ -d "$dir/.git" ] || return 1
@@ -272,19 +392,17 @@ if [ "$SPOTLIGHT_VAULT_APP" = "tolaria" ]; then
     if [ -d "/Applications/Tolaria.app" ] || [ -d "$HOME/Applications/Tolaria.app" ]; then
       printf "%s✓%s Tolaria.app installed\n" "$_c_green" "$_c_reset"
     else
-      tmpdir="$(mktemp -d)"
-      spin "Downloading Tolaria latest release" curl -L "https://github.com/refactoringhq/tolaria/releases/latest/download/Tolaria.app.tar.gz" -o "$tmpdir/Tolaria.app.tar.gz"
-      run tar -xzf "$tmpdir/Tolaria.app.tar.gz" -C "$tmpdir"
-      app_path="$(find "$tmpdir" -maxdepth 3 -name "Tolaria.app" -type d | head -1)"
-      if [ -z "$app_path" ] && [ "$DRY_RUN" != "1" ]; then echo "Tolaria.app was not found in the release archive." >&2; exit 1; fi
-      run mkdir -p "$HOME/Applications"
-      [ -n "$app_path" ] && run cp -R "$app_path" "$HOME/Applications/Tolaria.app"
-      run rm -rf "$tmpdir"
-      printf "%s✓%s Tolaria.app installed in ~/Applications\n" "$_c_green" "$_c_reset"
+      if [ "$DRY_RUN" = "1" ]; then
+        printf "DRY-RUN: Tolaria.app missing; installer would ask for a reviewed manual install before continuing.\n"
+      else
+        echo "Tolaria.app is not installed. Spotlight no longer downloads Tolaria from a moving latest-release URL." >&2
+        echo "Install a reviewed Tolaria build manually, then re-run setup; or choose Obsidian/local directory mode." >&2
+        exit 1
+      fi
     fi
     run open -a Tolaria 2>/dev/null || run open "$HOME/Applications/Tolaria.app" 2>/dev/null || true
   else
-    echo "Tolaria selected. On Linux, install Tolaria from https://tolaria.md/; Spotlight will still write Markdown files to the vault path."
+    echo "Tolaria selected. On Linux, install a reviewed Tolaria build manually; Spotlight will still write Markdown files to the vault path."
   fi
 else
   step "Obsidian vault"
@@ -320,17 +438,8 @@ fi
 cd "$SPOTLIGHT_DIR"
 
 step "Core dependencies"
-if ! command -v firecrawl >/dev/null 2>&1; then
-  spin "Installing firecrawl-cli" npm install -g firecrawl-cli
-else
-  printf "%s✓%s firecrawl-cli already installed\n" "$_c_green" "$_c_reset"
-fi
-
-if ! command -v qmd >/dev/null 2>&1; then
-  spin "Installing QMD vault search" npm install -g @tobilu/qmd
-else
-  printf "%s✓%s qmd already installed\n" "$_c_green" "$_c_reset"
-fi
+ensure_npm_global_exact firecrawl firecrawl-cli
+ensure_npm_global_exact qmd @tobilu/qmd
 
 # =====================================================================
 # LOCAL MODE — inference server + agent harness
@@ -443,11 +552,7 @@ if [ "$SPOTLIGHT_MODE" = "local" ]; then
     fi
 
     step "Agent harness (Pi)"
-    if ! command -v pi >/dev/null 2>&1; then
-      spin "Installing @mariozechner/pi-coding-agent via npm" npm install -g @mariozechner/pi-coding-agent
-    else
-      printf "%s✓%s pi already installed\n" "$_c_green" "$_c_reset"
-    fi
+    ensure_npm_global_exact pi @mariozechner/pi-coding-agent
 
     step "pi-llama-cpp extension (model browser for llama-server)"
     spin "Installing pi-llama-cpp" pi install npm:pi-llama-cpp
@@ -557,7 +662,7 @@ if [ "$SPOTLIGHT_MODE" = "local" ]; then
 set -euo pipefail
 MODEL="\$HOME/Models/$MODEL_LEAF/$GGUF_FILE"
 command -v llama-server >/dev/null 2>&1 || { echo "llama-server missing — brew install llama.cpp" >&2; exit 1; }
-command -v pi           >/dev/null 2>&1 || { echo "pi missing — npm install -g @mariozechner/pi-coding-agent" >&2; exit 1; }
+command -v pi           >/dev/null 2>&1 || { echo "pi missing — install reviewed @mariozechner/pi-coding-agent@$PI_CODING_AGENT_VERSION with install-spotlight.sh" >&2; exit 1; }
 [ -f "\$MODEL" ] || { echo "Model not found: \$MODEL" >&2; exit 1; }
 lsof -ti:8080 >/dev/null 2>&1 && { echo "Port 8080 already in use — kill the existing process first" >&2; exit 1; }
 llama-server --model "\$MODEL" --alias qwen27 --host 127.0.0.1 --port 8080 \\
@@ -600,7 +705,7 @@ SPOTLIGHT_DIR="\${SPOTLIGHT_DIR:-$SPOTLIGHT_DIR}"
 ENV_FILE="\$SPOTLIGHT_DIR/.env"
 if [ -f "\$ENV_FILE" ]; then set -a; . "\$ENV_FILE"; set +a; fi
 command -v ollama >/dev/null 2>&1 || { echo "ollama missing — brew install ollama" >&2; exit 1; }
-command -v pi     >/dev/null 2>&1 || { echo "pi missing — npm install -g @mariozechner/pi-coding-agent" >&2; exit 1; }
+command -v pi     >/dev/null 2>&1 || { echo "pi missing — install reviewed @mariozechner/pi-coding-agent@$PI_CODING_AGENT_VERSION with install-spotlight.sh" >&2; exit 1; }
 OLLAMA_MODEL="\${OLLAMA_MODEL:-$OLLAMA_MODEL_DEFAULT}"
 SPOTLIGHT_OLLAMA_ALIAS="\${SPOTLIGHT_OLLAMA_ALIAS:-$OLLAMA_ALIAS_DEFAULT}"
 ollama list >/dev/null 2>&1 || { brew services start ollama 2>/dev/null || ollama serve >/tmp/ollama-spotlight.log 2>&1 & sleep 2; }
@@ -672,13 +777,17 @@ else
   if ! command -v "$RT_BIN" >/dev/null 2>&1; then
     if [ "$SPOTLIGHT_RUNTIME" = "gemini" ]; then
       NPM_PREFIX="$HOME/.npm-global"; run mkdir -p "$NPM_PREFIX"
-      spin "Installing $RT_PKG" npm install -g --prefix "$NPM_PREFIX" "$RT_PKG"
-      export PATH="$NPM_PREFIX/bin:$PATH"
+      ensure_npm_global_exact "$RT_BIN" "$RT_PKG" "$NPM_PREFIX"
     else
-      spin "Installing $RT_PKG" npm install -g "$RT_PKG"
+      ensure_npm_global_exact "$RT_BIN" "$RT_PKG"
     fi
   else
-    printf "%s✓%s %s already installed\n" "$_c_green" "$_c_reset" "$RT_BIN"
+    if [ "$SPOTLIGHT_RUNTIME" = "gemini" ]; then
+      NPM_PREFIX="$HOME/.npm-global"
+      ensure_npm_global_exact "$RT_BIN" "$RT_PKG" "$NPM_PREFIX"
+    else
+      ensure_npm_global_exact "$RT_BIN" "$RT_PKG"
+    fi
   fi
   if [ -n "$RT_CTX" ]; then
     run ln -sfn "$SPOTLIGHT_DIR/AGENTS.md" "$SPOTLIGHT_DIR/$RT_CTX"
@@ -700,15 +809,11 @@ else
 fi
 
 step "Python dependencies"
-spin "Installing jsonschema + requests" bash -c "pip3 install --user --quiet jsonschema requests 2>/dev/null || pip install --user --quiet jsonschema requests"
+install_python_reviewed_deps
 
 step "Browser acquisition"
 if [ "$SPOTLIGHT_INT_DEVBROWSER" = "true" ]; then
-  if ! command -v dev-browser >/dev/null 2>&1; then
-    spin "Installing dev-browser" npm install -g dev-browser
-  else
-    printf "%s✓%s dev-browser already installed\n" "$_c_green" "$_c_reset"
-  fi
+  ensure_npm_global_exact dev-browser dev-browser
   spin "Installing dev-browser Chromium" bash -c "dev-browser install >/dev/null 2>&1 || true"
 else
   printf "%s→%s dev-browser not selected; browser acquisition fallback disabled by setup choice\n" "$_c_yellow" "$_c_reset"
@@ -775,6 +880,7 @@ else
   "vault_path": "$SPOTLIGHT_VAULT_PATH",
   "vault_type": "$([ "$SPOTLIGHT_VAULT_APP" = "tolaria" ] && echo tolaria || echo obsidian)",
   "vault_app": "$SPOTLIGHT_VAULT_APP",
+  "case_workspace_root": "$SPOTLIGHT_CASES_ROOT",
   "cases_root": "$SPOTLIGHT_CASES_ROOT",
   "install_path": "$SPOTLIGHT_DIR",
   "mode": "$SPOTLIGHT_MODE",
@@ -783,10 +889,29 @@ else
   "agent": $([ "$SPOTLIGHT_MODE" = "local" ] && printf '"%s"' "$SPOTLIGHT_AGENT" || echo null),
   "opencode_provider": $([ -n "$SPOTLIGHT_OPENCODE_PROVIDER" ] && printf '"%s"' "$SPOTLIGHT_OPENCODE_PROVIDER" || echo null),
   "integrations": {
-    "osint_navigator": true,
-    "junkipedia": $SPOTLIGHT_INT_JUNKIPEDIA,
-    "dev_browser": $SPOTLIGHT_INT_DEVBROWSER,
-    "unpaywall": $SPOTLIGHT_INT_UNPAYWALL,
+    "osint_navigator": {
+      "status": "unknown",
+      "enabled": true,
+      "checked_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+      "source": "setup",
+      "required_in_phase_2": false,
+      "reason": "preflight not run yet"
+    },
+    "junkipedia": {
+      "enabled": $SPOTLIGHT_INT_JUNKIPEDIA,
+      "status": "unknown",
+      "source": "setup"
+    },
+    "dev_browser": {
+      "enabled": $SPOTLIGHT_INT_DEVBROWSER,
+      "status": "unknown",
+      "source": "setup"
+    },
+    "unpaywall": {
+      "enabled": $SPOTLIGHT_INT_UNPAYWALL,
+      "status": "unknown",
+      "source": "setup"
+    },
     "rlm": {
       "enabled": $SPOTLIGHT_INT_RLM,
       "mode": "$SPOTLIGHT_RLM_MODE",
@@ -802,7 +927,7 @@ else
 CONFIG_EOF
 fi
 
-step "Vault scaffold"
+step "Case workspace and vault scaffold"
 run mkdir -p "$SPOTLIGHT_CASES_ROOT" "$SPOTLIGHT_VAULT_PATH/evidence" "$SPOTLIGHT_VAULT_PATH/captures" "$SPOTLIGHT_VAULT_PATH/briefs" "$SPOTLIGHT_VAULT_PATH/exports" "$SPOTLIGHT_VAULT_PATH/handoff-to-mycroft" "$SPOTLIGHT_VAULT_PATH/_schema"
 if [ "$DRY_RUN" != "1" ] && [ ! -f "$SPOTLIGHT_VAULT_PATH/_index.md" ]; then
   cat > "$SPOTLIGHT_VAULT_PATH/_index.md" <<'INDEX_EOF'
@@ -812,7 +937,10 @@ tags: [spotlight, index]
 ---
 # Spotlight Vault
 
-- cases/ — active investigations
+- investigations/ — verified case summaries ingested after approval
+- entities/ — durable people, organizations, places, and objects
+- methodology/ — reusable methods and source notes
+- tools/ — durable tool notes and integration lessons
 - evidence/ — verified source material and citations
 - captures/ — local page/document captures
 - briefs/ — case summaries and handoffs
@@ -865,7 +993,7 @@ SPOTLIGHT_VAULT_INPUT='$SPOTLIGHT_VAULT_INPUT'
 SPOTLIGHT_DIR_DEFAULT="\$(expand_path "\$SPOTLIGHT_DIR_DEFAULT_INPUT")"
 SPOTLIGHT_DIR="\${SPOTLIGHT_DIR:-\$SPOTLIGHT_DIR_DEFAULT}"
 SPOTLIGHT_VAULT_PATH="\${SPOTLIGHT_VAULT_PATH:-\$(expand_path "\$SPOTLIGHT_VAULT_INPUT")}"
-SPOTLIGHT_CASES_ROOT="\${SPOTLIGHT_CASES_ROOT:-\$SPOTLIGHT_VAULT_PATH/cases}"
+SPOTLIGHT_CASES_ROOT="\${SPOTLIGHT_CASES_ROOT:-\$SPOTLIGHT_DIR/cases}"
 fail=0
 ok() { printf "OK    %s\\n" "\$1"; }
 bad() { printf "FAIL  %s\\n" "\$1"; fail=1; }
@@ -879,7 +1007,7 @@ check_path "\$SPOTLIGHT_DIR/.env" "Spotlight env"
 check_env_name FIRECRAWL_API_KEY
 check_env_name OSINT_NAV_API_KEY
 check_path "\$SPOTLIGHT_VAULT_PATH" "Spotlight vault"
-check_path "\$SPOTLIGHT_CASES_ROOT" "Spotlight cases root"
+check_path "\$SPOTLIGHT_CASES_ROOT" "Spotlight case workspace"
 check_cmd firecrawl "Firecrawl CLI"
 check_cmd qmd "QMD CLI"
 DOCTOR_EOF

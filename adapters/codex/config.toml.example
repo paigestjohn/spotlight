@@ -37,5 +37,4 @@ approval_policy = "never"
 # Global defaults — apply when a profile does not override.
 [sandbox]
 # On bare-metal host: keep "read-only" by default; skills widen per-operation.
-# In Docker: pass `--dangerously-bypass-approvals-and-sandbox` at launch instead.
 mode = "read-only"

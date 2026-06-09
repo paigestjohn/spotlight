@@ -15,6 +15,7 @@
 #  11. setup.html exists
 #  12. index.html exists
 #  13. DISCLAIMER.md + LICENSE present
+#  14. Setup dependency pins are enforced
 #
 # Exit 0 on pass, 1 if any check fails.
 
@@ -100,6 +101,14 @@ else
   fail "tests/rlm-flow-check.py failed with rc=$rc"
 fi
 
+python3 tests/rlm-methodology-contract-check.py >/dev/null 2>&1
+rc=$?
+if [ $rc -eq 0 ]; then
+  ok "RLM methodology contract documented"
+else
+  fail "RLM methodology contract check failed with rc=$rc"
+fi
+
 echo ""
 echo "── Cleanliness ──"
 
@@ -138,9 +147,25 @@ else
   fail "integration routing rows drifted"
 fi
 
+python3 tests/dependency-pins-check.py >/dev/null 2>&1
+rc=$?
+if [ $rc -eq 0 ]; then
+  ok "setup dependency pins enforced"
+else
+  fail "setup dependency pins drifted"
+fi
+
+python3 tests/plugin-distribution-check.py >/dev/null 2>&1
+rc=$?
+if [ $rc -eq 0 ]; then
+  ok "plugin distribution payload valid"
+else
+  fail "plugin distribution payload drifted"
+fi
+
 echo ""
 echo "── Entry points ──"
-for f in setup.html index.html DISCLAIMER.md LICENSE; do
+for f in setup.html index.html DISCLAIMER.md LICENSE VALIDATED_DEPENDENCIES.md; do
   if [ -f "$f" ]; then
     ok "$f present"
   else

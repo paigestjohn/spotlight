@@ -23,7 +23,8 @@ def main() -> int:
         source = research / "source.md"
         source.write_text(
             "Alice used alice@example.com and @alice on 2026-06-04.\n"
-            "See https://example.com/profile for context.\n",
+            "See https://example.com/profile for context.\n"
+            "The portal URL is https://example.org/northstar/harborfront.\n",
             encoding="utf-8",
         )
         request = Path(tmp_dir) / "request.json"
@@ -42,6 +43,8 @@ def main() -> int:
         assert not validate_analysis(analysis)
         assert all(a["verification_status"] == "needs_verification" for a in analysis["artifacts"])
         assert any(a["text"] == "alice@example.com" for a in analysis["artifacts"])
+        assert any(a["text"] == "https://example.org/northstar/harborfront" for a in analysis["artifacts"])
+        assert not any(a["text"] == "https://example.org/northstar/harborfront." for a in analysis["artifacts"])
         assert validate_analysis(
             {
                 "schema_version": "1.0",
@@ -100,6 +103,31 @@ def main() -> int:
         )
         assert proc.returncode == 0, proc.stderr
         print("ok validate-case --include-rlm")
+
+    with tempfile.TemporaryDirectory() as workspace_dir:
+        old_cases_root = os.environ.get("SPOTLIGHT_CASES_ROOT")
+        os.environ["SPOTLIGHT_CASES_ROOT"] = workspace_dir
+        try:
+            project = "case-workspace"
+            case_dir = Path(workspace_dir) / project
+            research = case_dir / "research"
+            research.mkdir(parents=True)
+            (research / "source.md").write_text("Contact workspace@example.com.\n", encoding="utf-8")
+            request = case_dir / "request.json"
+            request.write_text(
+                json.dumps({"project": project, "run_id": "run-env", "mode": "lite", "corpus_paths": ["research/source.md"]}),
+                encoding="utf-8",
+            )
+            result = run(request)
+            assert Path(result["analysis_path"]).resolve() == (case_dir / "data" / "rlm-analysis.json").resolve()
+            analysis = json.loads(Path(result["analysis_path"]).read_text(encoding="utf-8"))
+            assert any(a["text"] == "workspace@example.com" for a in analysis["artifacts"])
+            print("ok SPOTLIGHT_CASES_ROOT rlm workspace")
+        finally:
+            if old_cases_root is None:
+                os.environ.pop("SPOTLIGHT_CASES_ROOT", None)
+            else:
+                os.environ["SPOTLIGHT_CASES_ROOT"] = old_cases_root
     return 0
 
 

@@ -97,7 +97,7 @@ echo "── Sample data validates against schemas ──"
 
 if ! python3 -c "import jsonschema" 2>/dev/null; then
   printf "%s⊘%s jsonschema not installed — skipping sample validation%s\n" "$_c_dim" "$_c_reset" "$_c_dim"
-  printf "   Install: pip3 install --user jsonschema   (CI installs this automatically)%s\n" "$_c_reset"
+  printf "   Install: python3 -m pip install --user jsonschema==4.25.1   (CI installs this automatically)%s\n" "$_c_reset"
 else
   for pair in "findings.sample.json:findings.schema.json" "fact-check.sample.json:fact-check.schema.json" "evidence-bundle.sample.json:evidence-bundle.schema.json" "provenance-manifest.sample.json:provenance-manifest.schema.json"; do
     sample="tests/fixtures/${pair%%:*}"
@@ -206,6 +206,36 @@ _VC_TMP=$(mktemp -d -t spotlight-validate-case.XXXXXX)
 mkdir -p "$_VC_TMP/data"
 cp tests/fixtures/findings.sample.json "$_VC_TMP/data/findings.json"
 cp tests/fixtures/fact-check.sample.json "$_VC_TMP/data/fact-check.json"
+cp tests/fixtures/evidence-bundle.sample.json "$_VC_TMP/data/evidence-bundle.json"
+python3 -c "
+import json
+json.dump({
+  'schema_version': '1.0',
+  'project': 'sample-investigation',
+  'cycles': [{
+    'cycle': 1,
+    'timestamp': '2026-04-17T15:00:00Z',
+    'focus': 'sample validation',
+    'methodology': {
+      'techniques_used': ['registry lookup'],
+      'tools_used': ['firecrawl'],
+      'search_queries': ['Example Corp Ltd BVI'],
+      'failed_approaches': []
+    },
+    'sources_consulted': [{
+      'url': 'https://bvifsc.example/filings/2019-ABC-123',
+      'type': 'registry',
+      'accessed': '2026-04-17T12:03:00Z',
+      'useful': True
+    }],
+    'findings_added': 1,
+    'findings_upgraded': 0,
+    'gaps_resolved': [],
+    'gaps_remaining': ['Primary UBO disclosure'],
+    'notes': 'Sample log.'
+  }]
+}, open('$_VC_TMP/data/investigation-log.json', 'w'))
+"
 if python3 scripts/validate-case.py "$_VC_TMP" >/dev/null 2>&1; then
   ok "validate-case.py passes the sample fixtures"
 else
@@ -226,6 +256,68 @@ if python3 scripts/validate-case.py "$_VC_NEG" >/dev/null 2>&1; then
   fail "validate-case.py FAILED to reject empty 'claim' (negative test)"
 else
   ok "validate-case.py rejects empty 'claim' (negative test)"
+fi
+rm -rf "$_VC_NEG"
+
+# Negative test: detailed fact-check evidence items must satisfy the published schema.
+_VC_NEG=$(mktemp -d -t spotlight-validate-case-fact-neg.XXXXXX)
+mkdir -p "$_VC_NEG/data"
+cp tests/fixtures/findings.sample.json "$_VC_NEG/data/findings.json"
+python3 -c "
+import json
+d = json.load(open('tests/fixtures/fact-check.sample.json'))
+d['claims'][0]['evidence_for'][0].pop('source')
+json.dump(d, open('$_VC_NEG/data/fact-check.json', 'w'))
+"
+if python3 scripts/validate-case.py "$_VC_NEG" >/dev/null 2>&1; then
+  fail "validate-case.py FAILED to reject malformed fact-check evidence item"
+else
+  ok "validate-case.py rejects malformed fact-check evidence item"
+fi
+rm -rf "$_VC_NEG"
+
+# Negative test: evidence-bundle.json must satisfy its published schema when present.
+_VC_NEG=$(mktemp -d -t spotlight-validate-case-evidence-neg.XXXXXX)
+mkdir -p "$_VC_NEG/data"
+cp tests/fixtures/findings.sample.json "$_VC_NEG/data/findings.json"
+cp tests/fixtures/fact-check.sample.json "$_VC_NEG/data/fact-check.json"
+python3 -c "
+import json
+d = json.load(open('tests/fixtures/evidence-bundle.sample.json'))
+d['items'][0].pop('source_url')
+json.dump(d, open('$_VC_NEG/data/evidence-bundle.json', 'w'))
+"
+if python3 scripts/validate-case.py "$_VC_NEG" >/dev/null 2>&1; then
+  fail "validate-case.py FAILED to reject malformed evidence-bundle.json"
+else
+  ok "validate-case.py rejects malformed evidence-bundle.json"
+fi
+rm -rf "$_VC_NEG"
+
+# Negative test: investigation-log.json must satisfy its published schema when present.
+_VC_NEG=$(mktemp -d -t spotlight-validate-case-log-neg.XXXXXX)
+mkdir -p "$_VC_NEG/data"
+cp tests/fixtures/findings.sample.json "$_VC_NEG/data/findings.json"
+cp tests/fixtures/fact-check.sample.json "$_VC_NEG/data/fact-check.json"
+python3 -c "
+import json
+json.dump({
+  'schema_version': '1.0',
+  'project': 'sample-investigation',
+  'cycles': [{
+    'cycle': 1,
+    'timestamp': '2026-04-17T15:00:00Z',
+    'focus': 'sample validation',
+    'methodology': {'techniques_used': ['registry lookup']},
+    'findings_added': 1,
+    'gaps_remaining': []
+  }]
+}, open('$_VC_NEG/data/investigation-log.json', 'w'))
+"
+if python3 scripts/validate-case.py "$_VC_NEG" >/dev/null 2>&1; then
+  fail "validate-case.py FAILED to reject malformed investigation-log.json"
+else
+  ok "validate-case.py rejects malformed investigation-log.json"
 fi
 rm -rf "$_VC_NEG"
 

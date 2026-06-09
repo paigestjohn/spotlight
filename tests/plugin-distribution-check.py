@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+"""Validate Spotlight's Every-style plugin distribution payload."""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+PLUGIN = ROOT / "plugins" / "spotlight"
+
+
+def fail(message: str) -> None:
+    print(f"FAIL  {message}", file=sys.stderr)
+    raise SystemExit(1)
+
+
+def load_json(path: Path) -> dict:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:  # pragma: no cover - failure path prints detail
+        fail(f"{path}: invalid JSON: {exc}")
+
+
+def assert_file(path: Path) -> None:
+    if not path.is_file():
+        fail(f"missing file: {path.relative_to(ROOT)}")
+
+
+def assert_dir(path: Path) -> None:
+    if not path.is_dir():
+        fail(f"missing directory: {path.relative_to(ROOT)}")
+
+
+def compare_file(source: Path, copied: Path) -> None:
+    assert_file(source)
+    assert_file(copied)
+    if source.read_bytes() != copied.read_bytes():
+        fail(f"stale plugin payload copy: {copied.relative_to(ROOT)} differs from {source.relative_to(ROOT)}")
+
+
+def compare_tree(source: Path, copied: Path, patterns: tuple[str, ...]) -> None:
+    for source_file in sorted(path for pattern in patterns for path in source.rglob(pattern) if path.is_file()):
+        rel = source_file.relative_to(source)
+        if any(part in {"__pycache__", ".pytest_cache"} for part in rel.parts):
+            continue
+        compare_file(source_file, copied / rel)
+
+
+def validate_marketplaces() -> None:
+    claude_market = load_json(ROOT / ".claude-plugin" / "marketplace.json")
+    agents_market = load_json(ROOT / ".agents" / "plugins" / "marketplace.json")
+    claude_plugin = load_json(PLUGIN / ".claude-plugin" / "plugin.json")
+    codex_plugin = load_json(PLUGIN / ".codex-plugin" / "plugin.json")
+
+    claude_entries = {entry["name"]: entry for entry in claude_market.get("plugins", [])}
+    agents_entries = {entry["name"]: entry for entry in agents_market.get("plugins", [])}
+    if "spotlight" not in claude_entries:
+        fail(".claude-plugin marketplace missing spotlight entry")
+    if "spotlight" not in agents_entries:
+        fail(".agents marketplace missing spotlight entry")
+    if claude_entries["spotlight"].get("source") != "./plugins/spotlight":
+        fail(".claude-plugin marketplace spotlight source must be ./plugins/spotlight")
+
+    source = agents_entries["spotlight"].get("source", {})
+    if source.get("source") != "local" or source.get("path") != "./plugins/spotlight":
+        fail(".agents marketplace spotlight source must be local ./plugins/spotlight")
+
+    for key in ("name", "version", "description"):
+        if claude_plugin.get(key) != codex_plugin.get(key):
+            fail(f"plugin metadata drift for {key}")
+    if codex_plugin.get("skills") != "./skills/":
+        fail("Codex plugin metadata must declare skills: ./skills/")
+    if not (PLUGIN / "skills").is_dir():
+        fail("Codex plugin declares skills but plugins/spotlight/skills is missing")
+
+
+def validate_payload_sync() -> None:
+    compare_tree(ROOT / "skills", PLUGIN / "skills", ("*.md",))
+    compare_tree(ROOT / "agents", PLUGIN / "agents", ("*.md",))
+    compare_tree(ROOT / "schemas", PLUGIN / "schemas", ("*.json",))
+    compare_tree(ROOT / "scripts", PLUGIN / "scripts", ("*.py",))
+    compare_tree(ROOT / "monitoring", PLUGIN / "monitoring", ("*.py", ".gitkeep"))
+    compare_file(ROOT / "AGENTS.md", PLUGIN / "AGENTS.md")
+    compare_file(ROOT / "VALIDATED_DEPENDENCIES.md", PLUGIN / "VALIDATED_DEPENDENCIES.md")
+    compare_file(ROOT / "skills-manifest.json", PLUGIN / "skills-manifest.json")
+
+    for copied_doc in sorted(path for path in (PLUGIN / "docs").iterdir() if path.is_file()):
+        compare_file(ROOT / "docs" / copied_doc.name, copied_doc)
+
+    for copied in sorted(path for path in (PLUGIN / "integrations").rglob("*") if path.is_file()):
+        allowed_root = copied.parent == PLUGIN / "integrations" and copied.name in {
+            "README.md",
+            "_preflight_base.py",
+            "_runner.py",
+            "preflight.py",
+        }
+        allowed_integration = copied.parent.parent == PLUGIN / "integrations" and (
+            copied.name in {"integration.md", "manifest.json"} or copied.name.startswith("run_") and copied.suffix == ".py"
+        )
+        if not (allowed_root or allowed_integration):
+            fail(f"plugin integration payload includes non-contract file: {copied.relative_to(ROOT)}")
+        compare_file(ROOT / copied.relative_to(PLUGIN), copied)
+
+
+def validate_boundaries() -> None:
+    readme = (PLUGIN / "README.md").read_text(encoding="utf-8")
+    if "does not install runtime packages" not in readme:
+        fail("plugin README must state that plugin install does not install runtime packages")
+    if "setup.html" not in readme or "VALIDATED_DEPENDENCIES.md" not in readme:
+        fail("plugin README must point runtime installs to setup.html and dependency pins")
+    if "lead-only and never verified or publishable evidence" not in readme:
+        fail("plugin README must preserve RLM evidence boundary")
+
+    forbidden = [
+        PLUGIN / "cases",
+        PLUGIN / "container",
+        PLUGIN / ".env",
+        PLUGIN / ".venv",
+        PLUGIN / ".firecrawl",
+        PLUGIN / "docs" / "plans",
+        PLUGIN / "tests",
+        PLUGIN / "evals",
+    ]
+    for path in forbidden:
+        if path.exists():
+            fail(f"forbidden runtime payload path present: {path.relative_to(ROOT)}")
+
+    generated = PLUGIN / "GENERATED_FROM_ROOT.txt"
+    if not generated.is_file():
+        fail("plugin payload missing GENERATED_FROM_ROOT.txt")
+
+
+def main() -> int:
+    assert_dir(PLUGIN)
+    validate_marketplaces()
+    validate_payload_sync()
+    validate_boundaries()
+    print("plugin distribution: OK")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -5,9 +5,12 @@ approved methodology, sourced findings, independent fact-checking, review
 artifacts, provenance records, and handoff-ready knowledge.
 
 It is built for active OSINT casework. Give it a lead, URL, document, entity, or
-question; it creates a case directory, gathers source material, tests claims
-against evidence, and stops at editorial gates instead of quietly treating
-unfinished leads as publishable facts.
+question; it creates a working case directory, gathers source material, tests
+claims against evidence, and stops at editorial gates instead of quietly
+treating unfinished leads as publishable facts. The active case workspace is
+separate from the knowledge vault: Spotlight queries the vault for prior context
+when a case starts, and ingests verified material into the vault only after an
+explicit end-of-case decision.
 
 ## What Spotlight Does
 
@@ -66,10 +69,11 @@ needs reporting.
 
 ## Case Outputs
 
-Each investigation gets an isolated directory under `cases/`:
+Each investigation gets an isolated working directory under the configured
+`SPOTLIGHT_CASES_ROOT` active case workspace:
 
 ```text
-cases/{project}/
+{CASE_DIR}/
 ├── brief-directions.txt
 ├── summary.md
 ├── review.html
@@ -137,7 +141,7 @@ The installer:
 - clones the Spotlight source,
 - installs required command-line dependencies,
 - writes local environment/config files,
-- creates the case/vault scaffold,
+- creates the active case workspace and knowledge-vault scaffold,
 - registers the vault for local search,
 - installs `spotlight`, `spotlight doctor`, and `spotlight update`,
 - runs preflight.

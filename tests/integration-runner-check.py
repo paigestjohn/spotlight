@@ -40,6 +40,19 @@ def main() -> int:
         assert data["ok"] is True
         print("ok atomic manifest write")
 
+        workspace = base / "workspace-cases"
+        old_cases_root = os.environ.get("SPOTLIGHT_CASES_ROOT")
+        os.environ["SPOTLIGHT_CASES_ROOT"] = str(workspace)
+        try:
+            env_run_dir = integration_run_dir("case-two", "rlm", "run-002")
+            assert env_run_dir == (workspace / "case-two" / "research" / "rlm" / "run-002").resolve()
+            print("ok SPOTLIGHT_CASES_ROOT integration workspace")
+        finally:
+            if old_cases_root is None:
+                os.environ.pop("SPOTLIGHT_CASES_ROOT", None)
+            else:
+                os.environ["SPOTLIGHT_CASES_ROOT"] = old_cases_root
+
         proc = run_subprocess(["python3", "-c", "print('ok')"])
         assert proc.returncode == 0 and proc.stdout.strip() == "ok"
         print("ok subprocess argument list")

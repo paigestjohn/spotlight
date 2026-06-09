@@ -1,3 +1,0 @@
-# Spotlight currently uses only Python standard-library modules in committed
-# runtime scripts. Add exact pins with --hash entries here when a wrapper needs
-# a third-party Python dependency.
