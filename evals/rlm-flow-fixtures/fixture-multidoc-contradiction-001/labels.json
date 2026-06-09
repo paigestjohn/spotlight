@@ -1,0 +1,12 @@
+{
+  "project": "fixture-rlm-flow-multidoc-001",
+  "lead": "Westport transit station sensor pilot",
+  "corpus_paths": ["research/source-a.md", "research/source-b.md"],
+  "expected_artifacts": [
+    {"text": "2026-05-18", "source_path": "research/source-a.md", "line": 2},
+    {"text": "pilot@meridian-civic.example", "source_path": "research/source-a.md", "line": 3},
+    {"text": "https://example.org/westport/sensor-pilot", "source_path": "research/source-a.md", "line": 3}
+  ],
+  "expected_contradiction_terms": ["no contract", "not authorized", "contradicting"],
+  "expected_absent": ["meeting-room capacity", "insurance renewals", "fare collection"]
+}

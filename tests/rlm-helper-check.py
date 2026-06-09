@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""Check RLM helper modes without requiring Ollama."""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "integrations" / "rlm"))
+from run_rlm import MODEL, run, validate_analysis  # noqa: E402
+
+
+def main() -> int:
+    with tempfile.TemporaryDirectory(dir=ROOT / "cases") as tmp_dir:
+        project = Path(tmp_dir).name
+        research = Path(tmp_dir) / "research"
+        research.mkdir()
+        source = research / "source.md"
+        source.write_text(
+            "Alice used alice@example.com and @alice on 2026-06-04.\n"
+            "See https://example.com/profile for context.\n",
+            encoding="utf-8",
+        )
+        request = Path(tmp_dir) / "request.json"
+        request.write_text(json.dumps({"project": project, "run_id": "run-1", "mode": "off", "corpus_paths": []}), encoding="utf-8")
+        off = run(request)
+        assert off["status"] == "off" and off["analysis_path"] is None
+        print("ok off mode")
+
+        request.write_text(
+            json.dumps({"project": project, "run_id": "run-2", "mode": "lite", "corpus_paths": ["research/source.md"]}),
+            encoding="utf-8",
+        )
+        lite = run(request)
+        analysis = json.loads(Path(lite["analysis_path"]).read_text(encoding="utf-8"))
+        assert analysis["provider"] == "deterministic" and analysis["model"] is None
+        assert not validate_analysis(analysis)
+        assert all(a["verification_status"] == "needs_verification" for a in analysis["artifacts"])
+        assert any(a["text"] == "alice@example.com" for a in analysis["artifacts"])
+        assert validate_analysis(
+            {
+                "schema_version": "1.0",
+                "project": project,
+                "run_id": "bad-shape",
+                "mode": "local_gemma4_e4b",
+                "provider": "ollama",
+                "created_at": "2026-06-04T00:00:00+00:00",
+                "artifacts": [
+                    {
+                        "lead": "Loose model output should not validate.",
+                        "source_refs": [{"path": "research/source.md", "line": 1}],
+                        "verification_status": "needs_verification",
+                    }
+                ],
+            }
+        )
+        print("ok lite mode")
+
+        os.environ["SPOTLIGHT_RLM_FAKE_LOCAL"] = "1"
+        request.write_text(
+            json.dumps({"project": project, "run_id": "run-3", "mode": "local_gemma4_e4b", "corpus_paths": ["research/source.md"]}),
+            encoding="utf-8",
+        )
+        local = run(request)
+        analysis = json.loads(Path(local["analysis_path"]).read_text(encoding="utf-8"))
+        assert analysis["provider"] == "ollama" and analysis["model"] == MODEL
+        assert not validate_analysis(analysis)
+        print("ok local gemma4:e4b path")
+
+        data_dir = Path(tmp_dir) / "data"
+        data_dir.mkdir(exist_ok=True)
+        (data_dir / "findings.json").write_text(
+            json.dumps(
+                {
+                    "project": project,
+                    "findings": [
+                        {
+                            "id": "finding-1",
+                            "claim": "Fixture claim.",
+                            "evidence": "Fixture evidence.",
+                            "sources": [{"url": "https://example.com/profile"}],
+                            "confidence": "low",
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        proc = subprocess.run(
+            ["python3", "scripts/validate-case.py", str(Path(tmp_dir)), "--include-rlm"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        assert proc.returncode == 0, proc.stderr
+        print("ok validate-case --include-rlm")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -75,8 +75,20 @@ export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$PATH"
 : "${JUNKIPEDIA_API_KEY:=}"
 : "${SPOTLIGHT_INT_UNPAYWALL:=false}"
 : "${UNPAYWALL_EMAIL:=}"
+: "${SPOTLIGHT_INT_RLM:=false}"
+: "${SPOTLIGHT_RLM_MODE:=off}"
+: "${SPOTLIGHT_RLM_MODEL:=}"
+: "${SPOTLIGHT_RLM_PREFILTER:=}"
+: "${SPOTLIGHT_RLM_HYBRID:=}"
 : "${FIRECRAWL_API_KEY:?firecrawl key missing from config}"
 : "${OSINT_NAV_API_KEY:?osint-navigator key missing from config}"
+
+if [ "$SPOTLIGHT_INT_RLM" != "true" ]; then
+  SPOTLIGHT_RLM_MODE="off"
+  SPOTLIGHT_RLM_MODEL=""
+  SPOTLIGHT_RLM_PREFILTER=""
+  SPOTLIGHT_RLM_HYBRID=""
+fi
 
 # Derive model artifact names from the model selection.
 #
@@ -728,6 +740,18 @@ ENV_HEADER
   if [ "$SPOTLIGHT_INT_UNPAYWALL" = "true" ] && [ -n "$UNPAYWALL_EMAIL" ]; then
     write_env_var UNPAYWALL_EMAIL "$UNPAYWALL_EMAIL"
   fi
+  if [ "$SPOTLIGHT_INT_RLM" = "true" ]; then
+    write_env_var SPOTLIGHT_RLM_MODE "$SPOTLIGHT_RLM_MODE"
+    if [ -n "$SPOTLIGHT_RLM_MODEL" ]; then
+      write_env_var SPOTLIGHT_RLM_MODEL "$SPOTLIGHT_RLM_MODEL"
+    fi
+    if [ -n "$SPOTLIGHT_RLM_PREFILTER" ]; then
+      write_env_var SPOTLIGHT_RLM_PREFILTER "$SPOTLIGHT_RLM_PREFILTER"
+    fi
+    if [ -n "$SPOTLIGHT_RLM_HYBRID" ]; then
+      write_env_var SPOTLIGHT_RLM_HYBRID "$SPOTLIGHT_RLM_HYBRID"
+    fi
+  fi
   if [ "$SPOTLIGHT_MODE" = "local" ]; then
     write_env_var MODEL_REPO "$SPOTLIGHT_MODEL_REPO"
     write_env_var LOCAL_SERVER "$SPOTLIGHT_LOCAL_SERVER"
@@ -762,7 +786,15 @@ else
     "osint_navigator": true,
     "junkipedia": $SPOTLIGHT_INT_JUNKIPEDIA,
     "dev_browser": $SPOTLIGHT_INT_DEVBROWSER,
-    "unpaywall": $SPOTLIGHT_INT_UNPAYWALL
+    "unpaywall": $SPOTLIGHT_INT_UNPAYWALL,
+    "rlm": {
+      "enabled": $SPOTLIGHT_INT_RLM,
+      "mode": "$SPOTLIGHT_RLM_MODE",
+      "model": $([ -n "$SPOTLIGHT_RLM_MODEL" ] && printf '"%s"' "$SPOTLIGHT_RLM_MODEL" || echo null),
+      "prefilter": $([ "$SPOTLIGHT_RLM_PREFILTER" = "true" ] && echo true || echo false),
+      "hybrid": $([ "$SPOTLIGHT_RLM_HYBRID" = "true" ] && echo true || echo false),
+      "evidence_boundary": "lead-only; never verified or publishable"
+    }
   },
   "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "last_used": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -869,6 +901,7 @@ DOCTOR_EOF
   [ -n "$SPOTLIGHT_CLOUD_KEY_VAR" ] && echo "check_env_name $SPOTLIGHT_CLOUD_KEY_VAR" >> "$HOME/.local/bin/spotlight-doctor"
   [ "$SPOTLIGHT_INT_JUNKIPEDIA" = "true" ] && echo 'check_env_name JUNKIPEDIA_API_KEY' >> "$HOME/.local/bin/spotlight-doctor"
   [ "$SPOTLIGHT_INT_UNPAYWALL" = "true" ] && echo 'check_env_name UNPAYWALL_EMAIL' >> "$HOME/.local/bin/spotlight-doctor"
+  [ "$SPOTLIGHT_INT_RLM" = "true" ] && echo 'check_env_name SPOTLIGHT_RLM_MODE' >> "$HOME/.local/bin/spotlight-doctor"
   cat >> "$HOME/.local/bin/spotlight-doctor" <<'DOCTOR_TAIL'
 if [ -x "$SPOTLIGHT_DIR/tests/smoke.sh" ]; then (cd "$SPOTLIGHT_DIR" && bash tests/smoke.sh >/dev/null) && ok "Smoke test" || bad "Smoke test failed"; fi
 if [ -x "$SPOTLIGHT_DIR/integrations/preflight.py" ] || [ -f "$SPOTLIGHT_DIR/integrations/preflight.py" ]; then (cd "$SPOTLIGHT_DIR" && set -a && . .env && set +a && python3 integrations/preflight.py --text >/dev/null) && ok "Integration preflight" || bad "Integration preflight reported issues"; fi

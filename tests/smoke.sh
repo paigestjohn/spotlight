@@ -4,15 +4,17 @@
 # Checks:
 #   1. All 15 skill directories present with SKILL.md
 #   2. All 2 agent prompts present
-#   3. All 7 schemas parse as valid JSON
+#   3. All schemas parse as valid JSON
 #   4. Integrations preflight runs cleanly
 #   5. Monitoring registry helper runs cleanly
-#   6. No banned Claude-specific syntax in skills/agents
-#   7. No legacy local feed framework remains
-#   8. AGENTS.md has 16 entries in skill registry
-#   9. setup.html exists
-#  10. index.html exists
-#  11. DISCLAIMER.md + LICENSE present
+#   6. RLM helper and flow proxy run without requiring Ollama
+#   7. No banned Claude-specific syntax in skills/agents
+#   8. No legacy local feed framework remains
+#   9. AGENTS.md skill registry matches skills-manifest.json count
+#  10. Integration routing rows resolve
+#  11. setup.html exists
+#  12. index.html exists
+#  13. DISCLAIMER.md + LICENSE present
 #
 # Exit 0 on pass, 1 if any check fails.
 
@@ -50,7 +52,7 @@ done
 
 echo ""
 echo "── Schemas ──"
-for s in findings fact-check methodology investigation-log summary evidence-bundle provenance-manifest; do
+for s in findings fact-check methodology investigation-log summary evidence-bundle provenance-manifest rlm-analysis; do
   if [ -f "schemas/$s.schema.json" ]; then
     if python3 -c "import json; json.load(open('schemas/$s.schema.json'))" 2>/dev/null; then
       ok "schemas/$s.schema.json parses"
@@ -81,6 +83,24 @@ else
 fi
 
 echo ""
+echo "── RLM ──"
+python3 tests/rlm-helper-check.py >/dev/null 2>&1
+rc=$?
+if [ $rc -eq 0 ]; then
+  ok "tests/rlm-helper-check.py runs"
+else
+  fail "tests/rlm-helper-check.py failed with rc=$rc"
+fi
+
+python3 tests/rlm-flow-check.py >/dev/null 2>&1
+rc=$?
+if [ $rc -eq 0 ]; then
+  ok "tests/rlm-flow-check.py runs"
+else
+  fail "tests/rlm-flow-check.py failed with rc=$rc"
+fi
+
+echo ""
 echo "── Cleanliness ──"
 
 banned_syntax=$(grep -rlE 'WebFetch|WebSearch|allowedTools|disallowedTools|maxTurns|run_in_background' skills/ agents/ 2>/dev/null || true)
@@ -99,10 +119,23 @@ fi
 echo ""
 echo "── Contracts ──"
 skill_count=$(grep -cE '^\| `[a-z-]+` \| `skills/' AGENTS.md || echo 0)
-if [ "$skill_count" = "16" ]; then
-  ok "AGENTS.md skill registry has 16 entries"
+manifest_count=$(python3 - <<'PY'
+import json
+print(len(json.load(open("skills-manifest.json"))["skills"]))
+PY
+)
+if [ "$skill_count" = "$manifest_count" ]; then
+  ok "AGENTS.md skill registry has $skill_count entries"
 else
-  fail "AGENTS.md skill registry count off: got $skill_count, want 16"
+  fail "AGENTS.md skill registry count off: got $skill_count, want $manifest_count"
+fi
+
+python3 tests/integrations-routing-check.py >/dev/null 2>&1
+rc=$?
+if [ $rc -eq 0 ]; then
+  ok "integration routing rows resolve"
+else
+  fail "integration routing rows drifted"
 fi
 
 echo ""

@@ -65,8 +65,20 @@ def smoke_test(manifest: dict) -> tuple[bool, str | None]:
         return found, None if found else f"python import '{mod}' failed"
 
     if kind == "cli":
-        return shutil.which(manifest["id"]) is not None, \
-               None if shutil.which(manifest["id"]) else f"{manifest['id']} not on PATH"
+        binary = manifest.get("local_binary") or manifest["id"]
+        resolved = shutil.which(binary)
+        if resolved is None:
+            return False, f"{binary} not on PATH"
+        version_args = manifest.get("version_args")
+        if isinstance(version_args, list) and version_args:
+            import subprocess
+            try:
+                proc = subprocess.run([binary, *version_args], text=True, capture_output=True, timeout=10, check=False)
+            except Exception as e:
+                return False, f"{binary} version check failed: {type(e).__name__}: {e}"
+            if proc.returncode != 0:
+                return False, f"{binary} version check exited {proc.returncode}"
+        return True, None
 
     return True, None
 

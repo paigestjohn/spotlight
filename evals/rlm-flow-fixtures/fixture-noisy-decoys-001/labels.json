@@ -1,0 +1,18 @@
+{
+  "project": "fixture-rlm-flow-noisy-001",
+  "lead": "Riverbend Schools device-tracking RFP",
+  "corpus_paths": ["research/source-a.md"],
+  "expected_artifacts": [
+    {"text": "2026-05-29", "source_path": "research/source-a.md", "line": 11},
+    {"text": "procurement@riverbend-schools.example", "source_path": "research/source-a.md", "line": 12},
+    {"text": "https://example.org/riverbend/device-rfp", "source_path": "research/source-a.md", "line": 12},
+    {"text": "@riverbend_procure", "source_path": "research/source-a.md", "line": 13}
+  ],
+  "expected_absent": [
+    "old-contact@example.org",
+    "https://example.org/old-vendor",
+    "@old_vendor",
+    "audit@example.org",
+    "school lunches"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "entities": [
+    "alice@example.com",
+    "https://example.com/profile",
+    "@alice_example"
+  ],
+  "contradictions": []
+}

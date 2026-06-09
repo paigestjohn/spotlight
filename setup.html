@@ -1327,6 +1327,18 @@
           <input type="text" id="unpaywall_email" placeholder="you@example.com" autocomplete="off">
         </div>
 
+        <div class="checkbox-group" style="margin-top: 12px;">
+          <label><input type="checkbox" id="int_rlm"><span class="opt-name"><span class="name">RLM case-corpus helper</span><span class="desc">Experimental relationship-lead extraction. Default is off; local mode uses Ollama gemma4:e4b with hybrid prefiltering and never writes verified facts.</span></span></label>
+        </div>
+        <div id="rlm_options" class="hidden" style="margin-top: 16px;">
+          <label class="block">RLM mode <span class="hint">— keep off unless you have reviewed the benchmark and want local lead extraction.</span></label>
+          <div class="provider-grid">
+            <label><input type="radio" name="rlm_mode" value="lite" checked><span class="opt">Lite</span></label>
+            <label><input type="radio" name="rlm_mode" value="local_gemma4_e4b"><span class="opt">Gemma4 E4B</span></label>
+          </div>
+          <p class="hint" style="margin-top: 12px;">Gemma4 E4B uses hybrid prefiltering by default: deterministic extraction first, then semantic contradiction chunks only. Output stays in <code>data/rlm-analysis.json</code> as <code>needs_verification</code> leads.</p>
+        </div>
+
       </section>
 
       <div class="generate-bar">
@@ -1621,6 +1633,7 @@
   }
   bindCheckbox('int_junkipedia', 'junkipedia_keys');
   bindCheckbox('int_unpaywall', 'unpaywall_keys');
+  bindCheckbox('int_rlm', 'rlm_options');
 
   function collectForm() {
     const mode = document.querySelector('input[name="mode"]:checked').value;
@@ -1660,6 +1673,10 @@
       junkipedia_key: document.getElementById('junkipedia_key').value.trim(),
       int_unpaywall: document.getElementById('int_unpaywall').checked,
       unpaywall_email: document.getElementById('unpaywall_email').value.trim(),
+      int_rlm: document.getElementById('int_rlm').checked,
+      rlm_mode: document.getElementById('int_rlm').checked
+        ? document.querySelector('input[name="rlm_mode"]:checked').value
+        : 'off',
     };
   }
 
@@ -1690,6 +1707,11 @@
       ['JUNKIPEDIA_API_KEY',            cfg.junkipedia_key || ''],
       ['SPOTLIGHT_INT_UNPAYWALL',       cfg.int_unpaywall ? 'true' : 'false'],
       ['UNPAYWALL_EMAIL',               cfg.unpaywall_email || ''],
+      ['SPOTLIGHT_INT_RLM',             cfg.int_rlm ? 'true' : 'false'],
+      ['SPOTLIGHT_RLM_MODE',            cfg.int_rlm ? (cfg.rlm_mode || 'lite') : 'off'],
+      ['SPOTLIGHT_RLM_MODEL',           cfg.int_rlm && cfg.rlm_mode === 'local_gemma4_e4b' ? 'gemma4:e4b' : ''],
+      ['SPOTLIGHT_RLM_PREFILTER',       cfg.int_rlm && cfg.rlm_mode === 'local_gemma4_e4b' ? 'true' : ''],
+      ['SPOTLIGHT_RLM_HYBRID',          cfg.int_rlm && cfg.rlm_mode === 'local_gemma4_e4b' ? 'true' : ''],
       ['FIRECRAWL_API_KEY',             cfg.firecrawl_key || ''],
       ['OSINT_NAV_API_KEY',             cfg.nav_key || ''],
     ];
@@ -1831,6 +1853,14 @@
     if (cfg.mode === 'cloud' && cfg.cloud_key_var) values[cfg.cloud_key_var] = cfg.cloud_key || '';
     if (cfg.int_junkipedia) values.JUNKIPEDIA_API_KEY = cfg.junkipedia_key || '';
     if (cfg.int_unpaywall) values.UNPAYWALL_EMAIL = cfg.unpaywall_email || '';
+    if (cfg.int_rlm) {
+      values.SPOTLIGHT_RLM_MODE = cfg.rlm_mode || 'lite';
+      if (cfg.rlm_mode === 'local_gemma4_e4b') {
+        values.SPOTLIGHT_RLM_MODEL = 'gemma4:e4b';
+        values.SPOTLIGHT_RLM_PREFILTER = 'true';
+        values.SPOTLIGHT_RLM_HYBRID = 'true';
+      }
+    }
     if (cfg.mode === 'local') {
       values.MODEL_REPO = cfg.model_repo || '';
       values.LOCAL_SERVER = cfg.local_server || 'llamacpp';
@@ -1879,6 +1909,7 @@
         optional: [
           ...(cfg.int_junkipedia ? ['JUNKIPEDIA_API_KEY'] : []),
           ...(cfg.int_unpaywall ? ['UNPAYWALL_EMAIL'] : []),
+          ...(cfg.int_rlm ? ['SPOTLIGHT_RLM_MODE'] : []),
         ],
         values: envValues(cfg),
       },
@@ -1887,6 +1918,14 @@
         dev_browser: cfg.int_devbrowser,
         junkipedia: cfg.int_junkipedia,
         unpaywall: cfg.int_unpaywall,
+        rlm: {
+          enabled: cfg.int_rlm,
+          mode: cfg.int_rlm ? (cfg.rlm_mode || 'lite') : 'off',
+          model: cfg.int_rlm && cfg.rlm_mode === 'local_gemma4_e4b' ? 'gemma4:e4b' : null,
+          prefilter: cfg.int_rlm && cfg.rlm_mode === 'local_gemma4_e4b',
+          hybrid: cfg.int_rlm && cfg.rlm_mode === 'local_gemma4_e4b',
+          evidence_boundary: 'lead-only; never verified or publishable',
+        },
       },
       notes: [
         'This manifest contains local secret values from the setup form.',

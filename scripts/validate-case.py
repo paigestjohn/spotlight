@@ -13,6 +13,7 @@ write-time) and cross-file checks that JSON Schema can't express.
 Usage:
     python3 scripts/validate-case.py cases/{project}
     python3 scripts/validate-case.py cases/{project} --strict
+    python3 scripts/validate-case.py cases/{project} --include-rlm
 
 Exit code:
     0 — valid (warnings may still print to stderr)
@@ -36,6 +37,10 @@ CAPS = {"high", "medium", "low"}
 SUPPORT_TYPES = {"direct", "indirect", "inferred", "contradicted", "insufficient"}
 SOURCE_ROLES = {"primary", "secondary", "contextual"}
 HUMAN_REVIEW = {"unreviewed", "approved", "rejected"}
+RLM_MODES = {"lite", "local_gemma4_e4b"}
+RLM_PROVIDERS = {"deterministic", "ollama"}
+RLM_STATUSES = {"needs_verification"}
+RLM_KINDS = {"entity", "timeline_event", "contradiction", "lead", "discarded"}
 
 
 def load_json(path: Path) -> tuple[Any, list[str]]:
@@ -171,10 +176,64 @@ def cross_reference(findings_data: dict[str, Any] | None, factcheck_data: dict[s
     return errors
 
 
+def validate_rlm_analysis(data: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(data, dict):
+        return [f"rlm-analysis.json: top-level must be an object, got {type(data).__name__}"]
+    for key in ("schema_version", "project", "run_id", "mode", "provider", "created_at", "artifacts"):
+        if key not in data:
+            errors.append(f"rlm-analysis.json: missing top-level '{key}'")
+    if data.get("schema_version") != "1.0":
+        errors.append("rlm-analysis.json: schema_version must be 1.0")
+    if data.get("mode") not in RLM_MODES:
+        errors.append(f"rlm-analysis.json: mode must be one of {sorted(RLM_MODES)}")
+    if data.get("provider") not in RLM_PROVIDERS:
+        errors.append(f"rlm-analysis.json: provider must be one of {sorted(RLM_PROVIDERS)}")
+    artifacts = data.get("artifacts")
+    if not isinstance(artifacts, list):
+        errors.append("rlm-analysis.json: artifacts must be a list")
+        return errors
+    for i, item in enumerate(artifacts):
+        prefix = f"rlm-analysis.json.artifacts[{i}]"
+        if not isinstance(item, dict):
+            errors.append(f"{prefix}: must be an object")
+            continue
+        if not nonempty_string(item.get("id")):
+            errors.append(f"{prefix}: missing or empty id")
+        if item.get("kind") not in RLM_KINDS:
+            errors.append(f"{prefix}: kind must be one of {sorted(RLM_KINDS)}, got {item.get('kind')!r}")
+        if not nonempty_string(item.get("text")):
+            errors.append(f"{prefix}: missing or empty text")
+        status = item.get("verification_status")
+        if status not in RLM_STATUSES:
+            errors.append(f"{prefix}: verification_status must be needs_verification, got {status!r}")
+        if status in {"verified", "confirmed", "publishable"}:
+            errors.append(f"{prefix}: forbidden verified-style status")
+        source_refs = item.get("source_refs")
+        if item.get("kind") != "discarded" and not source_refs:
+            errors.append(f"{prefix}: non-discarded artifact must have source_refs")
+        if source_refs is not None:
+            if not isinstance(source_refs, list):
+                errors.append(f"{prefix}: source_refs must be a list")
+            else:
+                for j, ref in enumerate(source_refs):
+                    ref_prefix = f"{prefix}.source_refs[{j}]"
+                    if not isinstance(ref, dict):
+                        errors.append(f"{ref_prefix}: must be an object")
+                        continue
+                    if not nonempty_string(ref.get("path")):
+                        errors.append(f"{ref_prefix}: missing or empty path")
+                    for key in ("line_start", "line_end"):
+                        if not isinstance(ref.get(key), int) or ref.get(key) < 1:
+                            errors.append(f"{ref_prefix}: {key} must be a positive integer")
+    return errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate a Spotlight case directory.")
     parser.add_argument("case_dir", help="Path to cases/{project}/")
     parser.add_argument("--strict", action="store_true", help="Treat warnings as errors")
+    parser.add_argument("--include-rlm", action="store_true", help="Also validate optional data/rlm-analysis.json if present")
     args = parser.parse_args()
 
     case_dir = Path(args.case_dir).expanduser().resolve()
@@ -209,6 +268,14 @@ def main() -> int:
 
     all_errors.extend(cross_reference(findings_data, factcheck_data))
 
+    if args.include_rlm:
+        rlm_path = case_dir / "data" / "rlm-analysis.json"
+        if rlm_path.exists():
+            rlm_data, errs = load_json(rlm_path)
+            all_errors.extend(errs)
+            if rlm_data is not None:
+                all_errors.extend(validate_rlm_analysis(rlm_data))
+
     if all_errors:
         print(f"\n{len(all_errors)} validation error(s) in {case_dir.name}:\n", file=sys.stderr)
         for err in all_errors:
@@ -216,7 +283,8 @@ def main() -> int:
         print(file=sys.stderr)
         return 1
 
-    print(f"✓ {case_dir.name} validates against findings + fact-check schemas")
+    suffix = " + RLM" if args.include_rlm else ""
+    print(f"✓ {case_dir.name} validates against findings + fact-check schemas{suffix}")
     return 0
 
 

@@ -21,6 +21,7 @@ An agent invokes a **skill** to get *guidance* and calls an **integration** to g
 | `browser-harness` | cli | browser-automation | No | Legacy browser fallback. Do not use as default while dev-browser is green. |
 | `browser-use` | library | browser-automation | No (optional cloud) | Legacy/adjacent browser automation. Do not use as default while dev-browser is green. |
 | `junkipedia` | api | social-osint | `JUNKIPEDIA_API_KEY` | Narrative / misinformation tracking across social platforms. Application-based access. |
+| `maigret` | cli | social-osint | No | Username-led account discovery. Produces unverified profile leads only, not attribution proof. |
 | `noosphere-c2pa` | api | provenance-signing | `NOOSPHERE_C2PA_URL` | Optional case-level C2PA/content-credentials signing after Gate 1. |
 | `osint-navigator` | api | tool-discovery | `OSINT_NAV_API_KEY` | 10,000+ OSINT tools with AI-powered synthesized answers. Complements the curated 150-tool catalog in the `osint` skill. |
 | `scoutpost` | api | monitoring | `SCOUTPOST_API_KEY` | Durable monitoring via existing Scoutpost projects, scouts, and information units. |
@@ -53,7 +54,7 @@ Status semantics (same as feed sources):
 | Status | Meaning |
 |---|---|
 | `green` | `env_vars` set (or no keys required) |
-| `yellow` | Keys set but smoke-test failed (only reported with `--smoke-test`) |
+| `yellow` | Keys set but a local binary/import probe or optional smoke test failed |
 | `red` | One or more required env vars missing |
 
 The orchestrator runs this at Phase 0 step 10 alongside its Mycroft/passive-monitor checks, giving the user a combined status table at session start.
@@ -105,8 +106,10 @@ When an agent needs to decide whether to use an integration:
 2. Check current preflight: `execute-shell("python3 integrations/preflight.py --json")`
 3. Pick an integration if its status is `green` and capabilities match the task
 4. `read-file("integrations/<chosen>/integration.md")` for the exact verb calls
-5. Execute; save raw response to `cases/{project}/research/<integration-id>-<slug>-<timestamp>.json`
+5. Execute; save raw response to `cases/{project}/research/<integration-id>/...` or the integration's documented run directory
 6. Cite the integration in the source entry with appropriate `access_method` + `access_notes`
+
+Maigret outputs are always `unverified` leads until the underlying source material has been inspected, archived, and verified.
 
 See `skills/integrations/SKILL.md` § "Routing decision tree" for the task → integration mapping.
 

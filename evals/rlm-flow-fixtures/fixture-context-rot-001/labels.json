@@ -1,0 +1,12 @@
+{
+  "project": "fixture-rlm-flow-001",
+  "lead": "Harborfront cleanup analytics procurement",
+  "corpus_paths": ["research/source-a.md"],
+  "expected_artifacts": [
+    {"text": "2026-05-14", "source_path": "research/source-a.md", "line": 11},
+    {"text": "audits@northstar-civic.example", "source_path": "research/source-a.md", "line": 19},
+    {"text": "https://example.org/northstar/harborfront", "source_path": "research/source-a.md", "line": 19},
+    {"text": "@northstar_civic", "source_path": "research/source-a.md", "line": 27}
+  ],
+  "expected_contradiction_terms": ["not final", "final", "contradicting"]
+}
