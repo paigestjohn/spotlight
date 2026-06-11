@@ -12,6 +12,21 @@ All notable changes to Spotlight. Format follows [Keep a Changelog](https://keep
 
 ### Added
 
+- **Vault claims layer.** A fifth note type: standalone, cross-case-queryable
+  claim records under `{vault}/claims/` with verdicts, source refs, and
+  temporal layering (`layer: durable | lead`, append-only supersession
+  history). Strict eligibility gate — only `verified` / `partially_verified`
+  findings with grounding above `low` and sources present enter; every
+  exclusion is logged. New ingest Step 6 plus claims registry
+  (`claims/_registry.json`), generated alias reverse index
+  (`entities/_aliases.json`), and human-gated merge proposals
+  (`entities/_merge-proposals.json`). Retrieval recipes added to the
+  investigator (claim dedup before research, alias resolution before
+  semantic search) and fact-checker (prior-verdict citation). Validated by
+  `tests/vault-claims-check.py` (wired into `smoke.sh`); existing vaults
+  backfill idempotently via `scripts/backfill-claims.py`. Fully additive —
+  older vaults without the layer keep working.
+
 - **Gemma 4 E4B Journalist as the default low-RAM local model.** New
   `SPOTLIGHT_LOCAL_MODEL=gemma-e4b` option in `install-spotlight.sh`, paired
   with a third radio card in `setup.html`. Pulls
@@ -20,6 +35,13 @@ All notable changes to Spotlight. Format follows [Keep a Changelog](https://keep
   gemma4 architecture with tool calls and thinking mode). Default selection
   in the setup form; the fit-check now recommends it for any Mac in the
   16–24 GB tier.
+
+### Removed
+
+- **Dormant Mycroft handoff scaffolding.** `install-spotlight.sh` no longer
+  creates `handoff-to-mycroft/` in the vault; nothing in Spotlight ever read
+  or wrote it. External consumers invoke the spotlight skill or read the
+  vault directly — Spotlight carries no consumer-specific scaffolding.
 
 ### Fixed
 

@@ -1,7 +1,7 @@
 ---
 title: "feat: Claim-level intelligence base with alias index and temporal layering"
 type: feat
-status: active
+status: completed
 date: 2026-06-11
 ---
 
