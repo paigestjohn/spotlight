@@ -60,7 +60,7 @@ BASE=(
   SPOTLIGHT_DIR_INPUT='~/Code/spotlight-test'
   SPOTLIGHT_VAULT_INPUT='~/Vaults/spotlight-test'
   SPOTLIGHT_VAULT_APP='obsidian'
-  SPOTLIGHT_INT_BROWSERUSE='false'
+  SPOTLIGHT_INT_DEVBROWSER='false'
   SPOTLIGHT_INT_JUNKIPEDIA='false'
   SPOTLIGHT_INT_UNPAYWALL='false'
   FIRECRAWL_API_KEY='fc-test'
@@ -123,9 +123,9 @@ ASSERTIONS=(
 )
 check_combo "local/llamacpp/pi" "${BASE[@]}" \
   SPOTLIGHT_MODE=local SPOTLIGHT_RUNTIME=local \
-  SPOTLIGHT_LOCAL_SERVER=llamacpp SPOTLIGHT_LOCAL_MODEL=gemma \
+  SPOTLIGHT_LOCAL_SERVER=llamacpp SPOTLIGHT_LOCAL_MODEL=qwen9b \
   SPOTLIGHT_AGENT=pi SPOTLIGHT_OPENCODE_INTERFACE=cli \
-  SPOTLIGHT_MODEL_REPO='unsloth/gemma-4-26B-A4B-it-GGUF'
+  SPOTLIGHT_MODEL_REPO='tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF'
 
 # --- Bonus: missing-config rejection ---
 if SPOTLIGHT_CONFIG="" bash "$INSTALLER" --dry-run 2>/dev/null; then

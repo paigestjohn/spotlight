@@ -1,34 +1,162 @@
 #!/usr/bin/env bash
-# Spotlight installer — runs the same end-to-end install as the legacy
-# setup.html generator, but as a static, version-controlled script.
+# Spotlight installer — one static, reviewable, key-free script:
 #
-# Driven by SPOTLIGHT_CONFIG: a base64-encoded block of `export KEY='value'`
-# lines built by setup.html's buildExportBlock() helper. The block is decoded
-# with `eval` — safety relies on the JS-side shellEscape() single-quoting
-# every value before joining.
+#   curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash
 #
-# Two delivery paths converge here:
-#   curl -fsSL .../install-spotlight.sh | SPOTLIGHT_CONFIG='<b64>' bash
-#   <generated .command file>  →  exports SPOTLIGHT_CONFIG then curls this.
+# Interactive flow: the script launches a local configurator
+# (install/setup_server.py) on 127.0.0.1; every choice and API key is entered
+# on that local page and staged in ~/.config/spotlight/ (setup-config.env +
+# .env, both 0600). The script sources the staged artifacts and the install
+# body takes over. Keys never appear in the shell command line, in shell
+# history, or on any hosted page.
+#
+# Headless / CI path:
+#   curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash -s -- --headless
+# with the required env vars pre-exported. Load keys from a 0600 env file
+# (set -a; . keys.env; set +a) — never inline `export KEY=...` commands — so
+# the no-keys-in-shell-history guarantee holds on this path too.
 
 set -euo pipefail
 
-if [ -z "${SPOTLIGHT_CONFIG:-}" ]; then
-  echo "SPOTLIGHT_CONFIG env var is required (base64-encoded shell export block)" >&2
-  echo "Open setup.html in a browser to generate the install one-liner." >&2
+# The retired SPOTLIGHT_CONFIG base64-blob channel fails loud — never decoded.
+if [ -n "${SPOTLIGHT_CONFIG:-}" ]; then
+  echo "The Spotlight install method changed — this script no longer accepts SPOTLIGHT_CONFIG." >&2
+  echo "Run the new installer instead:" >&2
+  echo "  curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash" >&2
   exit 1
 fi
 
-eval "$(printf '%s' "$SPOTLIGHT_CONFIG" | base64 -d)"
-
-# Dry-run mode prints what would happen without touching the system.
+# Arg parse: --dry-run prints what the body would do without touching the
+# system; --headless skips the configurator and reads pre-exported env vars
+# (the :? guards below enforce the required set). Plain --dry-run without
+# --headless still runs the live configurator — artifacts are staged, only
+# the install body is dry-run.
 DRY_RUN=0
+HEADLESS=0
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=1 ;;
+    --headless) HEADLESS=1 ;;
     *) ;;
   esac
 done
+
+# Version handshake with install/setup_server.py + install/configure.html —
+# asserted after a CDN fetch so a half-propagated deploy fails loud instead
+# of 403-ing every POST.
+CONFIGURATOR_VERSION="1"
+SPOTLIGHT_PROFILE_DIR="$HOME/.config/spotlight"
+STAGED_ENV="$SPOTLIGHT_PROFILE_DIR/.env"
+SETUP_CONFIG="$SPOTLIGHT_PROFILE_DIR/setup-config.env"
+SPOTLIGHT_INSTALL_DONE=0
+CONFIGURATOR_RAN=0
+
+if [ "$HEADLESS" = "1" ]; then
+  echo "→ Headless install: reading configuration from pre-exported environment variables."
+else
+  # ── Reuse gate: a completed install reconfigures without retyping keys ──
+  # Resolve the candidate install dir from the environment (the shell-rc
+  # block exports SPOTLIGHT_DIR), falling back to the SPOTLIGHT_DIR_INPUT
+  # retained in setup-config.env from the previous configurator run.
+  REUSE_CANDIDATE="${SPOTLIGHT_DIR:-}"
+  if [ -z "$REUSE_CANDIDATE" ] && [ -f "$SETUP_CONFIG" ]; then
+    REUSE_CANDIDATE="$( . "$SETUP_CONFIG" >/dev/null 2>&1 || true; printf '%s' "${SPOTLIGHT_DIR_INPUT:-}" )"
+    case "$REUSE_CANDIDATE" in
+      "~") REUSE_CANDIDATE="$HOME" ;;
+      "~/"*) REUSE_CANDIDATE="$HOME/${REUSE_CANDIDATE:2}" ;;
+    esac
+  fi
+  REUSED=0
+  if [ -n "$REUSE_CANDIDATE" ] && [ -f "$REUSE_CANDIDATE/.spotlight-config.json" ] && [ -f "$REUSE_CANDIDATE/.env" ]; then
+    echo "Found an existing Spotlight install at $REUSE_CANDIDATE. Reuse its configuration? [Y/n]"
+    read -r ans </dev/tty || ans="Y"
+    if [[ ! "$ans" =~ ^[Nn] ]]; then
+      set -a
+      . "$REUSE_CANDIDATE/.env"
+      if [ -f "$SETUP_CONFIG" ]; then . "$SETUP_CONFIG"; fi
+      set +a
+      REUSED=1
+      echo "→ Reusing configuration from $REUSE_CANDIDATE/.env"
+    fi
+  fi
+
+  if [ "$REUSED" != "1" ]; then
+    # python3 must actually execute, not merely resolve on PATH — a fresh mac
+    # ships a /usr/bin/python3 shim that dies until the Command Line Tools
+    # are installed, and the configurator needs a working interpreter.
+    if ! python3 -c 'pass' >/dev/null 2>&1; then
+      if [ "$(uname -s)" = "Darwin" ]; then
+        echo "python3 cannot run yet — macOS needs the Xcode Command Line Tools for the configurator."
+        echo "Install the Command Line Tools now? [Y/n]"
+        read -r ans </dev/tty || ans="Y"
+        if [[ "$ans" =~ ^[Nn] ]]; then echo "Aborted." >&2; exit 1; fi
+        xcode-select --install || true
+        echo "A dialog opened. Complete the Command Line Tools install, then re-run this script:"
+        echo "  curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash"
+        exit 1
+      else
+        echo "python3 is required for the configurator. Install it first (apt install python3 / dnf install python3), then re-run." >&2
+        exit 1
+      fi
+    fi
+
+    # SSH / display-less sessions: the configurator opens a local browser and
+    # degrades gracefully to printing its URL — give port-forward + headless
+    # guidance instead of failing silently, then continue.
+    if [ -n "${SSH_TTY:-}" ] || { [ "$(uname -s)" = "Linux" ] && [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ]; }; then
+      echo ""
+      echo "  This looks like an SSH or display-less session. The configurator serves a"
+      echo "  page on 127.0.0.1 and prints its URL below. Over SSH, forward that port"
+      echo "  from your local machine (ssh -L PORT:127.0.0.1:PORT <host>) and open the"
+      echo "  printed URL in your local browser — or run the headless install with"
+      echo "  pre-exported env vars loaded from a 0600 env file:"
+      echo "    curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash -s -- --headless"
+      echo ""
+    fi
+
+    # ── Configurator assets: working tree first, else fetch from Pages ──
+    if [ -f "${BASH_SOURCE[0]-}" ] && [ -f "$(dirname "${BASH_SOURCE[0]}")/install/setup_server.py" ]; then
+      CONFIGURATOR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    else
+      TMP_ASSETS="$(mktemp -d)"
+      mkdir -p "$TMP_ASSETS/install"
+      curl -fsSL https://spotlight.buriedsignals.com/install/setup_server.py -o "$TMP_ASSETS/install/setup_server.py"
+      curl -fsSL https://spotlight.buriedsignals.com/install/configure.html -o "$TMP_ASSETS/install/configure.html"
+      if ! grep -q "CONFIGURATOR_VERSION = \"$CONFIGURATOR_VERSION\"" "$TMP_ASSETS/install/setup_server.py" \
+        || ! grep -q "configurator-version\" content=\"$CONFIGURATOR_VERSION\"" "$TMP_ASSETS/install/configure.html"; then
+        echo "" >&2
+        echo "✗ Configurator version mismatch: this script expects configurator v$CONFIGURATOR_VERSION," >&2
+        echo "  but the fetched assets disagree. The Pages CDN may still be propagating a" >&2
+        echo "  deploy — retry in ~10 minutes." >&2
+        exit 1
+      fi
+      CONFIGURATOR_DIR="$TMP_ASSETS"
+    fi
+
+    # ── Abort trap: an interrupted install never orphans staged secrets.
+    # setup-config.env (no secrets) is retained for the reuse gate.
+    cleanup_staged_env() {
+      if [ "$SPOTLIGHT_INSTALL_DONE" != "1" ]; then rm -f "$STAGED_ENV"; fi
+    }
+    trap cleanup_staged_env EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+
+    echo "→ Opening the Spotlight configurator in your browser."
+    echo "  Your choices and API keys go to a local server on 127.0.0.1 only and are"
+    echo "  staged in $SPOTLIGHT_PROFILE_DIR — nothing is uploaded anywhere."
+    python3 "$CONFIGURATOR_DIR/install/setup_server.py" --profile-dir "$SPOTLIGHT_PROFILE_DIR" --repo-dir "$CONFIGURATOR_DIR"
+    if [ ! -f "$SETUP_CONFIG" ] || [ ! -f "$STAGED_ENV" ]; then
+      echo "Configuration was not completed; re-run the installer to try again." >&2
+      exit 1
+    fi
+    set -a
+    . "$SETUP_CONFIG"
+    . "$STAGED_ENV"
+    set +a
+    CONFIGURATOR_RAN=1
+  fi
+fi
 
 run() {
   if [ "$DRY_RUN" = "1" ]; then
@@ -877,10 +1005,35 @@ ENV_HEADER
   chmod 600 "$SPOTLIGHT_DIR/.env"
 fi
 
+# The final $SPOTLIGHT_DIR/.env is canonical from here on — drop the staged
+# copy in ~/.config/spotlight so secrets never persist in two places.
+# (setup-config.env carries no secrets and is retained for the reuse gate.)
+SPOTLIGHT_INSTALL_DONE=1
+if [ "$CONFIGURATOR_RAN" = "1" ] && [ "$STAGED_ENV" != "$SPOTLIGHT_DIR/.env" ]; then
+  if [ "$DRY_RUN" = "1" ]; then
+    printf 'DRY-RUN: delete staged %s once the final .env is written\n' "$STAGED_ENV"
+  elif [ -f "$STAGED_ENV" ]; then
+    rm -f "$STAGED_ENV"
+  fi
+fi
+
 step "Writing .spotlight-config.json"
 if [ "$DRY_RUN" = "1" ]; then
   printf 'DRY-RUN: write %s/.spotlight-config.json\n' "$SPOTLIGHT_DIR"
 else
+  if [ -f "$SPOTLIGHT_DIR/.spotlight-config.json" ]; then
+    PREV_VAULT_PATH="$(python3 -c '
+import json, sys
+try:
+    print(json.load(open(sys.argv[1])).get("vault_path", ""))
+except Exception:
+    pass
+' "$SPOTLIGHT_DIR/.spotlight-config.json" 2>/dev/null || true)"
+    if [ -n "$PREV_VAULT_PATH" ] && [ "$PREV_VAULT_PATH" != "$SPOTLIGHT_VAULT_PATH" ]; then
+      printf "%s!%s Vault path changed from %s; re-pointing qmd at the new vault — old vault data is not migrated.\n" \
+        "$_c_yellow" "$_c_reset" "$PREV_VAULT_PATH"
+    fi
+  fi
   cat > "$SPOTLIGHT_DIR/.spotlight-config.json" <<CONFIG_EOF
 {
   "search_library": "firecrawl",
@@ -1164,6 +1317,20 @@ if [ "$DRY_RUN" = "1" ]; then
 else
   set -a; source "$SPOTLIGHT_DIR/.env"; set +a
   python3 "$SPOTLIGHT_DIR/integrations/preflight.py" --text || true
+fi
+
+# Personalized post-install guide, written by the configurator.
+GETTING_STARTED="$SPOTLIGHT_PROFILE_DIR/getting-started.html"
+if [ "$DRY_RUN" = "1" ]; then
+  printf 'DRY-RUN: open %s\n' "$GETTING_STARTED"
+elif [ -f "$GETTING_STARTED" ]; then
+  if [ "$OS" = "Darwin" ]; then
+    open "$GETTING_STARTED" >/dev/null 2>&1 || true
+  elif command -v wslview >/dev/null 2>&1; then
+    wslview "$GETTING_STARTED" >/dev/null 2>&1 || true
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$GETTING_STARTED" >/dev/null 2>&1 || true
+  fi
 fi
 
 echo ""
