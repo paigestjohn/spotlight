@@ -1,7 +1,7 @@
 ---
 title: "refactor: Replace hosted key collection with static installer + local configurator"
 type: refactor
-status: active
+status: completed
 date: 2026-06-11
 ---
 
