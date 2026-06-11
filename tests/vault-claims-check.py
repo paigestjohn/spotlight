@@ -143,8 +143,10 @@ def validate_vault(vault: Path) -> tuple[list[str], list[str]]:
         errors.append(f"claims registry {cid}: no note file in claims/")
 
     # --- Note frontmatter, sources, history ---
+    # Entities registry comes in two shapes: spec {entities: [...]} and the
+    # legacy live-vault shape {section, last_updated, items}.
     entity_registry = load_json(vault / "entities" / "_registry.json", errors) or {"entities": []}
-    known_entities = {e["id"] for e in entity_registry.get("entities", [])}
+    known_entities = {e["id"] for e in entity_registry.get("entities", entity_registry.get("items", []))}
     for path in note_paths:
         fm = parse_frontmatter(path, errors)
         if fm is None:
@@ -172,6 +174,19 @@ def validate_vault(vault: Path) -> tuple[list[str], list[str]]:
         if "Supersession History" not in sections:
             errors.append(f"{path.name}: missing Supersession History section")
 
+    # --- Merge proposals schema (loaded first: the alias check below excuses
+    #     collisions that carry a recorded proposal) ---
+    proposal_pairs: set[frozenset[str]] = set()
+    proposals = load_json(vault / "entities" / "_merge-proposals.json", errors)
+    if proposals is not None:
+        for prop in proposals.get("proposals", []):
+            if prop.get("status") not in PROPOSAL_STATUSES:
+                errors.append(f"_merge-proposals.json {prop.get('id')}: invalid status '{prop.get('status')}'")
+            for eid in prop.get("entities", []):
+                if eid not in known_entities:
+                    errors.append(f"_merge-proposals.json {prop.get('id')}: unknown entity '{eid}'")
+            proposal_pairs.add(frozenset(prop.get("entities", [])))
+
     # --- Alias index derivable from entity frontmatter ---
     alias_index = load_json(vault / "entities" / "_aliases.json", errors)
     if alias_index is not None:
@@ -185,20 +200,16 @@ def validate_vault(vault: Path) -> tuple[list[str], list[str]]:
                 continue
             for alias in fm.get("aliases", []):
                 key = normalize(str(alias))
-                if alias_map.get(key) != fm.get("id"):
-                    errors.append(
-                        f"_aliases.json: alias '{key}' of {fm.get('id')} missing or mapped elsewhere"
-                    )
-
-    # --- Merge proposals schema ---
-    proposals = load_json(vault / "entities" / "_merge-proposals.json", errors)
-    if proposals is not None:
-        for prop in proposals.get("proposals", []):
-            if prop.get("status") not in PROPOSAL_STATUSES:
-                errors.append(f"_merge-proposals.json {prop.get('id')}: invalid status '{prop.get('status')}'")
-            for eid in prop.get("entities", []):
-                if eid not in known_entities:
-                    errors.append(f"_merge-proposals.json {prop.get('id')}: unknown entity '{eid}'")
+                mapped = alias_map.get(key)
+                if mapped == fm.get("id"):
+                    continue
+                # A collision with a recorded merge proposal is a flagged,
+                # human-gated state — not index drift.
+                if mapped and frozenset({mapped, str(fm.get("id"))}) in proposal_pairs:
+                    continue
+                errors.append(
+                    f"_aliases.json: alias '{key}' of {fm.get('id')} missing or mapped elsewhere"
+                )
 
     # --- Master stats ---
     master = load_json(vault / "_registry.json", errors)
