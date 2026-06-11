@@ -351,43 +351,62 @@ GETTING_STARTED_TEMPLATE = string.Template("""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Spotlight — Getting started</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23c16a34'><path d='M6 2h4v4h-4zM10 2h4v4h-4zM14 2h4v4h-4zM6 6h4v4h-4zM6 10h4v4h-4zM14 10h4v4h-4zM14 14h4v4h-4zM6 18h4v4h-4zM10 18h4v4h-4zM14 18h4v4h-4z'/></svg>">
 <style>
+  /* Spotlight DA (DESIGN.md) — local font stacks only; this page must work offline. */
   :root {
-    --vellum: #e8e0cf; --vellum-bright: #faf5e8; --vellum-2: #dfd5be;
-    --ink: #1a1a1f; --ink-soft: #4a4439; --ink-dim: #8e8676;
-    --oxide: #4a7363; --hairline: 1px solid rgba(26,26,31,0.22);
-    --serif: Georgia, 'Times New Roman', serif;
-    --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --ink: #07070a;
+    --ink-2: #0c0c10;
+    --paper: #ede8dc;
+    --paper-2: #e3ddce;
+    --paper-fg: #17140e;
+    --muted-dark: rgba(237, 232, 220, 0.55);
+    --muted-faint-dark: rgba(237, 232, 220, 0.18);
+    --muted-light: rgba(23, 20, 14, 0.55);
+    --muted-faint-light: rgba(23, 20, 14, 0.15);
+    --accent-warm: #c16a34;
+    --accent-warm-14: rgba(193, 106, 52, 0.14);
+    --green: #4a7d3f;
+    --amber: #8a6212;
+    --red: #a83838;
+    --hairline-light: 1px solid var(--muted-faint-light);
+    --hairline-dark: 1px solid var(--muted-faint-dark);
+    --display: "Fraunces", Georgia, serif;
+    --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--vellum); color: var(--ink); font: 15px/1.65 var(--sans); }
-  .shell { max-width: 860px; margin: 0 auto; padding: clamp(32px, 6vw, 80px) clamp(20px, 4vw, 48px) 96px; }
-  .brand { font-family: var(--serif); font-weight: 800; font-size: 20px; letter-spacing: -0.01em; }
-  .brand em { color: var(--oxide); font-style: normal; }
-  h1 { font-family: var(--serif); font-weight: 800; font-size: clamp(40px, 7vw, 64px); line-height: 1.02; letter-spacing: -0.02em; margin: 24px 0 12px; }
-  h1 em { font-style: italic; color: var(--oxide); }
-  .lede { font-size: 17px; color: var(--ink-soft); max-width: 56ch; }
-  .num { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-dim); margin: 64px 0 8px; }
-  h2 { font-family: var(--serif); font-weight: 800; font-size: clamp(26px, 4vw, 34px); letter-spacing: -0.015em; margin: 0 0 16px; }
-  h2 em { font-style: italic; color: var(--oxide); }
-  .card { background: var(--vellum-bright); border: var(--hairline); padding: 20px 22px; margin: 0 0 12px; }
-  .card .k { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-dim); margin: 0 0 8px; }
-  .card code, .card pre { font-family: var(--mono); font-size: 13px; color: var(--ink); background: none; white-space: pre-wrap; word-break: break-word; }
-  table { width: 100%; border-collapse: collapse; background: var(--vellum-bright); border: var(--hairline); }
-  th, td { text-align: left; padding: 10px 16px; border-bottom: 1px solid rgba(26,26,31,0.12); font-size: 14px; vertical-align: top; }
-  th { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-dim); font-weight: 500; }
-  td code { font-family: var(--mono); font-size: 12.5px; word-break: break-all; }
-  .callout { background: var(--vellum-2); border: var(--hairline); border-left: 3px solid var(--oxide); padding: 18px 22px; margin: 16px 0; }
-  .callout.urgent { border-left-color: #a83a26; }
+  body { margin: 0; background: var(--paper); color: var(--paper-fg); font: 400 14px/1.65 var(--mono); -webkit-font-smoothing: antialiased; }
+  .shell { max-width: 860px; margin: 0 auto; padding: clamp(36px, 6vw, 88px) clamp(20px, 4vw, 48px) 96px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-variation-settings: "opsz" 48, "wght" 500; font-weight: 500; font-size: 17px; letter-spacing: -0.01em; margin: 0; }
+  .brand svg { width: 18px; height: 18px; }
+  .brand em { color: var(--accent-warm); font-style: normal; }
+  h1 { font-family: var(--display); font-variation-settings: "opsz" 144, "wght" 500; font-weight: 500; font-size: clamp(44px, 7vw, 72px); line-height: 0.98; letter-spacing: -0.025em; margin: 28px 0 16px; }
+  h1 em { font-style: italic; font-variation-settings: "opsz" 144, "wght" 400; font-weight: 400; color: var(--accent-warm); }
+  .lede { font-size: 14px; line-height: 1.7; color: var(--muted-light); max-width: 58ch; }
+  .num { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: var(--paper-fg); opacity: 0.55; margin: 72px 0 0; }
+  h2 { font-family: var(--display); font-variation-settings: "opsz" 96, "wght" 500; font-weight: 500; font-size: clamp(26px, 3.4vw, 38px); line-height: 1.05; letter-spacing: -0.02em; margin: 10px 0 20px; padding-bottom: 16px; border-bottom: var(--hairline-light); }
+  h2 em { font-style: italic; font-variation-settings: "opsz" 96, "wght" 400; font-weight: 400; color: var(--accent-warm); }
+  p { line-height: 1.7; }
+  code { font-family: var(--mono); font-size: 0.92em; background: var(--paper-2); border: var(--hairline-light); padding: 1px 5px; }
+  .card { background: var(--paper-2); border: var(--hairline-light); padding: 20px 22px; margin: 0 0 8px; }
+  .card .k { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--paper-fg); opacity: 0.55; margin: 0 0 10px; }
+  .card code { background: var(--paper); border: var(--hairline-light); font-size: 13px; }
+  .card pre { font-family: var(--mono); font-size: 13px; line-height: 1.6; color: var(--paper); background: var(--ink); border: var(--hairline-dark); padding: 14px 16px; margin: 0; white-space: pre-wrap; word-break: break-word; }
+  table { width: 100%; border-collapse: collapse; background: var(--paper-2); border: var(--hairline-light); }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: var(--hairline-light); font-size: 13px; line-height: 1.6; vertical-align: top; }
+  th { font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted-light); font-weight: 500; white-space: nowrap; }
+  td code { background: var(--paper); font-size: 12px; word-break: break-all; }
+  .callout { background: var(--paper-2); border: var(--hairline-light); border-left: 3px solid var(--accent-warm); padding: 18px 22px; margin: 16px 0; font-size: 13px; line-height: 1.6; }
+  .callout.urgent { border-left-color: var(--red); }
   ol, ul { padding-left: 1.3em; } li { margin: 6px 0; }
-  a { color: var(--oxide); }
-  .foot { margin-top: 80px; padding-top: 24px; border-top: var(--hairline); font-size: 13px; color: var(--ink-dim); }
+  a { color: inherit; text-decoration: none; border-bottom: 1px solid currentColor; transition: color 0.15s ease; }
+  a:hover { color: var(--accent-warm); }
+  .foot { margin-top: 96px; padding-top: 24px; border-top: var(--hairline-light); font-size: 12px; line-height: 1.7; color: var(--muted-light); }
 </style>
 </head>
 <body>
 <div class="shell">
-  <p class="brand">Spotlight<em>.</em></p>
+  <p class="brand"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 2h4v4h-4zM10 2h4v4h-4zM14 2h4v4h-4zM6 6h4v4h-4zM6 10h4v4h-4zM14 10h4v4h-4zM14 14h4v4h-4zM6 18h4v4h-4zM10 18h4v4h-4zM14 18h4v4h-4z"/></svg>Spotlight<em>.</em></p>
   <h1>Case <em>open.</em></h1>
   <p class="lede">Spotlight is installed and wired into your agent runtime. This page is your map for the first hour — what landed on your machine, how to open your first case, and where to look when something breaks.</p>
 
