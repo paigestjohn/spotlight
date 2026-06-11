@@ -102,7 +102,7 @@ Create the lock:
 write-file("{vault}/.ingest-lock", "{project-id} {ISO timestamp}")
 ```
 
-Remove the lock when ingestion completes — whether successful or failed. Always clean up:
+Remove the lock when ingestion completes — whether successful or failed. Always clean up (these commands follow the `shell-safety` skill's probe → resolve → operate pattern via `scripts/spotlight_safe.py`):
 
 ```
 execute-shell("python3 scripts/spotlight_safe.py destructive-probe --base {vault} --path .ingest-lock")
@@ -296,7 +296,7 @@ For each finding in `findings.json`, join its matching fact-check entry from `fa
 1. Verdict is `verified` or `partially_verified`.
 2. Grounding `confidence_cap` is above `low`.
 3. At least one source reference is present.
-4. The finding is not RLM-derived.
+4. The finding is not RLM-derived. Detection rule: a finding is RLM-derived when any of its sources reference `data/rlm-analysis.json` (or an RLM artifact ID), or it carries an `rlm_assisted: true` marker. The investigator contract already forbids copying RLM artifacts into `findings.json`; this check is the defensive backstop, not the primary control.
 
 **Ineligible findings are never written as claims.** Record each exclusion for the ingest summary — finding ID and reason (e.g., `F3: verdict disputed`, `F7: grounding capped low`, `F9: no sources`). Filtering must be visible in the final report, never silent. Excluded findings still appear in the investigation note (Step 2), flagged as before.
 

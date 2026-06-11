@@ -52,16 +52,15 @@ def load_json(path: Path, errors: list[str]) -> dict | None:
         return None
 
 
-def parse_frontmatter(path: Path, errors: list[str]) -> dict[str, object] | None:
+def parse_frontmatter(text: str, name: str, errors: list[str]) -> dict[str, object] | None:
     """Minimal frontmatter parser for the generated note format:
     scalar `key: value` and inline lists `key: [a, b]`."""
-    text = path.read_text(encoding="utf-8")
     if not text.startswith("---\n"):
-        errors.append(f"{path.name}: missing frontmatter")
+        errors.append(f"{name}: missing frontmatter")
         return None
     end = text.find("\n---", 4)
     if end == -1:
-        errors.append(f"{path.name}: unterminated frontmatter")
+        errors.append(f"{name}: unterminated frontmatter")
         return None
     fields: dict[str, object] = {}
     for line in text[4:end].splitlines():
@@ -80,8 +79,7 @@ def parse_frontmatter(path: Path, errors: list[str]) -> dict[str, object] | None
     return fields
 
 
-def note_body_sections(path: Path) -> dict[str, str]:
-    text = path.read_text(encoding="utf-8")
+def note_body_sections(text: str) -> dict[str, str]:
     end = text.find("\n---", 4)
     body = text[end + 4:] if end != -1 else text
     sections: dict[str, str] = {}
@@ -148,7 +146,8 @@ def validate_vault(vault: Path) -> tuple[list[str], list[str]]:
     entity_registry = load_json(vault / "entities" / "_registry.json", errors) or {"entities": []}
     known_entities = {e["id"] for e in entity_registry.get("entities", entity_registry.get("items", []))}
     for path in note_paths:
-        fm = parse_frontmatter(path, errors)
+        note_text = path.read_text(encoding="utf-8")
+        fm = parse_frontmatter(note_text, path.name, errors)
         if fm is None:
             continue
         missing = REQUIRED_NOTE_FIELDS - set(fm)
@@ -167,7 +166,7 @@ def validate_vault(vault: Path) -> tuple[list[str], list[str]]:
         for eid in fm.get("entities", []):
             if eid not in known_entities:
                 errors.append(f"{path.name}: entity '{eid}' not in entities registry")
-        sections = note_body_sections(path)
+        sections = note_body_sections(note_text)
         sources = sections.get("Sources", "")
         if not any(line.strip().lstrip("-").strip() for line in sources.splitlines()):
             errors.append(f"{path.name}: Sources section empty — claims require source refs")
@@ -195,7 +194,7 @@ def validate_vault(vault: Path) -> tuple[list[str], list[str]]:
             if value not in known_entities:
                 errors.append(f"_aliases.json: '{value}' is not a known entity id")
         for entity_path in sorted((vault / "entities").glob("*.md")):
-            fm = parse_frontmatter(entity_path, errors)
+            fm = parse_frontmatter(entity_path.read_text(encoding="utf-8"), entity_path.name, errors)
             if fm is None:
                 continue
             for alias in fm.get("aliases", []):

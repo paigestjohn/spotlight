@@ -225,7 +225,6 @@ def main() -> int:
     check("rlm: non-positive line_start", vc.validate_rlm_analysis(mutate(valid_rlm(), lambda d: d["artifacts"][0]["source_refs"][0].__setitem__("line_start", 0))), True)
 
     # --- end-to-end exit codes ---
-    global PASS, FAIL
     with tempfile.TemporaryDirectory() as tmp:
         case = Path(tmp) / "case"
         (case / "data").mkdir(parents=True)

@@ -32,7 +32,7 @@ total_findings: N
 2. **Key Findings** — One section per finding:
    - Claim
    - Confidence (high / medium / low)
-   - Verdict (confirmed / unconfirmed / debunked)
+   - Verdict — the fact-check verdict, verbatim: verified / partially_verified / unverified / disputed / false / mischaracterized
    - Evidence
    - Sources
    - Perspective
@@ -167,7 +167,7 @@ needs_verification: false
 1. Fact-check verdict is `verified` or `partially_verified`.
 2. Grounding `confidence_cap` is above `low`.
 3. At least one source reference is present.
-4. The finding is not RLM-derived (RLM artifacts are leads inside a case, never vault knowledge).
+4. The finding is not RLM-derived (RLM artifacts are leads inside a case, never vault knowledge). Detection: sources referencing `data/rlm-analysis.json` or an RLM artifact ID, or an `rlm_assisted: true` marker on the finding.
 
 Findings that fail the gate stay in the investigation note (flagged, as today) and case files. The claims layer is the cross-case queryable surface; it admits verified intelligence only.
 
