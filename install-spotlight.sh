@@ -928,7 +928,7 @@ CONFIG_EOF
 fi
 
 step "Case workspace and vault scaffold"
-run mkdir -p "$SPOTLIGHT_CASES_ROOT" "$SPOTLIGHT_VAULT_PATH/evidence" "$SPOTLIGHT_VAULT_PATH/captures" "$SPOTLIGHT_VAULT_PATH/briefs" "$SPOTLIGHT_VAULT_PATH/exports" "$SPOTLIGHT_VAULT_PATH/handoff-to-mycroft" "$SPOTLIGHT_VAULT_PATH/_schema"
+run mkdir -p "$SPOTLIGHT_CASES_ROOT" "$SPOTLIGHT_VAULT_PATH/evidence" "$SPOTLIGHT_VAULT_PATH/captures" "$SPOTLIGHT_VAULT_PATH/briefs" "$SPOTLIGHT_VAULT_PATH/exports" "$SPOTLIGHT_VAULT_PATH/_schema"
 if [ "$DRY_RUN" != "1" ] && [ ! -f "$SPOTLIGHT_VAULT_PATH/_index.md" ]; then
   cat > "$SPOTLIGHT_VAULT_PATH/_index.md" <<'INDEX_EOF'
 ---
@@ -945,7 +945,6 @@ tags: [spotlight, index]
 - captures/ — local page/document captures
 - briefs/ — case summaries and handoffs
 - exports/ — publishable packets and review artifacts
-- handoff-to-mycroft/ — durable findings promoted to Mycroft
 INDEX_EOF
 fi
 if [ "$DRY_RUN" != "1" ] && [ ! -f "$SPOTLIGHT_CASES_ROOT/_template.md" ]; then
