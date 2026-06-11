@@ -132,6 +132,62 @@ usage_count: N
 
 ---
 
+### 5. Claim Note
+
+**Path:** `{vault}/claims/{claim-id}.md` where `claim-id` is `{project-id}-f{n}` (lowercased finding ID of the originating case — e.g. `health-insider-f1`). The claim's identity stays bound to the case that first recorded it; later cases append to it rather than minting a new ID.
+
+```yaml
+---
+id: health-insider-f1
+project: health-insider
+finding_id: F1
+entities: [innodiets-uab, health-insider-site]
+verdict: verified
+confidence: high
+confidence_cap: high
+layer: durable
+recorded: YYYY-MM-DD
+verified: YYYY-MM-DD
+verified_by: health-insider
+needs_verification: false
+---
+```
+
+**Field semantics:**
+
+- `verdict` — the fact-check verdict, exactly one of the existing taxonomy values that pass the eligibility gate: `verified` or `partially_verified`. Other verdicts never produce claim notes (see eligibility below).
+- `confidence` / `confidence_cap` — carried from the finding and its grounding object, unchanged.
+- `layer` — derived, never set by hand: `verified` → `durable`; `partially_verified` → `lead`.
+- `recorded` — the ingest date.
+- `verified` / `verified_by` — fact-check date and the project whose fact-check produced the verdict.
+- `needs_verification` — `true` for every `lead`-layer claim; `false` for `durable`.
+
+**Eligibility gate (hard rule).** A finding becomes a claim note only when ALL hold:
+
+1. Fact-check verdict is `verified` or `partially_verified`.
+2. Grounding `confidence_cap` is above `low`.
+3. At least one source reference is present.
+4. The finding is not RLM-derived (RLM artifacts are leads inside a case, never vault knowledge).
+
+Findings that fail the gate stay in the investigation note (flagged, as today) and case files. The claims layer is the cross-case queryable surface; it admits verified intelligence only.
+
+**Body structure:**
+
+1. **Claim** — the exact claim text, verbatim from the finding.
+2. **Evidence Summary** — brief description of the supporting evidence.
+3. **Sources** — list with URLs/refs and access dates, carried from the finding.
+4. **Supersession History** — append-only table; a later investigation that re-verifies, strengthens, or supersedes this claim appends a row and never rewrites prior rows:
+
+| Date | Investigation | Event | Verdict |
+|------|---------------|-------|---------|
+| YYYY-MM-DD | [[project-id]] | re-verified / superseded / strengthened | verified |
+
+5. **Connections** — wikilinks to `[[entity-id]]`s and the originating `[[project-id]]`.
+
+**Sensitive-vault parity:** when a sensitive vault is enabled, it carries the same `claims/` structure; the existing rule that the two vaults never cross-link applies to claim notes unchanged.
+
+---
+
 ## Wikilink Conventions
 
 | Reference type | Format |
@@ -140,10 +196,12 @@ usage_count: N
 | Investigation | `[[project-id]]` |
 | Methodology | `[[technique-id]]` |
 | Tool | `[[tool-id]]` |
+| Claim | `[[claim-id]]` |
 
 **ID rules:**
 - All IDs are **kebab-case** (lowercase, hyphens, no spaces).
 - Examples: `swiss-leaks`, `john-doe`, `reverse-image-search`, `bellingcat-osm`.
+- Claim IDs are `{project-id}-f{n}`: `health-insider-f1`.
 
 **Directory fallback** — When wikilinks don't resolve (e.g., flat export or non-Obsidian vault), use relative links:
 
