@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -13,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:
-    out = Path("/private/tmp/spotlight-rlm-flow-fake.json")
+    out = Path(tempfile.gettempdir()) / "spotlight-rlm-flow-fake.json"
     proc = subprocess.run(
         [
             sys.executable,
@@ -48,7 +49,7 @@ def main() -> int:
     assert with_prefiltered["source_lines_read_by_downstream"] < without["source_lines_read_by_downstream"]
     assert with_prefiltered["contradiction_required"] is True
     assert with_prefiltered["contradiction_requirement_satisfied"] is True
-    suite_out = Path("/private/tmp/spotlight-rlm-flow-suite-fake.json")
+    suite_out = Path(tempfile.gettempdir()) / "spotlight-rlm-flow-suite-fake.json"
     proc = subprocess.run(
         [
             sys.executable,

@@ -353,6 +353,12 @@ ensure_brew() {
   if command -v brew >/dev/null 2>&1; then
     printf "%s✓%s Homebrew present\n" "$_c_green" "$_c_reset"; return 0
   fi
+  # Dry-run must never prompt or fetch remote code — the $(curl …) below
+  # executes eagerly even when the outer command is wrapped by run().
+  if [ "$DRY_RUN" = "1" ]; then
+    printf 'DRY-RUN: install Homebrew (consent prompt + https://brew.sh install script)\n'
+    return 0
+  fi
   echo ""
   echo "Homebrew is needed to install other tools. Install it now? [Y/n]"
   read -r ans </dev/tty || ans="Y"
@@ -360,6 +366,10 @@ ensure_brew() {
   run /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   [ -x /opt/homebrew/bin/brew ] && eval "$(/opt/homebrew/bin/brew shellenv)"
   [ -x /usr/local/bin/brew ] && eval "$(/usr/local/bin/brew shellenv)"
+  [ -x /home/linuxbrew/.linuxbrew/bin/brew ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  # The && probes above leave a non-zero status when brew landed elsewhere;
+  # under set -e that status must not kill the install.
+  return 0
 }
 
 ensure_tool() {
