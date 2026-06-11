@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "entities": [
+    {
+      "id": "acme-corp",
+      "type": "company",
+      "aliases": ["ACME Ltd", "Acme Corporation"],
+      "country": "TL",
+      "investigations": ["test-case"],
+      "first_seen": "2026-06-01"
+    },
+    {
+      "id": "john-doe",
+      "type": "person",
+      "aliases": ["J. Doe"],
+      "country": "TL",
+      "investigations": ["test-case"],
+      "first_seen": "2026-06-01"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "claims": [
+    {
+      "id": "test-case-f1",
+      "project": "test-case",
+      "entities": ["acme-corp", "john-doe"],
+      "verdict": "verified",
+      "layer": "durable",
+      "recorded": "2026-06-01",
+      "verified": "2026-06-01",
+      "needs_verification": false,
+      "file": "claims/test-case-f1.md"
+    },
+    {
+      "id": "test-case-f2",
+      "project": "test-case",
+      "entities": ["acme-corp"],
+      "verdict": "partially_verified",
+      "layer": "lead",
+      "recorded": "2026-06-01",
+      "verified": "2026-06-01",
+      "needs_verification": true,
+      "file": "claims/test-case-f2.md"
+    }
+  ]
+}

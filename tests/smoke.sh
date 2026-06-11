@@ -110,6 +110,16 @@ else
 fi
 
 echo ""
+echo "── Vault claims layer ──"
+python3 tests/vault-claims-check.py >/dev/null 2>&1
+rc=$?
+if [ $rc -eq 0 ]; then
+  ok "tests/vault-claims-check.py passes (fixture + negative self-tests)"
+else
+  fail "tests/vault-claims-check.py failed with rc=$rc"
+fi
+
+echo ""
 echo "── Cleanliness ──"
 
 banned_syntax=$(grep -rlE 'WebFetch|WebSearch|allowedTools|disallowedTools|maxTurns|run_in_background' skills/ agents/ 2>/dev/null || true)

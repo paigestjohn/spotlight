@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "investigations": [
+    {
+      "id": "test-case",
+      "title": "Test Case: Acme Consultancy Payments",
+      "date": "2026-06-01",
+      "status": "confirmed",
+      "regions": ["Testland"],
+      "entities": ["acme-corp", "john-doe"],
+      "verified_count": 1,
+      "total_findings": 3
+    }
+  ]
+}

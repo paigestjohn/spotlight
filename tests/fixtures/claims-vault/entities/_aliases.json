@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "generated": "2026-06-11T00:00:00Z",
+  "aliases": {
+    "acme ltd": "acme-corp",
+    "acme corporation": "acme-corp",
+    "acme corp": "acme-corp",
+    "j. doe": "john-doe",
+    "john doe": "john-doe"
+  }
+}
