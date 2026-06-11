@@ -66,9 +66,13 @@ def _read_registry(path: Path) -> dict | None:
 def _write_registry(project: str, registry: dict) -> Path:
     path = _monitoring_path(project)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as fh:
+    # Write-temp-then-rename so a crash mid-write never leaves a corrupt
+    # registry (same pattern as the RLM helper's write_json).
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with open(tmp, "w") as fh:
         json.dump(registry, fh, indent=2, ensure_ascii=False)
         fh.write("\n")
+    tmp.replace(path)
     return path
 
 

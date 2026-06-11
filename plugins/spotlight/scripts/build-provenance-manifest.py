@@ -190,8 +190,22 @@ def main() -> int:
         print(f"case directory not found: {case_dir}", file=sys.stderr)
         return 2
 
+    if args.sign_endpoint:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from spotlight_safe import SafetyError, validate_url
+
+        try:
+            validate_url(args.sign_endpoint)
+        except SafetyError as exc:
+            print(f"invalid --sign-endpoint: {exc}", file=sys.stderr)
+            return 2
+
     output = Path(args.output).resolve() if args.output else case_dir / "data/provenance-manifest.json"
-    manifest = build_manifest(case_dir, args.credential_id, args.sign_endpoint)
+    try:
+        manifest = build_manifest(case_dir, args.credential_id, args.sign_endpoint)
+    except FileNotFoundError as exc:
+        print(f"missing required case file: {exc}", file=sys.stderr)
+        return 2
 
     if args.sign_endpoint:
         receipt_path = (

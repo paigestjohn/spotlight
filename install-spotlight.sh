@@ -457,10 +457,13 @@ if [ "$SPOTLIGHT_MODE" = "local" ]; then
     MODEL_DIR="$HOME/Models/$MODEL_LEAF"
     run mkdir -p "$MODEL_DIR"
     if [ ! -f "$MODEL_DIR/$GGUF_FILE" ]; then
+      # Download to .part and rename on success: an interrupted download is
+      # resumed (--continue-at -) instead of being mistaken for a complete file.
       spin "Downloading $GGUF_FILE from huggingface.co/$SPOTLIGHT_MODEL_REPO" \
         curl -L --fail --retry 3 --continue-at - \
           "https://huggingface.co/$SPOTLIGHT_MODEL_REPO/resolve/main/$GGUF_FILE" \
-          -o "$MODEL_DIR/$GGUF_FILE"
+          -o "$MODEL_DIR/$GGUF_FILE.part"
+      run mv "$MODEL_DIR/$GGUF_FILE.part" "$MODEL_DIR/$GGUF_FILE"
     else
       printf "%s✓%s Model already downloaded at %s\n" "$_c_green" "$_c_reset" "$MODEL_DIR/$GGUF_FILE"
     fi
@@ -671,7 +674,9 @@ SERVER_PID=\$!
 cleanup() { kill -TERM "\$SERVER_PID" 2>/dev/null || true; }
 trap cleanup EXIT INT TERM HUP
 echo -n "Waiting for llama-server"
-for i in {1..120}; do curl -sf http://127.0.0.1:8080/v1/models >/dev/null && { echo " ready."; break; }; echo -n "."; sleep 1; done
+READY=0
+for i in {1..120}; do curl -sf http://127.0.0.1:8080/v1/models >/dev/null && { echo " ready."; READY=1; break; }; echo -n "."; sleep 1; done
+[ "\$READY" = "1" ] || { echo " llama-server did not become ready after 120s — see /tmp/llama-server-*.log" >&2; exit 1; }
 pi "\$@"
 LAUNCHER_EOF
       else
@@ -690,7 +695,9 @@ SERVER_PID=\$!
 cleanup() { kill -TERM "\$SERVER_PID" 2>/dev/null || true; }
 trap cleanup EXIT INT TERM HUP
 echo -n "Waiting for llama-server"
-for i in {1..120}; do curl -sf http://127.0.0.1:8080/v1/models >/dev/null && { echo " ready."; break; }; echo -n "."; sleep 1; done
+READY=0
+for i in {1..120}; do curl -sf http://127.0.0.1:8080/v1/models >/dev/null && { echo " ready."; READY=1; break; }; echo -n "."; sleep 1; done
+[ "\$READY" = "1" ] || { echo " llama-server did not become ready after 120s — see /tmp/llama-server-*.log" >&2; exit 1; }
 opencode --model llama.cpp/qwen27 "\$@"
 LAUNCHER_EOF
       fi

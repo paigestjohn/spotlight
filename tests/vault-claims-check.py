@@ -260,6 +260,21 @@ def negative_cases() -> list[tuple[str, callable]]:
     def layer_inconsistent(v: Path):
         _mutate_json(v / "claims/_registry.json", lambda d: d["claims"][0].__setitem__("layer", "lead"))
 
+    def low_confidence_cap(v: Path):
+        p = v / "claims/test-case-f1.md"
+        p.write_text(p.read_text(encoding="utf-8").replace("confidence_cap: high", "confidence_cap: low"), encoding="utf-8")
+
+    def missing_supersession(v: Path):
+        p = v / "claims/test-case-f1.md"
+        p.write_text(p.read_text(encoding="utf-8").replace("## Supersession History", "## History"), encoding="utf-8")
+
+    def bad_proposal_status(v: Path):
+        def add(d):
+            d["proposals"].append({"id": "merge-0001", "entities": ["acme-corp", "john-doe"],
+                                   "colliding_alias": "x", "source_project": "test-case",
+                                   "proposed": "2026-06-01", "status": "maybe"})
+        _mutate_json(v / "entities/_merge-proposals.json", add)
+
     return [
         ("note without registry entry", drop_registry_entry),
         ("registry entry without note", orphan_registry_entry),
@@ -268,6 +283,9 @@ def negative_cases() -> list[tuple[str, callable]]:
         ("verdict outside claims-layer enum", bad_verdict),
         ("master stats mismatch", stats_mismatch),
         ("layer inconsistent with verdict", layer_inconsistent),
+        ("confidence_cap low fails eligibility", low_confidence_cap),
+        ("missing Supersession History section", missing_supersession),
+        ("invalid merge-proposal status", bad_proposal_status),
     ]
 
 

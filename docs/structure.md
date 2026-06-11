@@ -11,8 +11,8 @@ spotlight/
 ├── setup.html                # Browser-based installer — picks runtime, collects keys, generates install script
 ├── .spotlight-config.json    # Per-session config (search library, vault path, cases root, runtime)
 ├── .gitignore
-├── schemas/                  # JSON schemas — 6 case files, all schema_version 1.0
-├── skills/                   # 14 skills (pi-native SKILL.md format)
+├── schemas/                  # JSON schemas — 8 case files, all schema_version 1.0
+├── skills/                   # 16 skills (pi-native SKILL.md format)
 ├── agents/                   # 2 agent prompt bundles (investigator + fact-checker)
 ├── integrations/             # External tool integrations (dev-browser, Junkipedia, Noosphere C2PA, OSINT Navigator, Unpaywall)
 ├── docs/                     # You are here. Operator manual.
@@ -26,7 +26,7 @@ spotlight/
 
 1. **13-verb registry** — the abstract tool vocabulary every skill instruction uses
 2. **Agent manifests** — `investigator` and `fact-checker` with `allowed_verbs`, `iteration_limit`, `preferred_model`
-3. **Skill registry** — 14 skills with IDs, paths, and which agents can invoke them
+3. **Skill registry** — 16 skills with IDs, paths, and which agents can invoke them
 4. **Cases directory structure** — `{CASE_DIR}/{data,research}/` convention
 5. **Schema reference** — pointers to `schemas/*.json`
 6. **Sensitive mode** — toggle that strips `fetch`/`search` from allowed_verbs
@@ -51,7 +51,7 @@ spotlight/
 
 These are **abstract** — the runtime adapter binds each to a concrete tool. See [integrations.md](integrations.md) for per-runtime mappings.
 
-## schemas/ — 6 case files
+## schemas/ — 8 case files
 
 Every case file validates against a schema. All declare `schema_version: "1.0"`.
 
@@ -63,6 +63,8 @@ Every case file validates against a schema. All declare `schema_version: "1.0"`.
 | `evidence-bundle.schema.json` | `{CASE_DIR}/data/evidence-bundle.json` | Acquisition artifacts, missing-source gates, hashes, and claim links |
 | `investigation-log.schema.json` | `{CASE_DIR}/data/investigation-log.json` | Append-only cycle audit trail |
 | `summary.schema.json` | `{CASE_DIR}/data/summary.json` | Gate 1 summary |
+| `rlm-analysis.schema.json` | `{CASE_DIR}/data/rlm-analysis.json` | Optional RLM case-corpus analysis — leads only, every artifact `needs_verification` |
+| `provenance-manifest.schema.json` | `{CASE_DIR}/data/provenance-manifest.json` | Case artifact hashes, claim/verdict links, evidence refs, optional C2PA signing metadata |
 
 Validate a case file:
 
@@ -70,7 +72,7 @@ Validate a case file:
 python3 -m jsonschema -i {CASE_DIR}/data/findings.json schemas/findings.schema.json
 ```
 
-## skills/ — 14 skills
+## skills/ — 16 skills
 
 Each skill is a directory with `SKILL.md` (+ optional `references/*.md` for large supporting content).
 
@@ -82,7 +84,7 @@ Each skill is a directory with `SKILL.md` (+ optional `references/*.md` for larg
 
 - **`review`** — post-Gate-1 HTML review artifact. Renders a self-contained `{CASE_DIR}/review.html` the journalist opens in any browser, submits structured feedback, downloads as JSON. Mode B re-spawns the investigator to process the feedback and regenerates the HTML. No server required.
 - **`integrations`** — routing layer for external tool integrations (dev-browser, Junkipedia, Noosphere C2PA, OSINT Navigator, Unpaywall). Reads live preflight status, maps investigation tasks to integrations. See `integrations/` at repo root for manifests + per-integration usage docs.
-- **`ingest`** — archival from case files to vault. 7-step process with `.ingest-lock` concurrency and directory fallback.
+- **`ingest`** — archival from case files to vault. 8-step process with `.ingest-lock` concurrency and directory fallback. Step 6 extracts eligibility-gated claim records (verdict `verified`/`partially_verified`, grounding above `low`, sources present) into `{vault}/claims/` with a claims registry, a generated alias index (`entities/_aliases.json`), and human-gated merge proposals.
 - **`monitoring`** — case-level monitoring orchestration. Coordinates Mycroft passive signals, Scoutpost durable monitors, and runtime-native fallbacks.
 - **`acquisition-graduation`** — turns repeated dev-browser acquisition successes into durable source/domain guidance without secrets or brittle session details.
 

@@ -208,7 +208,7 @@ Set `sensitive: true` in `AGENTS.md` frontmatter (or pass as env `SPOTLIGHT_SENS
 
 ## Hermes
 
-**What it is:** Production ambient agent on the Mac Mini, loaded via `~/.hermes/config.yaml`. Already in use for the Mycroft workflow. See `/Users/tomvaillant/buried_signals/mycroft/.hermes/config.yaml` for the live config.
+**What it is:** Production ambient agent on the Mac Mini, loaded via `~/.hermes/config.yaml`. Already in use for the Mycroft workflow. See `~/.hermes/config.yaml` for the live config.
 
 ### Loading this repo
 
@@ -217,7 +217,7 @@ Add to `skills.external_dirs` in `~/.hermes/config.yaml`:
 ```yaml
 skills:
   external_dirs:
-    - /Users/tomvaillant/buried_signals/spotlight/skills
+    - /path/to/spotlight/skills
     # existing kit dirs follow
     - ~/buried_signals/kit/mycroft
     - ~/buried_signals/kit/shared
