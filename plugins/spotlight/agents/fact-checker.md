@@ -54,17 +54,18 @@ Before searching for new evidence, check the vault for prior verdicts on the ent
 
 If `VAULT_PATH` is set (not `"none"`):
 
-**Load registries ONCE at the start of the fact-check** — one `read-file` each for `{VAULT_PATH}/entities/_registry.json` and `{VAULT_PATH}/tools/_registry.json`. Hold them in working context for the rest of the check. Do not re-read per claim.
+**Load registries ONCE at the start of the fact-check** — one `read-file` each for `{VAULT_PATH}/entities/_registry.json`, `{VAULT_PATH}/entities/_aliases.json`, `{VAULT_PATH}/tools/_registry.json`, and `{VAULT_PATH}/claims/_registry.json`. Hold them in working context for the rest of the check. Do not re-read per claim. (Older vaults may lack the alias map or claims registry — skip what's missing and continue.)
 
-1. Extract the proper-noun entities from each claim (persons, organizations, companies, places).
+1. Extract the proper-noun entities from each claim (persons, organizations, companies, places). Resolve each through the alias map first (normalize: lowercase, trim, collapse whitespace) so alternate names land on the right entity ID.
 2. For entities that appear in the already-loaded `entities/_registry.json`, `read-file` each matching note once and scan for:
    - Prior investigation roles that bear on credibility
    - Previous findings that support or contradict the current claim
    - Known aliases or relationships that change the picture
-3. For source domains cited in `findings.json`, look them up in the already-loaded `tools/_registry.json`. For matches, `read-file` the tool note once and check "Tips for Future Agents" (e.g. "outlet X has a history of unretracted errors on Y topic"). Treat those tips as inputs to the credibility judgment.
-4. For the top-priority claims only (high-confidence or disputed), use `query-vault("{VAULT_PATH}", "<claim keywords>")` for semantic search. Cap at ~5 queries per cycle to keep cost bounded.
+3. **Check the claims registry for prior verdicts.** Filter the loaded `claims/_registry.json` by the resolved entity IDs. For matches that resemble the claim under check, `read-file` the claim note once: a `durable` prior verdict with intact sources is strong corroborating prior art; a `lead`-layer claim tells you what prior work could and couldn't pin down. Cite as `"Prior verdict: [[claim-id]] — {verdict}, verified {date} by [[project-id]]"`.
+4. For source domains cited in `findings.json`, look them up in the already-loaded `tools/_registry.json`. For matches, `read-file` the tool note once and check "Tips for Future Agents" (e.g. "outlet X has a history of unretracted errors on Y topic"). Treat those tips as inputs to the credibility judgment.
+5. For the top-priority claims only (high-confidence or disputed), use `query-vault("{VAULT_PATH}", "<claim keywords>")` for semantic search. Cap at ~5 queries per cycle to keep cost bounded.
 
-Record prior-art references in `notes` on each claim as `"Prior vault context: [[entity-id]], [[prior-project-id]] — {what was found}"`. Do not suppress a verdict because of prior context; use it as one input among many.
+Record prior-art references in `notes` on each claim as `"Prior vault context: [[entity-id]], [[prior-project-id]] — {what was found}"` (and the prior-verdict format above for claim hits). Do not suppress a verdict because of prior context; use it as one input among many — a prior verdict is evidence about evidence, not a substitute for your own check.
 
 The vault is read-only. Do not modify it during fact-checking.
 

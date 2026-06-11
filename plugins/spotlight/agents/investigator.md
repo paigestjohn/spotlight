@@ -89,14 +89,20 @@ Read the registries and scan for entities, methodology, tools, and investigation
 2. **`read-file("{VAULT_PATH}/methodology/_registry.json")`** — Filter by category relevant to your approach. For matches, read the full note — pay attention to lessons learned and proven steps.
 3. **`read-file("{VAULT_PATH}/tools/_registry.json")`** — Filter by category. For matches, read the full note — **treat "Tips for Future Agents" as requirements, not suggestions.**
 4. **`read-file("{VAULT_PATH}/investigations/_registry.json")`** — Look for investigations sharing regions, entities, or tags. Read summaries — prior gaps may be your leads.
+5. **`read-file("{VAULT_PATH}/entities/_aliases.json")`** — Hold the alias map for the whole session. To check any name, normalize it (lowercase, trim, collapse whitespace) and look it up here first — this resolves alternate spellings and former names to entity IDs without a semantic query.
+6. **`read-file("{VAULT_PATH}/claims/_registry.json")`** — **Claim dedup, before any research.** Filter claims by the entity IDs (and alias hits) relevant to your lead. For each match, `read-file("{VAULT_PATH}/claims/{claim-id}.md")` and apply:
+   - `layer: durable` — the claim is verified knowledge. Do not re-research it; downgrade to spot-confirmation (one check that the cited sources still stand) only if the claim is load-bearing for your case.
+   - `layer: lead` (`needs_verification: true`) — treat as an explicit lead: prior work partially verified this; your case may be positioned to finish the verification.
+
+Older vaults may not have `claims/_registry.json` or `entities/_aliases.json` yet — on a missing-file read, skip that step and continue.
 
 When registries are large or you need semantic search beyond registry filtering, use `query-vault("{VAULT_PATH}", "<your query>")` to find related context across the vault.
 
 ### Step 3: Incorporate into your work
 
-**In PLANNING mode:** Reference prior techniques that worked, tools with proven tips, and known entity relationships. Cite vault context as "Prior investigation context: [[entity-id]]".
+**In PLANNING mode:** Reference prior techniques that worked, tools with proven tips, and known entity relationships. Cite vault context as "Prior investigation context: [[entity-id]]". Cite prior claims as "Prior verdict: [[claim-id]] — {verdict}, verified {date} by [[project-id]]" and shape the methodology around them: don't plan research steps for durable claims; plan verification steps for lead-layer claims you intend to firm up.
 
-**In EXECUTION mode:** Skip redundant research. If an entity is already documented, start from what's known. If a tool has tips, follow them. If a methodology has lessons learned, apply them.
+**In EXECUTION mode:** Skip redundant research. If an entity is already documented, start from what's known. If a claim is already durable, cite it instead of re-deriving it. If a tool has tips, follow them. If a methodology has lessons learned, apply them.
 
 **The vault is read-only during investigation.** Do not create, modify, or delete vault files during PLANNING or EXECUTION modes.
 
@@ -149,8 +155,8 @@ Follow the paper trail. Corporate filings link to people. People link to address
 
 For each new entity:
 
-1. Look up the registry list (already loaded) — check both `id` and `aliases`.
-2. If hit: `read-file("{VAULT_PATH}/entities/{entity-id}.md")` and apply what you already know. Do not re-investigate from zero.
+1. Look up the alias map first (`entities/_aliases.json`, already loaded at vault-context time): normalize the name and check for an exact hit — this catches alternate spellings, legal names, and former names that a raw `id` match misses. Then check the registry list's `id` and `aliases` directly.
+2. If hit: `read-file("{VAULT_PATH}/entities/{entity-id}.md")` and apply what you already know. Do not re-investigate from zero. Also filter the loaded claims registry by this entity — a durable prior verdict about it may answer your question outright.
 3. If the registry lookup misses but you suspect prior work might have covered adjacent context, call `query-vault("{VAULT_PATH}", "<entity name + context keywords>")` sparingly (cap ~3 per cycle) for semantic search.
 
 Record vault matches in your investigation-log under `methodology.vault_hits`. This is where the knowledge base compounds — a journalist shouldn't re-research the same shell company for three different stories.

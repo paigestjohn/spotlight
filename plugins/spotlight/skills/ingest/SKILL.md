@@ -116,7 +116,7 @@ If the process errors partway through, remove the lock before reporting the erro
 
 ## Ingestion Process
 
-Seven steps. Execute in order. Do not skip steps.
+Eight steps. Execute in order. Do not skip steps.
 
 ### Step 1 — Read Current Vault State
 
@@ -126,17 +126,21 @@ Read all registry files:
 read-file("{vault}/_registry.json")
 read-file("{vault}/investigations/_registry.json")
 read-file("{vault}/entities/_registry.json")
+read-file("{vault}/entities/_aliases.json")
+read-file("{vault}/entities/_merge-proposals.json")
 read-file("{vault}/methodology/_registry.json")
 read-file("{vault}/tools/_registry.json")
+read-file("{vault}/claims/_registry.json")
 ```
 
-If the vault is empty (registries do not exist), initialize each with the empty schema from `references/registry-spec.md` and `schema_version: "1.0"`. Create the directories:
+If the vault is empty (registries do not exist), initialize each with the empty schema from `references/registry-spec.md` and `schema_version: "1.0"`. A vault created before the claims layer existed simply lacks `claims/_registry.json`, `entities/_aliases.json`, and `entities/_merge-proposals.json` — initialize those with their empty schemas and continue; nothing else about the vault needs migration. Create the directories:
 
 ```
 {vault}/investigations/
 {vault}/entities/
 {vault}/methodology/
 {vault}/tools/
+{vault}/claims/
 ```
 
 ### Step 2 — Create Investigation Note
@@ -200,7 +204,9 @@ Generate kebab-case ID from entity name.
 - Add `{project-id}` to frontmatter `investigations` array (if not already present)
 - `write-file` the updated note
 
-**If entity is new:**
+**If entity is new — alias collision check first:**
+
+Normalize the new entity's name and aliases (lowercase, trim, collapse whitespace) and look each up in `entities/_aliases.json`. If any normalized form maps to a *different* existing entity ID, this may be the same real-world entity under another name. Do **not** merge. Append a proposal to `entities/_merge-proposals.json` (per `references/registry-spec.md` — skip if the same pair already has a proposal in any status) and proceed with both entities separate. Then:
 
 `write-file("{vault}/entities/{entity-id}.md", ...)` per `references/entity-model.md`:
 
@@ -283,7 +289,33 @@ usage_count: 1
 
 Body: Capabilities, Access Notes, Usage History table (one row), Tips for Future Agents (from search queries if useful).
 
-### Step 6 — Update ALL Registries
+### Step 6 — Create or Update Claim Notes
+
+For each finding in `findings.json`, join its matching fact-check entry from `fact-check.json` (on finding ID) and apply the **eligibility gate** from `references/entity-model.md`:
+
+1. Verdict is `verified` or `partially_verified`.
+2. Grounding `confidence_cap` is above `low`.
+3. At least one source reference is present.
+4. The finding is not RLM-derived.
+
+**Ineligible findings are never written as claims.** Record each exclusion for the ingest summary — finding ID and reason (e.g., `F3: verdict disputed`, `F7: grounding capped low`, `F9: no sources`). Filtering must be visible in the final report, never silent. Excluded findings still appear in the investigation note (Step 2), flagged as before.
+
+**For each eligible finding**, claim ID is `{project-id}-f{n}`:
+
+**If the claim is new** — `write-file("{vault}/claims/{claim-id}.md", ...)` per the Claim Note schema in `references/entity-model.md`:
+
+- `verdict`, `confidence`, `confidence_cap` carried from the finding and fact-check unchanged
+- `layer: durable` when verdict is `verified`; `layer: lead` + `needs_verification: true` when `partially_verified`
+- `recorded` = today; `verified` = fact-check date; `verified_by` = this project
+- `entities` = entity IDs from Step 3 that this finding references
+- Body: Claim (verbatim), Evidence Summary, Sources (with access dates), Supersession History (empty table), Connections (wikilinks to entities and `[[{project-id}]]`)
+
+**If the claim already exists** (re-ingest of the same project, or a later project re-verifying the same claim):
+
+- Same project re-ingest: update the note idempotently — identical inputs must produce identical output, no duplicate registry entries.
+- Different project re-verifying or superseding: **never rewrite the existing note's claim, evidence, or history.** Append one dated row to the Supersession History table (`re-verified` / `strengthened` / `superseded`), update frontmatter `verified`/`verified_by` to the latest verification, and promote `layer` to `durable` if the new verdict is `verified`. History is append-only.
+
+### Step 7 — Update ALL Registries
 
 This is mandatory. Update every registry affected by the ingestion.
 
@@ -291,11 +323,14 @@ This is mandatory. Update every registry affected by the ingestion.
 - **`{vault}/entities/_registry.json`** — add new entities, update `investigations` arrays for existing ones.
 - **`{vault}/methodology/_registry.json`** — add new techniques, update `investigations` arrays for existing ones.
 - **`{vault}/tools/_registry.json`** — add new tools, update `investigations` and `usage_count` for existing ones.
-- **`{vault}/_registry.json`** (master) — update `stats` counts and `last_updated` to current ISO 8601 timestamp.
+- **`{vault}/claims/_registry.json`** — add new claims, update `verified`/`layer`/`needs_verification` for re-verified ones. Entries stay minimal per `references/registry-spec.md`.
+- **`{vault}/entities/_aliases.json`** — rebuild in full from the frontmatter of every entity note (canonical names + all aliases, normalized). This is a derived artifact; never merge by hand.
+- **`{vault}/entities/_merge-proposals.json`** — write any proposals collected in Step 3. Preserve resolved (`accepted`/`rejected`) proposals.
+- **`{vault}/_registry.json`** (master) — update `stats` counts (including `claims`) and `last_updated` to current ISO 8601 timestamp.
 
 See `references/registry-spec.md` for exact schemas.
 
-### Step 7 — Update _INDEX.md
+### Step 8 — Update _INDEX.md
 
 `write-file("{vault}/_INDEX.md", ...)` using the template from `references/registry-spec.md`.
 
@@ -306,7 +341,7 @@ See `references/registry-spec.md` for exact schemas.
 For Obsidian and Tolaria vaults: use wikilinks in the investigations table (`[[project-id]]`).
 For directory fallback: use relative links (`[project-id](investigations/project-id.md)`).
 
-After Step 7 completes, remove the `.ingest-lock`.
+After Step 8 completes, remove the `.ingest-lock`. Include the claim exclusion log from Step 6 in the ingest summary reported to the user: claims written, claims updated, and each excluded finding with its reason.
 
 ---
 
@@ -319,6 +354,7 @@ When `vault_type` is `"directory"` (no `.obsidian/` detected):
 - Replace all wikilinks `[[project-id]]` with `[project-id](../investigations/project-id.md)`.
 - Replace all wikilinks `[[technique-id]]` with `[technique-id](../methodology/technique-id.md)`.
 - Replace all wikilinks `[[tool-id]]` with `[tool-id](../tools/tool-id.md)`.
+- Replace all wikilinks `[[claim-id]]` with `[claim-id](../claims/claim-id.md)`.
 - `_INDEX.md` browse section uses relative links too.
 
 Frontmatter and registry JSON are identical regardless of vault type.
@@ -334,6 +370,9 @@ Frontmatter and registry JSON are identical regardless of vault type.
 5. **Wikilinks create the graph.** Use `[[entity-id]]` format in Obsidian and Tolaria vaults for all cross-references.
 6. **IDs are kebab-case.** Lowercase, hyphens, no spaces. Examples: `swiss-leaks`, `john-doe`, `reverse-image-search`.
 7. **Only confirmed knowledge enters.** No speculative findings, no in-progress research. Low-confidence claims must be explicitly flagged with `> **LOW CONFIDENCE** — {reason}` if included at all.
+8. **The claims layer admits verified intelligence only.** Verdict `verified` or `partially_verified`, grounding cap above `low`, sources present, non-RLM origin. Every exclusion is logged with its reason in the ingest summary.
+9. **Claim history is append-only.** Re-verification and supersession append dated rows; existing claim content is never rewritten by a later investigation.
+10. **Aliases are derived, merges are human-gated.** Rebuild `entities/_aliases.json` from entity frontmatter every run; alias collisions become merge proposals, never automatic merges.
 
 ---
 
@@ -360,18 +399,25 @@ Reads from:
   {vault}/_registry.json
   {vault}/investigations/_registry.json
   {vault}/entities/_registry.json
+  {vault}/entities/_aliases.json
+  {vault}/entities/_merge-proposals.json
   {vault}/methodology/_registry.json
   {vault}/tools/_registry.json
+  {vault}/claims/_registry.json
 
 Writes to:
   {vault}/investigations/{project-id}.md
   {vault}/entities/{entity-id}.md          (per entity)
   {vault}/methodology/{technique-id}.md    (per technique)
   {vault}/tools/{tool-id}.md               (per tool)
+  {vault}/claims/{claim-id}.md             (per eligible finding)
   {vault}/investigations/_registry.json
   {vault}/entities/_registry.json
+  {vault}/entities/_aliases.json           (rebuilt, derived)
+  {vault}/entities/_merge-proposals.json   (human-gated)
   {vault}/methodology/_registry.json
   {vault}/tools/_registry.json
+  {vault}/claims/_registry.json
   {vault}/_registry.json                   (master)
   {vault}/_INDEX.md
 ```

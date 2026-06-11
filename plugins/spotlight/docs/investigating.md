@@ -117,7 +117,8 @@ The orchestrator spawns the investigator in PLANNING mode. The investigator writ
 
 Before designing the methodology, the investigator queries the vault (`VAULT_PATH` from the spawn prompt) for:
 
-- **Entities** — people, organizations, companies, places mentioned in the brief. Prior investigation roles matter.
+- **Entities** — people, organizations, companies, places mentioned in the brief. Names are resolved through the alias map (`entities/_aliases.json`) so alternate spellings land on known entities. Prior investigation roles matter.
+- **Claims** — prior verdicts on the topic (`claims/_registry.json`, filtered by entity). A `durable` claim is settled knowledge — cite it, don't re-research it. A `lead`-layer claim is an explicit lead: prior work partially verified it.
 - **Methodology** — previous technique notes with "Lessons Learned".
 - **Tools** — tool notes with "Tips for Future Agents" (treat tips as requirements).
 - **Investigations** — prior cases sharing regions, entities, or tags. Prior gaps may be today's leads.
