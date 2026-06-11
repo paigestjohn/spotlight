@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spotlight — Install</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000'><path d='M6 2h4v4h-4zM10 2h4v4h-4zM14 2h4v4h-4zM6 6h4v4h-4zM6 10h4v4h-4zM14 10h4v4h-4zM14 14h4v4h-4zM6 18h4v4h-4zM10 18h4v4h-4zM14 18h4v4h-4z'/></svg>">
-<meta name="description" content="Configure your Spotlight install. Frontier or local, integrations, vault — generate the script and run it.">
+<meta name="description" content="Install Spotlight with one command. A static, reviewable script — configuration happens on a local page served from your own machine; keys never touch a website.">
 <link rel="alternate" type="text/markdown" title="llms.txt" href="/llms.txt">
 <link rel="alternate" type="text/markdown" title="llms_full.txt" href="/llms_full.txt">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -186,20 +186,20 @@
     padding-bottom: 6px;
   }
 
-  /* ── FORM SHELL (paper) ───────────────────────────────── */
-  main.form-shell {
+  /* ── PAGE SHELL (formerly form shell — now static sections) ── */
+  main.page-shell {
     background: transparent;
     color: var(--paper);
     position: relative;
     z-index: 10;
   }
-  .form-wrap {
-    max-width: 880px;
+  .page-wrap {
+    max-width: 1080px;
     margin: 0 auto;
     padding: 0 48px;
   }
 
-  /* Section header */
+  /* Section header — carries the page's vertical rhythm (80px top). */
   .sec-header {
     display: flex; justify-content: space-between; align-items: baseline;
     padding: 80px 0 28px;
@@ -211,12 +211,6 @@
     opacity: 0.55;
     flex-shrink: 0;
   }
-  .sec-header .chap .req {
-    color: var(--red); margin-left: 8px; font-weight: 600;
-  }
-  .sec-header .chap .opt {
-    margin-left: 8px; opacity: 0.7; text-transform: none; letter-spacing: 0;
-  }
   .sec-header h2 {
     font-family: "Fraunces", serif;
     font-variation-settings: "opsz" 96, "wght" 500;
@@ -227,173 +221,98 @@
     text-align: right;
     max-width: 22ch;
   }
+  .sec-header h2 em {
+    font-style: italic;
+    color: var(--accent-warm);
+  }
 
-  /* Cards */
-  section.card {
-    background: var(--ink-2);
-    border: 1px solid var(--muted-faint-dark);
-    padding: 28px 28px;
+  /* Section lede — short stage-setting paragraph under the header. */
+  .sec-lede {
+    margin: 26px 0 0;
+    max-width: 62ch;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--muted-dark);
+  }
+  .sec-lede strong { color: var(--paper); font-weight: 500; }
+  .sec-lede a { border-bottom: 1px solid currentColor; transition: color 0.15s; }
+  .sec-lede a:hover { color: var(--accent-warm); }
+
+  /* Item cards — the three-up grids in "How it works" / "Have these ready".
+     Carry forward section.card's ink-2 surface + 28px top offset so the
+     spacing after .sec-header matches the old form cards exactly. */
+  .how-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
     margin: 28px 0 0;
   }
-  section.card > p:first-child { margin-top: 0; }
-  section.card .lede {
-    font-size: 13px; line-height: 1.6;
-    opacity: 0.75;
-    margin: 0 0 18px;
-  }
-
-  /* Labels + inputs */
-  label.block {
-    display: block;
-    margin-bottom: 10px;
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    opacity: 0.7;
-    font-weight: 500;
-  }
-  label.block .hint {
-    text-transform: none; letter-spacing: 0;
-    opacity: 0.85;
-    font-weight: 400;
-    font-size: 12px;
-    margin-left: 6px;
-  }
-  label.block a {
-    border-bottom: 1px solid currentColor;
-    transition: color 0.15s, border-color 0.15s;
-  }
-  label.block a:hover {
-    color: var(--accent-warm);
-  }
-  input[type="text"], input[type="password"], select {
-    width: 100%;
-    background: var(--ink);
-    border: 1px solid var(--muted-faint-dark);
-    border-radius: 0;
-    padding: 12px 14px;
-    color: var(--paper);
-    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 13px;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  input:focus, select:focus {
-    outline: none;
-    border-color: var(--accent-warm);
-    box-shadow: inset 0 -2px 0 0 var(--accent-warm);
-  }
-
-  /* Radio / checkbox cards (label-as-card pattern) */
-  .radio-group, .checkbox-group {
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  .radio-group > label, .checkbox-group > label {
-    cursor: pointer;
-    padding: 16px 18px;
-    border: 1px solid var(--muted-faint-dark);
-    background: var(--ink);
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-  }
-  .radio-group > label:hover, .checkbox-group > label:hover {
-    border-color: var(--paper);
-  }
-  .radio-group > label > input, .checkbox-group > label > input {
-    margin-top: 4px;
-    flex-shrink: 0;
-    accent-color: var(--paper);
-  }
-  .radio-group > label:has(input:checked),
-  .checkbox-group > label:has(input:checked) {
-    background: var(--ink);
-    color: var(--paper);
-    border-color: var(--ink);
-  }
-  .radio-group > label:has(input:checked) > input,
-  .checkbox-group > label:has(input:checked) > input {
-    accent-color: var(--accent-warm);
-  }
-  /* On selection, the Fraunces name flips to terracotta — signature accent */
-  .radio-group > label:has(input:checked) .opt-name .name,
-  .checkbox-group > label:has(input:checked) .opt-name .name {
-    color: var(--accent-warm);
-  }
-  .opt-name { flex: 1; }
-  .opt-name .name {
-    font-family: "Fraunces", serif;
-    font-variation-settings: "opsz" 48, "wght" 500;
-    font-size: 18px;
-    letter-spacing: -0.01em;
-    display: block;
-    margin-bottom: 4px;
-    transition: color 0.15s;
-  }
-  .opt-name .desc {
-    font-size: 12px;
-    line-height: 1.55;
-    opacity: 0.7;
-  }
-
-  .key-row { margin-top: 18px; }
-  .hidden { display: none !important; }
-
-  /* Step / instruction cards */
-  .step-card {
-    background: var(--ink);
-    border-left: 2px solid var(--paper);
-    padding: 18px 20px;
-    margin-top: 16px;
-    font-size: 13px;
-  }
-  .step-card h4 {
-    margin: 0 0 12px;
-    font-size: 10px;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    opacity: 0.55;
-    font-weight: 500;
-  }
-  .step-card ol, .step-card ul { margin: 6px 0; padding-left: 22px; }
-  .step-card li { margin: 6px 0; line-height: 1.55; }
-  .step-card code {
+  .item {
     background: var(--ink-2);
-    padding: 1px 6px;
-    font-size: 12px;
     border: 1px solid var(--muted-faint-dark);
+    padding: 26px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
-  .step-card a { border-bottom: 1px solid currentColor; transition: color 0.15s, border-color 0.15s; }
-  .step-card a:hover { color: var(--accent-warm); }
-
-  .step-card.warn {
-    border-left-color: var(--amber);
+  .item .knum {
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    opacity: 0.55;
+    margin: 0 0 16px;
   }
-  .step-card.warn h4 { color: var(--amber); opacity: 1; }
-
-  .note-advisory {
-    background: var(--ink);
-    border-left: 2px solid var(--amber);
-    padding: 12px 16px;
-    font-size: 12px;
-    line-height: 1.55;
-    margin-top: 14px;
+  .item .knum em { font-style: normal; color: var(--accent-warm); opacity: 1; }
+  .item h3 {
+    font-family: "Fraunces", serif;
+    font-variation-settings: "opsz" 72, "wght" 500;
+    font-size: 22px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin: 0 0 10px;
   }
-  /* Small helper text under a primary paragraph — pricing footnotes, model footnotes. */
-  .note-sub { margin: 10px 0 0; font-size: 12px; opacity: 0.7; }
-
-  /* Model card — non-recommended gets grayed out but stays clickable */
-  #model-group label.recommended {
+  .item h3 em { font-style: italic; color: var(--accent-warm); }
+  .item p {
+    font-size: 13px;
+    line-height: 1.6;
+    opacity: 0.75;
+    margin: 0;
+  }
+  .item p strong { font-weight: 600; opacity: 1; }
+  .item p a { border-bottom: 1px solid currentColor; transition: color 0.15s; }
+  .item p a:hover { color: var(--accent-warm); }
+  .item-links {
+    margin-top: auto;
+    padding-top: 18px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .mini-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border: 1px solid var(--muted-faint-dark);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+  .mini-link:hover {
+    background: var(--accent-warm-14);
     border-color: var(--accent-warm);
-    background: var(--ink);
+    color: var(--accent-warm);
   }
-  #model-group label.not-recommended {
-    opacity: 0.45;
-    cursor: pointer;
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: 1px solid currentColor;
+    padding: 3px 8px;
+    margin-left: 10px;
+    vertical-align: 3px;
+    opacity: 0.8;
   }
-  #model-group label.not-recommended:hover {
-    opacity: 0.65;
-  }
+  .badge.req { color: var(--accent-warm); opacity: 1; }
 
   /* Inline code */
   code {
@@ -404,63 +323,31 @@
     font-size: 0.92em;
     border: 1px solid var(--muted-faint-dark);
   }
-  section.card code { background: var(--ink); }
-  /* Inside selected radio/checkbox cards (ink bg) — flip code to dark variant */
-  .radio-group > label:has(input:checked) code,
-  .checkbox-group > label:has(input:checked) code {
-    background: var(--ink-2);
-    color: var(--paper);
-    border-color: var(--muted-faint-dark);
-  }
-
-  /* Local model — info row */
-  .model-info {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 0;
-    margin-top: 8px;
-    border-top: 1px solid var(--muted-faint-dark);
-    border-bottom: 1px solid var(--muted-faint-dark);
-  }
-  .model-info .stat {
-    padding: 16px 14px;
-    border-right: 1px solid var(--muted-faint-dark);
-    font-size: 11px;
-    line-height: 1.5;
-    opacity: 0.75;
-  }
-  .model-info .stat:last-child { border-right: none; }
-  .model-info .stat strong {
-    display: block;
-    color: var(--accent-warm);
-    font-family: "Fraunces", serif;
-    font-variation-settings: "opsz" 48, "wght" 500;
-    font-size: 18px;
-    letter-spacing: -0.01em;
-    margin-bottom: 4px;
-    opacity: 1;
-  }
+  .item code, .install-bar code { background: var(--ink); }
 
   /* Buttons */
   button.btn-primary, .btn-primary {
     display: inline-flex; align-items: center; gap: 10px;
     padding: 14px 18px;
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--paper);
+    color: var(--paper-fg);
     font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
     font-weight: 500;
-    border: 1px solid currentColor;
+    border: 1px solid var(--paper);
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.2s;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
   }
-  button.btn-primary:hover, .btn-primary:hover { background: var(--paper); color: var(--paper-fg); }
-  button.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  button.btn-ghost {
+  button.btn-primary:hover, .btn-primary:hover {
+    background: var(--accent-warm);
+    border-color: var(--accent-warm);
+    color: var(--paper);
+  }
+  /* Ghost — rescoped from button.btn-ghost: "Read the script" is an <a>. */
+  .btn-ghost {
     display: inline-flex; align-items: center; gap: 8px;
-    padding: 10px 14px;
+    padding: 14px 18px;
     background: transparent;
     color: var(--paper);
     border: 1px solid var(--muted-faint-dark);
@@ -468,83 +355,36 @@
     font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
   }
-  button.btn-ghost:hover { background: var(--paper); color: var(--paper-fg); }
+  .btn-ghost:hover { background: var(--paper); color: var(--paper-fg); border-color: var(--paper); }
 
-  /* Generate bar */
-  .generate-bar {
-    margin: 80px 0 40px;
-    padding: 32px 0;
-    border-top: 1px solid var(--muted-faint-dark);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(420px, 540px);
-    gap: 24px;
-    align-items: center;
-  }
-  .generate-bar .lbl {
-    font-family: "Fraunces", serif;
-    font-variation-settings: "opsz" 72, "wght" 400;
-    font-style: italic;
-    font-size: 22px;
-    letter-spacing: -0.01em;
-    max-width: 32ch;
-    margin: 0;
-  }
-  .generate-bar .lbl em {
-    font-style: normal;
-    color: var(--accent-warm);
-  }
-  #generate-btn {
-    width: 100%;
-    justify-content: center;
-    padding: 18px 24px;
-    background: var(--paper);
-    color: var(--paper-fg);
-    border-color: var(--paper);
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
-    transition: background 0.3s, border-color 0.3s, color 0.3s, transform 0.2s;
-  }
-  #generate-btn:hover {
-    background: var(--accent-warm);
-    color: var(--paper);
-    border-color: var(--accent-warm);
-    transform: translateY(-1px);
-  }
-  .generate-actions {
-    display: flex;
-    gap: 12px;
-  }
-  .generate-actions > button {
-    min-width: 0;
-    min-height: 58px;
-    padding: 18px 24px;
-  }
-  .generate-actions #generate-btn { flex: 1; }
-
-  /* ── INSTALL OUTPUT (dark reveal) ─────────────────────── */
-  #install-output {
+  /* ── INSTALL SLAB (dark closing section) ─────────────────
+     Inherits #install-output's outer rhythm (80px top padding, border-top)
+     so the page cadence is unchanged after the form removal. */
+  #install {
     background: transparent;
     color: var(--paper);
     padding: 80px 48px 100px;
     border-top: 1px solid var(--muted-faint-dark);
+    margin-top: 96px;
     position: relative;
     z-index: 10;
   }
-  #install-output .out-wrap {
+  #install .out-wrap {
     max-width: 1080px;
     margin: 0 auto;
   }
-  #install-output .out-header {
+  #install .out-header {
     display: flex; justify-content: space-between; align-items: flex-end;
     padding-bottom: 24px;
     gap: 32px;
   }
-  #install-output .out-header .chap {
+  #install .out-header .chap {
     font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.55;
     padding-bottom: 8px;
   }
-  #install-output .out-header h2 {
+  #install .out-header h2 {
     font-family: "Fraunces", serif;
     font-variation-settings: "opsz" 96, "wght" 500;
     font-size: clamp(28px, 3.2vw, 44px);
@@ -553,254 +393,80 @@
     margin: 0;
     text-align: right;
   }
-  .install-options {
-    display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-    gap: 0;
-    border-top: 1px solid var(--muted-faint-dark);
-    border-bottom: 1px solid var(--muted-faint-dark);
-  }
-  .install-option {
-    padding: 36px 32px;
-    border-right: 1px solid var(--muted-faint-dark);
-    display: flex; flex-direction: column;
-    min-width: 0;
-  }
-  .install-option:last-child { border-right: none; }
-  .install-option .kicker {
-    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
-    opacity: 0.55;
-    margin-bottom: 12px;
-  }
-  .install-option h3 {
-    font-family: "Fraunces", serif;
-    font-variation-settings: "opsz" 72, "wght" 500;
-    font-size: clamp(22px, 2.6vw, 32px);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    margin: 0 0 16px;
-    max-width: 18ch;
-  }
-  .install-option .desc {
-    font-size: 13px; line-height: 1.6; opacity: 0.7;
-    margin: 0 0 20px;
-  }
-  .install-option .note-advisory {
-    background: rgba(255, 245, 217, 0.05);
-    border-left: 2px solid var(--warm);
-    color: var(--paper);
-  }
-  .install-option .actions {
-    display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
-    margin-bottom: 18px;
-  }
-  /* Buttons inside dark install panel — cream surface ignites terracotta on hover */
-  .install-option button.btn-primary {
-    background: var(--warm);
-    color: var(--ink);
-    transition: background 0.2s, color 0.2s;
-  }
-  .install-option button.btn-primary:hover {
-    background: var(--accent-warm);
-    color: var(--paper);
-  }
+  #install .out-header h2 em { font-style: italic; color: var(--accent-warm); }
+  #install .sec-lede { margin-top: 0; }
 
-  .script-box {
-    background: var(--ink-2);
-    border: 1px solid var(--muted-faint-dark);
-    padding: 16px;
-    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 11px;
-    line-height: 1.55;
-    white-space: pre;
-    overflow: auto;
-    max-height: 320px;
-    width: 100%;
-    max-width: 100%;
-    color: var(--paper);
-    margin-bottom: 16px;
-  }
-
-  .steps-list { counter-reset: step; padding: 0; list-style: none; margin: 16px 0 0; }
-  .steps-list li {
-    counter-increment: step;
-    padding: 6px 0 6px 36px;
-    position: relative;
-    font-size: 12px;
-    line-height: 1.6;
-  }
-  .steps-list li::before {
-    content: counter(step, decimal-leading-zero);
-    position: absolute;
-    left: 0;
-    top: 7px;
-    font-family: "Fraunces", serif;
-    font-variation-settings: "opsz" 48, "wght" 500;
-    font-size: 13px;
-    color: var(--accent-warm);
-    letter-spacing: 0;
-  }
-  .steps-list kbd {
-    background: var(--ink);
-    border: 1px solid var(--muted-faint-dark);
-    border-bottom-width: 2px;
-    padding: 1px 6px;
-    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 11px;
-  }
-
-  .copied-feedback {
-    display: inline-block;
-    margin-left: 4px;
-    color: var(--accent-warm);
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .copied-feedback.show { opacity: 1; }
-
-  .error {
-    color: var(--red);
-    font-size: 12px;
-    margin-top: 10px;
-    letter-spacing: 0.05em;
-  }
-
-  /* LLM fit check panel */
-  .fit-row {
-    margin-top: 18px;
+  .cmd-block {
     display: flex;
-    gap: 14px;
     align-items: center;
-    flex-wrap: wrap;
-  }
-  .fit-row .fit-aside {
-    font-size: 11px; opacity: 0.6;
-  }
-  .fit-panel {
-    margin-top: 16px;
-    padding: 18px 20px;
-    background: var(--ink);
-    border-left: 2px solid var(--muted-faint-dark);
-    font-size: 13px;
-  }
-  .fit-panel.idle { border-left-color: var(--muted-faint-dark); }
-  .fit-panel.green { border-left-color: var(--green); }
-  .fit-panel.amber { border-left-color: var(--amber); }
-  .fit-panel.red { border-left-color: var(--red); }
-  .fit-verdict {
-    display: flex; align-items: center; gap: 12px;
-    font-family: "Fraunces", serif;
-    font-variation-settings: "opsz" 72, "wght" 500;
-    font-size: 18px;
-    letter-spacing: -0.01em;
-    margin-bottom: 12px;
-  }
-  .fit-verdict .icon {
-    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 16px;
-    width: 22px; height: 22px;
-    display: inline-flex; align-items: center; justify-content: center;
-    border: 1px solid currentColor;
-  }
-  .fit-verdict.green { color: var(--green); }
-  .fit-verdict.amber { color: var(--amber); }
-  .fit-verdict.red { color: var(--red); }
-  .fit-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 0;
-    margin: 12px 0;
-    border-top: 1px solid var(--muted-faint-dark);
-    border-bottom: 1px solid var(--muted-faint-dark);
-  }
-  .fit-stats .stat-item {
-    padding: 12px 14px;
-    border-right: 1px solid var(--muted-faint-dark);
-  }
-  .fit-stats .stat-item:last-child { border-right: none; }
-  .fit-stats .stat-item .k {
-    color: var(--paper);
-    opacity: 0.55;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    margin-bottom: 4px;
-  }
-  .fit-stats .stat-item .v {
-    color: var(--accent-warm);
-    font-family: "Fraunces", serif;
-    font-variation-settings: "opsz" 48, "wght" 500;
-    font-size: 17px;
-    letter-spacing: -0.01em;
-    display: block;
-  }
-  #fit-body { color: var(--paper); opacity: 0.8; line-height: 1.6; font-size: 13px; }
-  #fit-body b { font-weight: 600; opacity: 1; }
-  .fit-copy-cmd {
-    display: flex; gap: 10px; align-items: center;
+    gap: 16px;
     background: var(--ink-2);
-    padding: 10px 12px;
-    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 11px;
     border: 1px solid var(--muted-faint-dark);
-    margin-top: 12px;
+    padding: 18px 20px;
+    margin-top: 36px;
   }
-  .fit-copy-cmd code {
-    background: none;
-    border: none;
-    padding: 0;
+  .cmd-block pre {
+    margin: 0;
     flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .fit-copy-cmd button {
-    background: var(--ink);
-    border: 1px solid var(--muted-faint-dark);
+    min-width: 0;
+    overflow-x: auto;
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.5;
     color: var(--paper);
-    padding: 5px 12px;
+    white-space: pre;
+  }
+  .cmd-block button {
+    flex-shrink: 0;
+    background: var(--paper);
+    color: var(--paper-fg);
+    border: 1px solid var(--paper);
+    padding: 9px 16px;
     font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 10px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
+    font-weight: 500;
     cursor: pointer;
-    flex-shrink: 0;
-    transition: background 0.15s;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
   }
-  .fit-copy-cmd button:hover { background: var(--paper); color: var(--paper-fg); }
+  .cmd-block button:hover {
+    background: var(--accent-warm);
+    border-color: var(--accent-warm);
+    color: var(--paper);
+  }
 
-  /* Provider sub-picker (compact grid) */
-  .provider-grid {
+  .install-bar {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 0;
-    margin-top: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 28px;
+    align-items: center;
     border: 1px solid var(--muted-faint-dark);
+    border-top: none;
+    padding: 22px 20px;
   }
-  .provider-grid > label {
-    cursor: pointer;
-    padding: 14px 16px;
-    border: 1px solid transparent;
-    border-right-color: var(--muted-faint-dark);
-    background: var(--ink);
+  .install-bar .bar-copy strong {
+    display: block;
+    font-family: "Fraunces", serif;
+    font-variation-settings: "opsz" 48, "wght" 500;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+  .install-bar .bar-copy strong em { font-style: italic; color: var(--accent-warm); }
+  .install-bar .bar-copy span {
+    display: block;
     font-size: 12px;
-    letter-spacing: 0.05em;
-    text-align: center;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    line-height: 1.6;
+    opacity: 0.7;
   }
-  .provider-grid > label:last-child { border-right: none; }
-  .provider-grid > label:hover { background: var(--ink-2); }
-  .provider-grid > label:has(input:checked) {
-    background: var(--accent-warm-14);
-    border: 1px solid var(--accent-warm);
-    color: var(--accent-warm);
-    position: relative;
-    z-index: 1;
+  .install-bar .bar-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
-  .provider-grid input { display: none; }
+  .install-bar .bar-actions a { text-decoration: none; }
 
   /* ── FOOTER ───────────────────────────────────────────── */
   #footer {
@@ -904,31 +570,21 @@
       padding-bottom: 0;
     }
 
-    .form-wrap { padding: 0 20px; }
+    .page-wrap { padding: 0 20px; }
     .sec-header {
       flex-direction: column; align-items: flex-start; gap: 12px;
       padding: 60px 0 22px;
     }
     .sec-header h2 { text-align: left; }
-    section.card { padding: 22px 20px; }
 
-    .provider-grid {
-      grid-template-columns: 1fr;
-    }
-    .provider-grid > label {
-      border-right: none;
-      border-bottom: 1px solid var(--muted-faint-dark);
-    }
-    .provider-grid > label:last-child {
-      border-bottom: none;
-    }
+    .how-grid { grid-template-columns: 1fr; }
 
-    .install-options { grid-template-columns: 1fr; }
-    .install-option { border-right: none; border-bottom: 1px solid var(--muted-faint-dark); }
-    .install-option:last-child { border-bottom: none; }
-    #install-output { padding: 60px 20px 80px; }
-    #install-output .out-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-    #install-output .out-header h2 { text-align: left; }
+    #install { padding: 60px 20px 80px; margin-top: 72px; }
+    #install .out-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    #install .out-header h2 { text-align: left; }
+    .cmd-block { flex-direction: column; align-items: stretch; gap: 12px; }
+    .install-bar { grid-template-columns: 1fr; gap: 18px; }
+    .install-bar .bar-actions { justify-content: flex-start; }
 
     #footer { padding: 64px 20px 28px; }
     .footer-simple {
@@ -941,12 +597,6 @@
       justify-content: flex-start;
     }
     .footer-meta { flex-direction: column; gap: 12px; align-items: flex-start; margin-top: 28px; }
-
-    .generate-bar { grid-template-columns: 1fr; gap: 16px; }
-    .generate-actions { flex-direction: column; }
-    .generate-actions > button {
-      width: 100%;
-    }
   }
 
   /* ── REVEAL SYSTEM (subset) ───────────────────────────── */
@@ -1020,375 +670,114 @@
       </h1>
     </div>
     <div class="hero-side" data-reveal="body" style="--rd: 1000ms">
-      Pick your runtime, drop in your keys, generate the script. Frontier or local — same skills, same review loop. Install in a single Terminal paste.
+      One command in Terminal. A configurator opens locally — runtime, keys, vault, integrations — and Spotlight launches when it's done. Frontier or local: same skills, same review loop.
     </div>
   </div>
 </section>
 
-<!-- ── FORM ─────────────────────────────────────────────── -->
-<main class="form-shell">
-  <div class="form-wrap">
-    <form id="setup-form" onsubmit="return false;">
+<!-- ── 01 · HOW IT WORKS ───────────────────────────────── -->
+<main class="page-shell">
+  <div class="page-wrap">
 
-      <!-- 01 — Mode -->
+    <section id="how">
       <div class="sec-header">
-        <span class="chap" data-reveal="meta">01 — Mode <span class="req">Required</span></span>
-        <h2 data-reveal="title">Frontier or Local.</h2>
+        <span class="chap" data-reveal="meta">01 — How it works</span>
+        <h2 data-reveal="title">Three steps, <em>one machine.</em></h2>
       </div>
-      <section class="card">
-        <div class="radio-group">
-          <label><input type="radio" name="mode" value="cloud" checked><span class="opt-name"><span class="name">Frontier</span><span class="desc">Use a hosted model (Claude Code, Gemini, Codex, or OpenCode). Faster investigations, higher quality, but queries go to the provider.</span></span></label>
-          <label><input type="radio" name="mode" value="local"><span class="opt-name"><span class="name">Local</span><span class="desc">Run a journalism model on your own machine. Private by design — nothing leaves your laptop. Pick your harness; the installer preconfigures the inference server underneath.</span></span></label>
+      <p class="sec-lede" data-reveal="body">
+        <strong>The installer is a single static script — the same for everyone.</strong>
+        It never asks you to paste a key into a website: configuration happens on a
+        local page served from your own machine.
+      </p>
+
+      <div class="how-grid">
+        <div class="item" data-reveal="body" style="--rs: 0">
+          <p class="knum"><em>01</em> Terminal</p>
+          <h3>Run one <em>command.</em></h3>
+          <p>Paste the install command below into Terminal. A single static, reviewable script fetches Spotlight and the exact pinned tools it needs — no personalized blobs, nothing generated per user.</p>
         </div>
-      </section>
-
-      <!-- LOCAL SECTION -->
-      <div id="local-section" class="hidden">
-        <div class="sec-header">
-          <span class="chap" data-reveal="meta">02 — Local model</span>
-          <h2 data-reveal="title">Hosted on your Mac.</h2>
+        <div class="item" data-reveal="body" style="--rs: 1">
+          <p class="knum"><em>02</em> Browser</p>
+          <h3>Configure <em>locally.</em></h3>
+          <p>A configurator page opens in your browser, served from <code>127.0.0.1</code> on your own machine. Pick your runtime, paste your keys, choose your vault, toggle integrations. Keys are verified live with each provider and written straight to disk — they never touch a website.</p>
         </div>
-        <section class="card">
-          <label class="block">Agent harness</label>
-          <div class="radio-group" id="agent-group">
-            <label><input type="radio" name="agent" value="opencode" checked><span class="opt-name"><span class="name">OpenCode</span><span class="desc">Recommended. Native sub-agents — investigator and fact-checker run in independent contexts, preserving Spotlight's verification independence guarantee. Installer preconfigures <strong>Ollama</strong> as the inference server.</span></span></label>
-            <label><input type="radio" name="agent" value="pi"><span class="opt-name"><span class="name">Pi</span><span class="desc">Minimal TypeScript harness (<a href="https://pi.dev" target="_blank">pi.dev</a>) with the <code>pi-llama-cpp</code> extension for model browsing. <strong>No native sub-agents</strong> — investigator and fact-checker share one context, weakening independence. Installer preconfigures <strong>llama.cpp</strong> as the inference server.</span></span></label>
-          </div>
-
-          <p class="lede" id="local-lede-opencode" style="margin-top: 16px;">
-            The installer uses <strong>opencode</strong> (<a href="https://opencode.ai" target="_blank">opencode.ai</a>, MIT) as the agent harness and <strong>Ollama</strong> to serve the model locally on <code>127.0.0.1:11434</code>. opencode reads Spotlight's skills + AGENTS.md natively; native sub-agents handle the investigator/fact-checker pattern. Both install with one command.
-          </p>
-          <p class="lede hidden" id="local-lede-pi" style="margin-top: 16px;">
-            The installer uses <strong>Pi</strong> (<a href="https://pi.dev" target="_blank">pi.dev</a>, MIT) as the agent harness with <strong>llama.cpp</strong> (via the <code>pi-llama-cpp</code> extension) serving the model locally on <code>127.0.0.1:8080</code>. Pi lets you browse/load/switch models from inside the harness. Note: Pi has no native sub-agents, so investigator + fact-checker share context.
-          </p>
-
-          <div class="fit-row">
-            <button type="button" class="btn-ghost" id="fit-check-btn">Check my Mac and recommend</button>
-            <span class="fit-aside">Quick hardware probe — runs in your browser</span>
-          </div>
-
-          <div id="fit-panel" class="fit-panel idle hidden">
-            <div class="fit-verdict" id="fit-verdict"><span class="icon">—</span><span id="fit-title">—</span></div>
-            <div class="fit-stats" id="fit-stats"></div>
-            <div id="fit-body"></div>
-            <div class="fit-copy-cmd" id="fit-cmd-box" style="display: none;">
-              <code id="fit-cmd">system_profiler SPHardwareDataType | grep Memory</code>
-              <button type="button" id="fit-cmd-copy">Copy</button>
-            </div>
-          </div>
-
-          <!-- Model selector — two tiers. 9B is the default; 27B requires a
-               passed fit-check (auto-triggered on selection if not already
-               run; user is warned + downgrade-suggested if RAM < 32 GB). -->
-          <div class="radio-group" id="model-group">
-            <label id="model-card-qwen9b">
-              <input type="radio" name="local_model" value="qwen9b" checked>
-              <span class="opt-name">
-                <span class="name">Qwen 3.5 9B Journalist</span>
-                <span class="desc">Default. 9B dense, abliterated, investigative-journalism fine-tune by <a href="https://huggingface.co/tomvaillant" target="_blank" rel="noopener">@tomvaillant</a>. Fits 16 GB Macs comfortably (~6 GB on disk, ~8 GB at runtime). Bench-tested: 100% refusal-resistance on OSINT-grade prompts, leads with the answer 100% of the time.</span>
-              </span>
-            </label>
-            <label id="model-card-qwen27b">
-              <input type="radio" name="local_model" value="qwen27b">
-              <span class="opt-name">
-                <span class="name">Qwen 3.6 27B Journalist <span class="badge req" style="margin-left:6px;">32 GB</span></span>
-                <span class="desc">Heavy tier. 27B dense, fine-tuned by <a href="https://huggingface.co/tomvaillant" target="_blank" rel="noopener">@tomvaillant</a> on the same investigative-journalism corpus as the 9B, built on Huihui's abliterated Qwen 3.6 base. Runs in thinking mode (the abliterated family's <code>/no_think</code> path is broken). <strong>Needs 32 GB unified memory minimum</strong> — the fit-check below confirms your hardware before this option is enabled.</span>
-              </span>
-            </label>
-          </div>
-
-          <input type="hidden" id="model_repo" value="tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF">
-
-          <div class="model-info" id="model-info-qwen9b">
-            <div class="stat"><strong>9B</strong>Dense — all params active</div>
-            <div class="stat"><strong>~6 GB</strong>disk</div>
-            <div class="stat"><strong>~8 GB</strong>RAM at runtime</div>
-            <div class="stat"><strong>16 GB</strong>recommended</div>
-          </div>
-
-          <div class="model-info hidden" id="model-info-qwen27b">
-            <div class="stat"><strong>27B</strong>Dense — all params active</div>
-            <div class="stat"><strong>~15 GB</strong>disk</div>
-            <div class="stat"><strong>~22 GB</strong>RAM at runtime</div>
-            <div class="stat"><strong>32 GB+</strong>required</div>
-          </div>
-
-          <p class="note-advisory" id="local-note-llamacpp">
-            Download size: ~6 GB for the 9B, ~15 GB for the 27B. The installer streams the GGUF from Hugging Face via <code>curl</code>; resume-on-interrupt is supported. The model lives at <code>~/Models/&lt;repo-leaf&gt;/</code>; you can swap quants by re-running with <code>MODEL=...</code>.
-          </p>
-          <p class="note-advisory hidden" id="local-note-ollama">
-            Download size: ~6 GB for the 9B, ~15 GB for the 27B. Progress streams live in Terminal via Ollama's native UI. Spotlight uses Hugging Face's tagged Ollama artifacts for both tiers: <code>hf.co/tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF:Q4_K_M</code> (9B) and <code>hf.co/tomvaillant/qwen3.6-27b-abliterated-journalist-GGUF:Q4_K_M</code> (27B). To use another installed Ollama model later, set <code>OLLAMA_MODEL</code> and <code>SPOTLIGHT_OLLAMA_ALIAS</code> in <code>.env</code>.
-          </p>
-        </section>
+        <div class="item" data-reveal="body" style="--rs: 2">
+          <p class="knum"><em>03</em> Investigate</p>
+          <h3>Launch <em>Spotlight.</em></h3>
+          <p>The installer scaffolds your vault, runs preflight, and launches Spotlight with your chosen runtime. A getting-started guide opens when the install completes — tailored to your mode and integrations.</p>
+        </div>
       </div>
+    </section>
 
-      <!-- CLOUD SECTION -->
-      <div id="cloud-section">
-        <div class="sec-header">
-          <span class="chap" data-reveal="meta">02 — Runtime</span>
-          <h2 data-reveal="title">Pick your AI agent.</h2>
-        </div>
-        <section class="card">
-          <p class="lede" style="margin-top:0; margin-bottom: 20px;">Spotlight is a skill bundle — it runs inside an AI agent runtime you already have. Subscription runtimes (Claude Code, Gemini, Codex) authenticate via their own login: <strong>no API key needed</strong>. Only OpenCode requires a provider key (pay-per-token).</p>
-          <div class="radio-group" id="cloud-group">
-            <label><input type="radio" name="cloud_runtime" value="claude" checked><span class="opt-name"><span class="name">Claude Code</span><span class="desc">Anthropic Claude (Opus / Sonnet) — covered by Claude Max or Claude Pro subscription. Strongest for methodology + fact-checking depth.</span></span></label>
-            <label><input type="radio" name="cloud_runtime" value="gemini"><span class="opt-name"><span class="name">Gemini</span><span class="desc">Google Gemini — covered by Google AI / Gemini subscription. Good for long-context investigations.</span></span></label>
-            <label><input type="radio" name="cloud_runtime" value="codex"><span class="opt-name"><span class="name">Codex</span><span class="desc">OpenAI GPT — covered by ChatGPT Plus / Pro / Team / Enterprise. Fast, broadly capable.</span></span></label>
-            <label><input type="radio" name="cloud_runtime" value="opencode"><span class="opt-name"><span class="name">OpenCode</span><span class="desc">Pick a provider below — OpenRouter, Fireworks, or Together. Pay per token (typically cheaper than subscriptions for heavy users).</span></span></label>
-          </div>
-
-          <div id="opencode-provider-section" class="hidden" style="margin-top: 20px;">
-            <label class="block">OpenCode provider</label>
-            <div class="provider-grid" id="opencode-provider-grid">
-              <label><input type="radio" name="opencode_provider" value="openrouter" checked><span class="opt">OpenRouter</span></label>
-              <label><input type="radio" name="opencode_provider" value="fireworks"><span class="opt">Fireworks</span></label>
-              <label><input type="radio" name="opencode_provider" value="together"><span class="opt">Together</span></label>
-            </div>
-            <p class="note-sub">~$0.50–2 per investigation, charged per token by the provider's API.</p>
-          </div>
-
-          <div class="key-row hidden" id="cloud_key_row">
-            <label class="block" id="cloud_key_label">Provider API key</label>
-            <input type="password" id="cloud_key" placeholder="" autocomplete="off">
-            <p id="cloud_key_err" class="error hidden">Provider API key is required for OpenCode.</p>
-          </div>
-
-          <div id="cloud-usage-claude" class="step-card">
-            <h4>Using Spotlight with Claude Code</h4>
-            <ol>
-              <li>First time only: run <code>claude login</code> and sign in with your Claude Max / Pro account — no API key needed</li>
-              <li>In any terminal, type <code>spotlight</code> — opens Claude Code in your Spotlight repo with all skills loaded</li>
-              <li>Tell it: <em>"Start a Spotlight investigation on &lt;your lead&gt;"</em></li>
-              <li>Claude walks you through Preflight → Brief → Methodology → 5 execution cycles → Gate 1 review → Ingestion into your vault</li>
-            </ol>
-            <p class="note-sub">Also works in the Claude Desktop app: open the Spotlight folder, Claude sees <code>CLAUDE.md</code> automatically. Covered by Claude Max / Claude Pro — no per-investigation cost.</p>
-          </div>
-
-          <div class="step-card hidden" id="cloud-usage-gemini">
-            <h4>Using Spotlight with Gemini</h4>
-            <ol>
-              <li>First time only: run <code>gemini</code> and sign in with your Google account — no API key needed</li>
-              <li>In any terminal, type <code>spotlight</code> — opens Gemini CLI in your Spotlight repo with all skills loaded</li>
-              <li>Tell it: <em>"Start a Spotlight investigation on &lt;your lead&gt;"</em></li>
-              <li>Gemini walks you through Preflight → Brief → Methodology → 5 execution cycles → Gate 1 review → Ingestion into your vault</li>
-            </ol>
-            <p class="note-sub">Covered by your Gemini subscription — no per-investigation cost.</p>
-          </div>
-
-          <div class="step-card hidden" id="cloud-usage-codex">
-            <h4>Using Spotlight with Codex</h4>
-            <ol>
-              <li>First time only: run <code>codex login</code> and sign in with your ChatGPT account — no API key needed</li>
-              <li>In any terminal, type <code>spotlight</code> — opens Codex in your Spotlight repo with all skills loaded</li>
-              <li>Tell it: <em>"Start a Spotlight investigation on &lt;your lead&gt;"</em></li>
-              <li>Codex walks you through Preflight → Brief → Methodology → 5 execution cycles → Gate 1 review → Ingestion into your vault</li>
-            </ol>
-            <p class="note-sub">Covered by your ChatGPT Plus / Pro / Team / Enterprise subscription — no per-investigation cost.</p>
-          </div>
-
-          <div class="step-card hidden" id="cloud-usage-opencode">
-            <h4>Using Spotlight with OpenCode</h4>
-            <ol>
-              <li>Paste your provider key above — OpenCode is pay-per-token and needs an API key for OpenRouter / Fireworks / Together</li>
-              <li>In any terminal, type <code>spotlight</code> — opens OpenCode in your Spotlight repo with all skills loaded</li>
-              <li>First time: type <code>/model</code> and pick a strong default for your provider</li>
-              <li>Tell it: <em>"Start a Spotlight investigation on &lt;your lead&gt;"</em></li>
-              <li>OpenCode walks you through Preflight → Brief → Methodology → 5 execution cycles → Gate 1 review → Ingestion into your vault</li>
-            </ol>
-            <p class="note-sub">Recommended models: OpenRouter → <code>z-ai/glm-5.1</code>; Fireworks → <code>qwen3p6-plus</code>; Together → a Qwen3.6 variant. Cost is per-token.</p>
-          </div>
-        </section>
-      </div>
-
-      <!-- 03 — Case analysis -->
+    <!-- ── 02 · HAVE THESE READY ─────────────────────────── -->
+    <section id="keys">
       <div class="sec-header">
-        <span class="chap" data-reveal="meta">03 — Case analysis <span class="opt">optional local helper</span></span>
-        <h2 data-reveal="title">Find hidden links in case files.</h2>
+        <span class="chap" data-reveal="meta">02 — Before you start</span>
+        <h2 data-reveal="title">Have these <em>ready.</em></h2>
       </div>
-      <section class="card">
-        <div class="checkbox-group">
-          <label><input type="checkbox" id="int_rlm"><span class="opt-name"><span class="name">Case-corpus lead extraction</span><span class="desc">Optional local analysis for relationship, timeline, and contradiction leads. Default is off; if installed, Spotlight asks during methodology before using it for a case.</span></span></label>
-        </div>
-        <p class="lede" style="margin-top: 14px;">
-          A recursive language model is a local helper that repeatedly reads the case files Spotlight has already saved, extracts possible connections, and feeds only the useful leads back into the investigation plan. It does not browse the web, verify claims, or create publishable facts.
-        </p>
-        <div id="rlm_options" class="hidden" style="margin-top: 16px;">
-          <label class="block">Analysis mode <span class="hint">— keep off unless you want local lead extraction during methodology.</span></label>
-          <div class="provider-grid">
-            <label><input type="radio" name="rlm_mode" value="lite" checked><span class="opt">Lite</span></label>
-            <label><input type="radio" name="rlm_mode" value="local_gemma4_e4b"><span class="opt">Gemma4 E4B</span></label>
-          </div>
-          <p class="hint" style="margin-top: 12px;">Benchmark note: on the synthetic context-rot suite, hybrid Gemma4 E4B improved average recall from 0.75 to 1.0, removed decoy hits from 4 to 0, and reduced average downstream lines from 10.25 to 3.0. See <code>docs/rlm-benchmark-audit.md</code>. Output stays in <code>data/rlm-analysis.json</code> as <code>needs_verification</code> leads.</p>
-        </div>
-      </section>
+      <p class="sec-lede" data-reveal="body">
+        <strong>The configurator will ask for these keys.</strong> Grab them first and the
+        whole install takes about five minutes. Anything optional can be added later by
+        re-running the installer.
+      </p>
 
-      <!-- 04 — Web scraping -->
-      <div class="sec-header">
-        <span class="chap" data-reveal="meta">04 — Web scraping <span class="req">Required</span></span>
-        <h2 data-reveal="title">Firecrawl key.</h2>
-      </div>
-      <section class="card">
-        <label class="block">Firecrawl API key <span class="hint">— <a href="https://www.firecrawl.dev/" target="_blank">get a free one here</a></span></label>
-        <input type="password" id="firecrawl_key" placeholder="fc-..." autocomplete="off">
-        <p id="firecrawl_err" class="error hidden">Firecrawl key is required.</p>
-      </section>
-
-      <!-- 05 — OSINT Navigator -->
-      <div class="sec-header">
-        <span class="chap" data-reveal="meta">05 — Tool discovery <span class="req">Required</span></span>
-        <h2 data-reveal="title">OSINT Navigator.</h2>
-      </div>
-      <section class="card">
-        <p class="lede">
-          A live database of 10,000+ OSINT tools with AI-powered lookup — essential for country-specific registries and niche techniques.
-        </p>
-        <label class="block">OSINT Navigator API key <span class="hint">— <a href="https://navigator.indicator.media/" target="_blank">Get API key</a></span></label>
-        <input type="password" id="nav_key" placeholder="on_..." autocomplete="off">
-        <p id="nav_err" class="error hidden">OSINT Navigator key is required.</p>
-      </section>
-
-      <!-- 06 — Vault -->
-      <div class="sec-header">
-        <span class="chap" data-reveal="meta">06 — Vault <span class="req">Required</span></span>
-        <h2 data-reveal="title">Your investigative memory.</h2>
-      </div>
-      <section class="card">
-        <p class="lede">
-          Spotlight archives verified findings into a Markdown vault as structured knowledge — entities, methodology, tools — with wikilinks and YAML frontmatter. Over time, the vault becomes your investigative memory.
-        </p>
-
-        <label class="block" style="margin-top: 18px;">Vault app</label>
-        <div class="provider-grid" id="vault-app-grid">
-          <label><input type="radio" name="vault_app" value="obsidian" checked><span class="opt">Obsidian</span></label>
-          <label><input type="radio" name="vault_app" value="tolaria"><span class="opt">Tolaria</span></label>
-        </div>
-
-        <div id="obsidian_vault_note">
-          <p class="lede" style="margin-top:18px;">
-          <strong>The installer brew-installs Obsidian</strong> if it isn't already on your Mac, then launches it so you can complete one small step below.
-          </p>
-
-          <div class="step-card warn">
-            <h4>One manual step (Obsidian 1.12+)</h4>
-            <p style="margin:0 0 10px; font-size:13px;">
-              Obsidian's CLI toggle can't be automated — you must click it once after the app launches:
-            </p>
-            <ol>
-              <li>The installer opens Obsidian for you</li>
-              <li>In Obsidian → <strong>Settings</strong> → <strong>General</strong> → <strong>Advanced</strong> → toggle <strong>Command Line Interface</strong> ON</li>
-              <li>That's it. Spotlight detects the <code>obsidian</code> command on its first run and prompts you again if it's missing.</li>
-            </ol>
-            <p style="margin:12px 0 0; font-size:12px; opacity: 0.75;">
-              If Obsidian is already installed and the CLI is on, the installer skips this step. If you haven't opened Obsidian in a while, verify you're on 1.12 or newer (<strong>About</strong> menu).
-            </p>
+      <div class="how-grid">
+        <div class="item" data-reveal="body" style="--rs: 0">
+          <p class="knum"><em>01</em> Required</p>
+          <h3>Two keys<em>.</em><span class="badge req">required</span></h3>
+          <p><strong>Firecrawl</strong> powers all web scraping and search — the only permitted web-fetch tool in Spotlight. Free tier available. <strong>OSINT Navigator</strong> is a live database of 10,000+ OSINT tools with AI-powered lookup — essential for country-specific registries and niche techniques.</p>
+          <div class="item-links">
+            <a class="mini-link" href="https://www.firecrawl.dev/" target="_blank" rel="noopener">Firecrawl key →</a>
+            <a class="mini-link" href="https://navigator.indicator.media/" target="_blank" rel="noopener">Navigator key →</a>
           </div>
         </div>
-
-        <div id="tolaria_vault_note" class="hidden">
-          <p class="lede" style="margin-top:18px;">
-            <strong>Tolaria must already be installed from a build you trust.</strong> Spotlight no longer downloads Tolaria from a moving latest-release URL. It writes standard Markdown files with YAML frontmatter, so the same vault remains readable from Tolaria, Git, and your agent tools.
-          </p>
+        <div class="item" data-reveal="body" style="--rs: 1">
+          <p class="knum"><em>02</em> Conditional</p>
+          <h3>A provider key<em>.</em><span class="badge">opencode only</span></h3>
+          <p>Only if you pick the <strong>OpenCode</strong> runtime: an API key from OpenRouter, Fireworks, or Together (pay-per-token, ~$0.50–2 per investigation). Claude Code, Gemini, and Codex sign in with OAuth on first launch — no API key needed.</p>
+          <div class="item-links">
+            <a class="mini-link" href="https://openrouter.ai/" target="_blank" rel="noopener">OpenRouter →</a>
+            <a class="mini-link" href="https://fireworks.ai/" target="_blank" rel="noopener">Fireworks →</a>
+            <a class="mini-link" href="https://www.together.ai/" target="_blank" rel="noopener">Together →</a>
+          </div>
         </div>
-
-        <label class="block" style="margin-top: 18px;">Install folder <span class="hint">— where Spotlight itself should live on this Mac</span></label>
-        <div class="provider-grid" id="install-base-grid">
-          <label><input type="radio" name="install_base" value="documents" checked><span class="opt">Documents</span></label>
-          <label><input type="radio" name="install_base" value="code"><span class="opt">Code</span></label>
-          <label><input type="radio" name="install_base" value="home"><span class="opt">Home</span></label>
-          <label><input type="radio" name="install_base" value="custom"><span class="opt">Custom</span></label>
-        </div>
-        <label class="block" style="margin-top: 16px;">Folder name <span class="hint">— Spotlight will be created inside the parent folder above</span></label>
-        <input type="text" id="install_name" placeholder="Spotlight" value="Spotlight" autocomplete="off">
-        <div id="install_custom_wrap" class="hidden" style="margin-top: 16px;">
-          <label class="block">Custom parent folder <span class="hint">— type the parent location and Spotlight will create the folder name inside it</span></label>
-          <input type="text" id="install_custom_base" placeholder="~/Work" autocomplete="off">
-        </div>
-        <p class="hint" style="margin-top: 14px;">Final install path: <code id="install_path_preview">~/Documents/Spotlight</code></p>
-        <p class="hint" style="margin-top: 8px;">Active case files stay under this install folder in <code>cases/</code> until you explicitly ingest approved material into the vault.</p>
-        <p id="install_err" class="error hidden">Install folder is required.</p>
-
-        <label class="block" style="margin-top: 18px;">Vault path <span class="hint">— full path to your Markdown vault folder (or where to create one)</span></label>
-        <input type="text" id="vault_path" placeholder="/Users/you/Documents/Intelligence" value="~/Intelligence">
-        <p id="vault_err" class="error hidden">Vault path is required.</p>
-      </section>
-
-      <!-- 07 — Integrations -->
-      <div class="sec-header">
-        <span class="chap" data-reveal="meta">07 — Integrations <span class="opt">optional external tools</span></span>
-        <h2 data-reveal="title">Plug-ins.</h2>
-      </div>
-      <section class="card">
-        <div class="checkbox-group">
-          <label><input type="checkbox" id="int_devbrowser" checked><span class="opt-name"><span class="name">dev-browser</span><span class="desc">Browser automation for specific investigative tasks: forms, JS-rendered pages, screenshots, downloads, and authenticated sessions. Installs the reviewed npm pin only. No key required.</span></span></label>
-        </div>
-
-        <div class="checkbox-group" style="margin-top: 12px;">
-          <label><input type="checkbox" id="int_junkipedia"><span class="opt-name"><span class="name">Junkipedia</span><span class="desc">Misinformation / narrative tracking database. Used by 100+ newsrooms. Application-based access.</span></span></label>
-        </div>
-        <div id="junkipedia_keys" class="hidden" style="margin-top: 16px;">
-          <label class="block">Junkipedia API key <span class="hint">— <a href="https://www.junkipedia.org/" target="_blank">apply for access</a></span></label>
-          <input type="password" id="junkipedia_key" placeholder="..." autocomplete="off">
-        </div>
-
-        <div class="checkbox-group" style="margin-top: 12px;">
-          <label><input type="checkbox" id="int_unpaywall"><span class="opt-name"><span class="name">Unpaywall</span><span class="desc">Legal open-access lookup for academic papers with DOIs. Optional; uses a contact email as a fair-use identifier.</span></span></label>
-        </div>
-        <div id="unpaywall_keys" class="hidden" style="margin-top: 16px;">
-          <label class="block">Unpaywall email <span class="hint">— sent to Unpaywall as a fair-use contact; never stored by us.</span></label>
-          <input type="text" id="unpaywall_email" placeholder="you@example.com" autocomplete="off">
-        </div>
-
-      </section>
-
-      <div class="generate-bar">
-        <p class="lbl"><em>All set?</em> Generate your installer.</p>
-        <p class="hint" style="margin: 8px 0 0;">The installer uses exact reviewed package versions from <code>VALIDATED_DEPENDENCIES.md</code>; it does not install npm/PyPI <code>latest</code>.</p>
-        <div class="generate-actions">
-          <button type="button" class="btn-primary" id="generate-btn">Generate installer <span aria-hidden="true">→</span></button>
+        <div class="item" data-reveal="body" style="--rs: 2">
+          <p class="knum"><em>03</em> Optional</p>
+          <h3>Extras<em>.</em><span class="badge">skippable</span></h3>
+          <p><a href="https://www.junkipedia.org/" target="_blank" rel="noopener">Junkipedia</a> (misinformation / narrative tracking — application-based access) · <a href="https://unpaywall.org/" target="_blank" rel="noopener">Unpaywall</a> (legal open-access lookup for academic papers — just a contact email, no key).</p>
         </div>
       </div>
-    </form>
+    </section>
+
   </div>
 </main>
 
-<!-- ── INSTALL OUTPUT ─────────────────────────────────── -->
-<section id="install-output" class="hidden" data-nav-theme="dark">
+<!-- ── 03 · INSTALL ─────────────────────────────────────── -->
+<section id="install" data-nav-theme="dark">
   <div class="out-wrap">
     <div class="out-header">
-      <span class="chap">Output — Two ways to install</span>
-      <h2>Run it.</h2>
+      <span class="chap" data-reveal="meta">03 — The command</span>
+      <h2 data-reveal="title">One line. Then <em>the browser.</em></h2>
+    </div>
+    <p class="sec-lede" data-reveal="body">
+      The installer is a static, reviewable bash script — read it before you run it.
+      No personalized blobs, no keys baked into downloads.
+    </p>
+
+    <div class="cmd-block" data-reveal="body">
+      <pre id="installCmd">curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash</pre>
+      <button type="button" id="copyCmdBtn">Copy</button>
     </div>
 
-    <div class="install-options">
-
-      <div class="install-option">
-        <div class="kicker">Option A — Simplest</div>
-        <h3>Copy into Terminal.</h3>
-        <p class="desc">Copy the script below, open Terminal, paste. No downloads.</p>
-        <div class="script-box" id="script-preview"></div>
-        <div class="actions">
-          <button type="button" class="btn-primary" id="copy-btn">Copy script</button>
-          <span class="copied-feedback" id="copied-feedback">✓ Copied</span>
-        </div>
-        <ol class="steps-list">
-          <li>Press <kbd>⌘</kbd> + <kbd>Space</kbd></li>
-          <li>Type <kbd>Terminal</kbd>, press <kbd>Return</kbd></li>
-          <li>Press <kbd>⌘</kbd> + <kbd>V</kbd>, then <kbd>Return</kbd></li>
-        </ol>
+    <div class="install-bar" data-reveal="body">
+      <div class="bar-copy">
+        <strong>macOS &amp; Linux. <em>Windows via WSL2.</em></strong>
+        <span>Prefer a file? The ZIP contains a tiny key-free <code>spotlight-install.command</code> that fetches and runs the same canonical script. Extract and double-click; macOS warns about an unverified file the first time — right-click the file, choose Open.</span>
       </div>
-
-      <div class="install-option">
-        <div class="kicker">Option B — Download</div>
-        <h3>One file, double-click.</h3>
-        <p class="desc">Download a single file and double-click to run. Good if you'd rather not open Terminal manually.</p>
-        <div class="actions">
-          <button type="button" class="btn-primary" id="download-btn">Download .zip <span aria-hidden="true">↓</span></button>
-        </div>
-        <div class="note-advisory">
-          <strong>First time on macOS?</strong> Gatekeeper will block unsigned installers. After extracting the zip: <strong>right-click</strong> <code>spotlight-setup.command</code> → <strong>Open</strong> → <strong>Confirm</strong>. Subsequent runs: plain double-click.
-        </div>
+      <div class="bar-actions">
+        <a class="btn-ghost" href="https://github.com/buriedsignals/spotlight/blob/main/install-spotlight.sh" target="_blank" rel="noopener">Read the script</a>
+        <button type="button" class="btn-primary" id="zipBtn">Download ZIP <span aria-hidden="true">→</span></button>
       </div>
-
     </div>
   </div>
 </section>
@@ -1421,324 +810,17 @@
 (function () {
   'use strict';
 
-  const localSection = document.getElementById('local-section');
-  const cloudSection = document.getElementById('cloud-section');
-  const cloudKeyLabel = document.getElementById('cloud_key_label');
-  const cloudKeyInput = document.getElementById('cloud_key');
-  const generateBtn = document.getElementById('generate-btn');
-  const installOutput = document.getElementById('install-output');
-  const scriptPreview = document.getElementById('script-preview');
-  const copyBtn = document.getElementById('copy-btn');
-  const copiedFeedback = document.getElementById('copied-feedback');
-  const downloadBtn = document.getElementById('download-btn');
-  const firecrawlErr = document.getElementById('firecrawl_err');
-  const navErr = document.getElementById('nav_err');
-  const cloudKeyErr = document.getElementById('cloud_key_err');
-  const installErr = document.getElementById('install_err');
-  const vaultErr = document.getElementById('vault_err');
-  const installNameInput = document.getElementById('install_name');
-  const installCustomWrap = document.getElementById('install_custom_wrap');
-  const installCustomBaseInput = document.getElementById('install_custom_base');
-  const installPathPreview = document.getElementById('install_path_preview');
-  const obsidianVaultNote = document.getElementById('obsidian_vault_note');
-  const tolariaVaultNote = document.getElementById('tolaria_vault_note');
-  let installLocationDirty = false;
-
-  // --- Mode switching (Local vs Cloud) ---
-  function renderMode() {
-    const mode = document.querySelector('input[name="mode"]:checked').value;
-    localSection.classList.toggle('hidden', mode !== 'local');
-    cloudSection.classList.toggle('hidden', mode !== 'cloud');
-    renderSuggestedInstallBase();
-  }
-  document.querySelectorAll('input[name="mode"]').forEach(el => el.addEventListener('change', renderMode));
-
-  function normalizePathPart(value) {
-    return String(value || '').trim().replace(/^\/+|\/+$/g, '');
-  }
-
-  function buildInstallPath() {
-    const folderName = normalizePathPart(installNameInput.value);
-    const baseMode = document.querySelector('input[name="install_base"]:checked').value;
-    let base = '';
-
-    if (baseMode === 'documents') base = '~/Documents';
-    if (baseMode === 'code') base = '~/Code';
-    if (baseMode === 'home') base = '~';
-    if (baseMode === 'custom') base = String(installCustomBaseInput.value || '').trim().replace(/\/+$/g, '');
-
-    if (!folderName || !base) return '';
-    if (base === '~') return `~/${folderName}`;
-    return `${base}/${folderName}`;
-  }
-
-  function renderInstallPath() {
-    const baseMode = document.querySelector('input[name="install_base"]:checked').value;
-    installCustomWrap.classList.toggle('hidden', baseMode !== 'custom');
-    const installPath = buildInstallPath();
-    installPathPreview.textContent = installPath || '—';
-  }
-
-  function setInstallBase(value) {
-    const radio = document.querySelector(`input[name="install_base"][value="${value}"]`);
-    if (radio) radio.checked = true;
-  }
-
-  function renderSuggestedInstallBase() {
-    if (installLocationDirty) return;
-    const mode = document.querySelector('input[name="mode"]:checked').value;
-    setInstallBase(mode === 'local' ? 'code' : 'documents');
-    renderInstallPath();
-  }
-
-  document.querySelectorAll('input[name="install_base"]').forEach(el => el.addEventListener('change', () => {
-    installLocationDirty = true;
-    renderInstallPath();
-  }));
-  installNameInput.addEventListener('input', () => {
-    installLocationDirty = true;
-    renderInstallPath();
+  // --- Copy the install command ---
+  const copyCmdBtn = document.getElementById('copyCmdBtn');
+  copyCmdBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(document.getElementById('installCmd').textContent.trim());
+      copyCmdBtn.textContent = 'Copied';
+    } catch (e) {
+      copyCmdBtn.textContent = 'Copy failed';
+    }
+    setTimeout(() => { copyCmdBtn.textContent = 'Copy'; }, 2000);
   });
-  installCustomBaseInput.addEventListener('input', () => {
-    installLocationDirty = true;
-    renderInstallPath();
-  });
-
-  // --- Model repo map (HF repo path, used by the llamacpp install path) ---
-  const MODEL_REPOS = {
-    qwen9b:  'tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF',
-    qwen27b: 'tomvaillant/qwen3.6-27b-abliterated-journalist-GGUF',
-  };
-  // RAM minimum per model (in GB) — used by fit-check enforcement on heavy tier.
-  const MODEL_MIN_RAM = { qwen9b: 16, qwen27b: 32 };
-
-  // --- Local model switching ---
-  function renderLocalModel() {
-    const sel = document.querySelector('input[name="local_model"]:checked').value;
-    document.getElementById('model_repo').value = MODEL_REPOS[sel];
-    document.getElementById('model-info-qwen9b').classList.toggle('hidden', sel !== 'qwen9b');
-    document.getElementById('model-info-qwen27b').classList.toggle('hidden', sel !== 'qwen27b');
-    fitBtn.textContent = sel === 'qwen9b'
-      ? 'Check my Mac and recommend'
-      : 'Check if my Mac can run this';
-    fitBtn.disabled = false;
-    // Heavy-tier enforcement: when the user picks the 27B, ensure the fit-check
-    // has run. If it hasn't (no fitPanel state yet), auto-trigger it so they
-    // don't accidentally proceed with a 32 GB-required model on a 16 GB Mac.
-    if (sel === 'qwen27b' && !fitPanel.classList.contains('green') &&
-        !fitPanel.classList.contains('amber') && !fitPanel.classList.contains('red')) {
-      runFitCheck();
-    }
-  }
-  document.querySelectorAll('input[name="local_model"]').forEach(el => el.addEventListener('change', renderLocalModel));
-
-  // --- Local server + agent switching ---
-  // Server is now derived from the chosen harness — opencode→ollama, pi→llamacpp.
-  // The user no longer picks a server; the install one-liner emits the matching
-  // SPOTLIGHT_LOCAL_SERVER value via envValues().
-  const SERVER_FOR_AGENT = { opencode: 'ollama', pi: 'llamacpp' };
-  function renderLocalServer() {
-    const agentEl = document.querySelector('input[name="agent"]:checked');
-    const agent = agentEl ? agentEl.value : 'opencode';
-    const srv = SERVER_FOR_AGENT[agent] || 'ollama';
-    // Toggle the two lede variants — one per harness.
-    document.getElementById('local-lede-opencode').classList.toggle('hidden', agent !== 'opencode');
-    document.getElementById('local-lede-pi').classList.toggle('hidden', agent !== 'pi');
-    // Server notes mirror the derived server.
-    document.getElementById('local-note-llamacpp').classList.toggle('hidden', srv !== 'llamacpp');
-    document.getElementById('local-note-ollama').classList.toggle('hidden', srv !== 'ollama');
-  }
-  document.querySelectorAll('input[name="agent"]').forEach(el => el.addEventListener('change', renderLocalServer));
-
-  // --- Runtime registry (single source of truth) ---
-  // Subscription runtimes (claude/gemini/codex) authenticate via their CLI's OAuth login —
-  // no API key required. We only collect a key for OpenCode + a paid token-billed provider.
-  const RUNTIMES = {
-    local: {
-      name: 'Local model',
-      bin: 'spotlight-local',
-      installPkg: null,
-      contextFile: null,
-    },
-    claude: {
-      name: 'Claude Code',
-      bin: 'claude',
-      installPkg: '@anthropic-ai/claude-code@2.1.169',
-      contextFile: 'CLAUDE.md',
-    },
-    gemini: {
-      name: 'Gemini',
-      bin: 'gemini',
-      installPkg: '@google/gemini-cli@0.45.2',
-      contextFile: 'GEMINI.md',
-    },
-    codex: {
-      name: 'Codex',
-      bin: 'codex',
-      installPkg: '@openai/codex@0.138.0',
-      contextFile: null,
-    },
-    opencode: {
-      name: 'OpenCode',
-      bin: 'opencode',
-      installPkg: 'opencode-ai@1.16.2',
-      contextFile: null,
-    },
-  };
-
-  const OPENCODE_PROVIDERS = {
-    openrouter: { label: 'OpenRouter API key', placeholder: 'sk-or-v1-...', envVar: 'OPENROUTER_API_KEY' },
-    fireworks: { label: 'Fireworks API key', placeholder: 'fw-...', envVar: 'FIREWORKS_API_KEY' },
-    together: { label: 'Together AI API key', placeholder: '...', envVar: 'TOGETHER_API_KEY' },
-  };
-
-  const opencodeProviderSection = document.getElementById('opencode-provider-section');
-  const cloudKeyRow = document.getElementById('cloud_key_row');
-
-  function renderCloud() {
-    const rt = document.querySelector('input[name="cloud_runtime"]:checked').value;
-    if (rt === 'opencode') {
-      opencodeProviderSection.classList.remove('hidden');
-      const prov = document.querySelector('input[name="opencode_provider"]:checked').value;
-      const keyCfg = OPENCODE_PROVIDERS[prov];
-      cloudKeyLabel.innerHTML = keyCfg.label + ' <span class="hint">— required, paste a key from ' + keyCfg.label.replace(' API key', '') + '.</span>';
-      cloudKeyInput.placeholder = keyCfg.placeholder;
-      cloudKeyRow.classList.remove('hidden');
-    } else {
-      opencodeProviderSection.classList.add('hidden');
-      cloudKeyRow.classList.add('hidden');
-      cloudKeyInput.value = '';
-    }
-
-    document.querySelectorAll('[id^="cloud-usage-"]').forEach(el => el.classList.add('hidden'));
-    const activeUsage = document.getElementById('cloud-usage-' + rt);
-    if (activeUsage) activeUsage.classList.remove('hidden');
-  }
-  document.querySelectorAll('input[name="cloud_runtime"]').forEach(el => el.addEventListener('change', renderCloud));
-  document.querySelectorAll('input[name="opencode_provider"]').forEach(el => el.addEventListener('change', renderCloud));
-
-  function renderVaultApp() {
-    const app = document.querySelector('input[name="vault_app"]:checked').value;
-    obsidianVaultNote.classList.toggle('hidden', app !== 'obsidian');
-    tolariaVaultNote.classList.toggle('hidden', app !== 'tolaria');
-  }
-  document.querySelectorAll('input[name="vault_app"]').forEach(el => el.addEventListener('change', renderVaultApp));
-
-  function bindCheckbox(checkboxId, targetId) {
-    const cb = document.getElementById(checkboxId);
-    const target = document.getElementById(targetId);
-    cb.addEventListener('change', () => target.classList.toggle('hidden', !cb.checked));
-  }
-  bindCheckbox('int_junkipedia', 'junkipedia_keys');
-  bindCheckbox('int_unpaywall', 'unpaywall_keys');
-  bindCheckbox('int_rlm', 'rlm_options');
-
-  function collectForm() {
-    const mode = document.querySelector('input[name="mode"]:checked').value;
-    const cloudRt = document.querySelector('input[name="cloud_runtime"]:checked').value;
-    const opencodeProv = document.querySelector('input[name="opencode_provider"]:checked').value;
-
-    // Only OpenCode needs a provider API key written to .env.
-    // Claude Code / Gemini CLI / Codex CLI authenticate via their own OAuth login,
-    // covered by Claude Max / Pro, Google AI / Gemini sub, or ChatGPT Plus / Pro / Team.
-    let cloudKeyVar = '';
-    if (mode === 'cloud' && cloudRt === 'opencode') {
-      cloudKeyVar = OPENCODE_PROVIDERS[opencodeProv].envVar;
-    }
-
-    return {
-      mode: mode,
-      runtime: mode === 'local' ? 'local' : cloudRt,
-      local_model: mode === 'local' ? document.querySelector('input[name="local_model"]:checked').value : null,
-      // local_server is derived from the chosen harness, not user-picked
-      local_server: mode === 'local'
-        ? (SERVER_FOR_AGENT[document.querySelector('input[name="agent"]:checked').value] || 'ollama')
-        : null,
-      agent: mode === 'local' ? document.querySelector('input[name="agent"]:checked').value : null,
-      // opencode interface is always CLI now; no UI picker.
-      opencode_interface: mode === 'local' ? 'cli' : null,
-      opencode_provider: cloudRt === 'opencode' ? opencodeProv : null,
-      cloud_key: mode === 'cloud' ? document.getElementById('cloud_key').value.trim() : '',
-      cloud_key_var: cloudKeyVar,
-      firecrawl_key: document.getElementById('firecrawl_key').value.trim(),
-      nav_key: document.getElementById('nav_key').value.trim(),
-      install_path: buildInstallPath(),
-      vault_app: document.querySelector('input[name="vault_app"]:checked').value,
-      vault_path: document.getElementById('vault_path').value.trim(),
-      model_repo: mode === 'local' ? document.getElementById('model_repo').value.trim() : null,
-      int_devbrowser: document.getElementById('int_devbrowser').checked,
-      int_junkipedia: document.getElementById('int_junkipedia').checked,
-      junkipedia_key: document.getElementById('junkipedia_key').value.trim(),
-      int_unpaywall: document.getElementById('int_unpaywall').checked,
-      unpaywall_email: document.getElementById('unpaywall_email').value.trim(),
-      int_rlm: document.getElementById('int_rlm').checked,
-      rlm_mode: document.getElementById('int_rlm').checked
-        ? document.querySelector('input[name="rlm_mode"]:checked').value
-        : 'off',
-    };
-  }
-
-  function shellEscape(s) {
-    if (s == null || s === '') return "''";
-    return "'" + String(s).replace(/'/g, "'\\''") + "'";
-  }
-
-  function buildExportBlock(cfg) {
-    // Built as: export KEY='value'  (single-quote escaped via shellEscape).
-    // install-spotlight.sh decodes this base64 + evals it.
-    const fields = [
-      ['SPOTLIGHT_MODE',                cfg.mode || ''],
-      ['SPOTLIGHT_RUNTIME',             cfg.runtime || ''],
-      ['SPOTLIGHT_LOCAL_SERVER',        cfg.local_server || ''],
-      ['SPOTLIGHT_LOCAL_MODEL',         cfg.local_model || ''],
-      ['SPOTLIGHT_AGENT',               cfg.agent || ''],
-      ['SPOTLIGHT_OPENCODE_INTERFACE',  cfg.opencode_interface || 'cli'],
-      ['SPOTLIGHT_OPENCODE_PROVIDER',   cfg.opencode_provider || ''],
-      ['SPOTLIGHT_CLOUD_KEY_VAR',       cfg.cloud_key_var || ''],
-      ['SPOTLIGHT_CLOUD_KEY',           cfg.cloud_key || ''],
-      ['SPOTLIGHT_DIR_INPUT',           cfg.install_path || ''],
-      ['SPOTLIGHT_VAULT_INPUT',         cfg.vault_path || ''],
-      ['SPOTLIGHT_VAULT_APP',           cfg.vault_app || 'obsidian'],
-      ['SPOTLIGHT_MODEL_REPO',          cfg.model_repo || ''],
-      ['SPOTLIGHT_INT_DEVBROWSER',      cfg.int_devbrowser ? 'true' : 'false'],
-      ['SPOTLIGHT_INT_JUNKIPEDIA',      cfg.int_junkipedia ? 'true' : 'false'],
-      ['JUNKIPEDIA_API_KEY',            cfg.junkipedia_key || ''],
-      ['SPOTLIGHT_INT_UNPAYWALL',       cfg.int_unpaywall ? 'true' : 'false'],
-      ['UNPAYWALL_EMAIL',               cfg.unpaywall_email || ''],
-      ['SPOTLIGHT_INT_RLM',             cfg.int_rlm ? 'true' : 'false'],
-      ['SPOTLIGHT_RLM_MODE',            cfg.int_rlm ? (cfg.rlm_mode || 'lite') : 'off'],
-      ['SPOTLIGHT_RLM_MODEL',           cfg.int_rlm && cfg.rlm_mode === 'local_gemma4_e4b' ? 'gemma4:e4b' : ''],
-      ['SPOTLIGHT_RLM_PREFILTER',       cfg.int_rlm && cfg.rlm_mode === 'local_gemma4_e4b' ? 'true' : ''],
-      ['SPOTLIGHT_RLM_HYBRID',          cfg.int_rlm && cfg.rlm_mode === 'local_gemma4_e4b' ? 'true' : ''],
-      ['FIRECRAWL_API_KEY',             cfg.firecrawl_key || ''],
-      ['OSINT_NAV_API_KEY',             cfg.nav_key || ''],
-    ];
-    return fields.map(([k, v]) => `export ${k}=${shellEscape(String(v))}`).join('\n');
-  }
-
-  function utf8Base64(str) {
-    // TextEncoder + manual byte-string → btoa avoids the deprecated unescape() pattern.
-    const bytes = new TextEncoder().encode(str);
-    let bin = '';
-    for (const b of bytes) bin += String.fromCharCode(b);
-    return btoa(bin);
-  }
-
-  const INSTALLER_URL = 'https://raw.githubusercontent.com/buriedsignals/spotlight/main/install-spotlight.sh';
-
-  function buildOneLiner(cfg) {
-    const block = buildExportBlock(cfg);
-    const b64 = utf8Base64(block);
-    return `curl -fsSL ${INSTALLER_URL} | SPOTLIGHT_CONFIG='${b64}' bash`;
-  }
-
-  function buildCommandScript(cfg) {
-    // 3-line wrapper for the downloadable .command file. Fetches the same
-    // install-spotlight.sh as the paste path — single source of truth.
-    const block = buildExportBlock(cfg);
-    const b64 = utf8Base64(block);
-    return `#!/usr/bin/env bash\nexport SPOTLIGHT_CONFIG='${b64}'\ncurl -fsSL ${INSTALLER_URL} | bash\n`;
-  }
 
   // --- Minimal hand-rolled zip (uncompressed, single file, unix exec bit) ---
   function crc32(str) {
@@ -1836,245 +918,29 @@
     return buildZipEntries([{ filename, contents, executable: true }]);
   }
 
-  generateBtn.addEventListener('click', () => {
-    const cfg = collectForm();
+  // Key-free bootstrap: fetches and runs the same canonical installer as the
+  // one-line command above — exactly one script to review and maintain.
+  const BOOTSTRAP_COMMAND = `#!/usr/bin/env bash
+# Spotlight installer bootstrap — fetches and runs the canonical installer:
+#   https://spotlight.buriedsignals.com/install-spotlight.sh
+#   source: https://github.com/buriedsignals/spotlight/blob/main/install-spotlight.sh
+set -euo pipefail
+TMP="$(mktemp -t spotlight-install).sh"
+curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh -o "$TMP"
+exec /usr/bin/env bash "$TMP"
+`;
 
-    let hasErr = false;
-    if (!cfg.firecrawl_key) { firecrawlErr.classList.remove('hidden'); hasErr = true; } else firecrawlErr.classList.add('hidden');
-    if (!cfg.nav_key) { navErr.classList.remove('hidden'); hasErr = true; } else navErr.classList.add('hidden');
-    if (cfg.runtime === 'opencode' && !cfg.cloud_key) { cloudKeyErr.classList.remove('hidden'); hasErr = true; } else cloudKeyErr.classList.add('hidden');
-    if (!cfg.install_path) { installErr.classList.remove('hidden'); hasErr = true; } else installErr.classList.add('hidden');
-    if (!cfg.vault_path) { vaultErr.classList.remove('hidden'); hasErr = true; } else vaultErr.classList.add('hidden');
-    if (hasErr) {
-      document.querySelector('.error:not(.hidden)').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-
-    const oneLiner = buildOneLiner(cfg);
-    const commandScript = buildCommandScript(cfg);
-    scriptPreview.textContent = oneLiner;
-    installOutput.classList.remove('hidden');
-    installOutput.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    installOutput.dataset.script = oneLiner;
-    installOutput.dataset.command = commandScript;
-  });
-
-  copyBtn.addEventListener('click', async () => {
-    const script = installOutput.dataset.script || '';
-    try {
-      await navigator.clipboard.writeText(script);
-      copiedFeedback.classList.add('show');
-      setTimeout(() => copiedFeedback.classList.remove('show'), 2000);
-    } catch (e) {
-      const range = document.createRange();
-      range.selectNode(scriptPreview);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-      alert('Clipboard access denied. Script is selected — press ⌘+C to copy.');
-    }
-  });
-
-  downloadBtn.addEventListener('click', () => {
-    const script = installOutput.dataset.command || '';
-    const zip = buildZip('spotlight-setup.command', script);
+  document.getElementById('zipBtn').addEventListener('click', () => {
+    const zip = buildZip('spotlight-install.command', BOOTSTRAP_COMMAND);
     const blob = new Blob([zip], { type: 'application/zip' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'spotlight-setup.zip';
+    a.download = 'spotlight-install.zip';
+    document.body.appendChild(a);
     a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 3000);
   });
-
-  // --- Model recommendation after fit check ---
-  const qwen9bCard  = document.getElementById('model-card-qwen9b');
-  const qwen27bCard = document.getElementById('model-card-qwen27b');
-  const MODEL_CARDS = { qwen9b: qwen9bCard, qwen27b: qwen27bCard };
-  const NOT_RECOMMENDED_COPY = {
-    qwen9b:  '<em>Not recommended for your hardware — your machine can run a larger model (the 27B). You can still select it above.</em>',
-    qwen27b: '<em>Not recommended — the 27B needs 32 GB unified memory; your machine reports less. The 9B is the right pick. You can still select it above, but it will likely OOM.</em>',
-  };
-  const ORIGINAL_COPY = {
-    qwen9b:  'Default. 9B dense, abliterated, investigative-journalism fine-tune by <a href="https://huggingface.co/tomvaillant" target="_blank" rel="noopener">@tomvaillant</a>. Fits 16 GB Macs comfortably (~6 GB on disk, ~8 GB at runtime). Bench-tested: 100% refusal-resistance on OSINT-grade prompts, leads with the answer 100% of the time.',
-    qwen27b: 'Heavy tier. 27B dense, fine-tuned by <a href="https://huggingface.co/tomvaillant" target="_blank" rel="noopener">@tomvaillant</a> on the same investigative-journalism corpus as the 9B, built on Huihui\'s abliterated Qwen 3.6 base. Runs in thinking mode (the abliterated family\'s <code>/no_think</code> path is broken). <strong>Needs 32 GB unified memory minimum</strong> — the fit-check below confirms your hardware before this option is enabled.',
-  };
-
-  function recommendModel(recommended) {
-    const radio = document.querySelector(`input[name="local_model"][value="${recommended}"]`);
-    if (radio) { radio.checked = true; renderLocalModel(); }
-    Object.entries(MODEL_CARDS).forEach(([key, card]) => {
-      const isRec = key === recommended;
-      card.classList.toggle('recommended', isRec);
-      card.classList.toggle('not-recommended', !isRec);
-      if (!isRec) {
-        card.querySelector('.opt-name .desc').innerHTML = NOT_RECOMMENDED_COPY[key];
-      } else {
-        card.querySelector('.opt-name .desc').innerHTML = ORIGINAL_COPY[key];
-      }
-    });
-  }
-
-  function clearModelRecommendation() {
-    Object.entries(MODEL_CARDS).forEach(([key, card]) => {
-      card.classList.remove('recommended', 'not-recommended');
-      card.querySelector('.opt-name .desc').innerHTML = ORIGINAL_COPY[key];
-    });
-  }
-
-  // --- LLM fit check ---
-  const fitBtn = document.getElementById('fit-check-btn');
-  const fitPanel = document.getElementById('fit-panel');
-  const fitVerdict = document.getElementById('fit-verdict');
-  const fitTitle = document.getElementById('fit-title');
-  const fitStats = document.getElementById('fit-stats');
-  const fitBody = document.getElementById('fit-body');
-  const fitCmdBox = document.getElementById('fit-cmd-box');
-  const fitCmd = document.getElementById('fit-cmd');
-  const fitCmdCopy = document.getElementById('fit-cmd-copy');
-
-  async function runFitCheck() {
-    fitPanel.classList.remove('hidden', 'green', 'amber', 'red');
-    fitPanel.classList.add('idle');
-    fitTitle.textContent = 'Probing…';
-    fitVerdict.querySelector('.icon').textContent = '⠋';
-    fitStats.innerHTML = '';
-    fitBody.innerHTML = '';
-    fitCmdBox.style.display = 'none';
-    clearModelRecommendation();
-
-    const frames = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
-    let fi = 0;
-    const spinInt = setInterval(() => {
-      fitVerdict.querySelector('.icon').textContent = frames[fi++ % frames.length];
-    }, 90);
-
-    await new Promise(r => setTimeout(r, 600));
-
-    const ua = navigator.userAgent;
-    const isMac = /Macintosh/.test(ua);
-    const isLinux = /Linux/.test(ua) && !/Android/.test(ua);
-    const cores = navigator.hardwareConcurrency || 'unknown';
-    const deviceMemGB = navigator.deviceMemory || null;
-
-    let arch = null;
-    try {
-      if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
-        const high = await navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness']);
-        arch = high.architecture;
-      }
-    } catch {}
-
-    let isAppleSilicon;
-    if (arch === 'arm') isAppleSilicon = true;
-    else if (arch === 'x86') isAppleSilicon = false;
-    else if (isMac) {
-      isAppleSilicon = (typeof cores === 'number' && cores >= 8) && !!navigator.gpu;
-    } else {
-      isAppleSilicon = false;
-    }
-
-    let gpuName = 'unknown';
-    try {
-      if (navigator.gpu) {
-        const adapter = await navigator.gpu.requestAdapter();
-        if (adapter) {
-          const info = await adapter.requestAdapterInfo?.() || {};
-          gpuName = info.architecture || info.vendor || info.description || 'WebGPU available';
-        }
-      }
-    } catch {}
-
-    clearInterval(spinInt);
-
-    let verdict = 'amber';
-    let title = 'Model recommendation based on your hardware';
-    let body = '';
-    let recommendedModel = null; // 'qwen9b' | 'qwen27b' | null
-
-    const currentSel = document.querySelector('input[name="local_model"]:checked')?.value;
-
-    if (deviceMemGB && deviceMemGB >= 32) {
-      verdict = 'green';
-      title = 'Qwen 3.6 27B — your machine can run it';
-      body = 'You have <b>' + deviceMemGB + ' GB+</b> RAM. The 27B (~17 GB on disk, ~24 GB at runtime) loads cleanly with headroom for the orchestration pipeline. The 9B is also a fine pick if you want faster responses — both work here.';
-      recommendedModel = 'qwen27b';
-    } else if (deviceMemGB && deviceMemGB >= 16) {
-      verdict = currentSel === 'qwen27b' ? 'red' : 'green';
-      title = currentSel === 'qwen27b'
-        ? 'Insufficient RAM for the 27B — pick the 9B'
-        : 'Qwen 3.5 9B — fits your hardware';
-      body = currentSel === 'qwen27b'
-        ? 'You have <b>~' + deviceMemGB + ' GB</b> RAM. The 27B needs 32 GB minimum. Switch to the <strong>Qwen 3.5 9B Journalist</strong> above — same abliterated journalism corpus, much smaller footprint, bench-equivalent on refusal-resistance.'
-        : 'You have <b>~' + deviceMemGB + ' GB</b> RAM. The 9B Journalist (~6 GB on disk, ~8 GB at runtime) leaves plenty of headroom for the orchestration pipeline. The 27B needs 32 GB+ and will OOM on your machine — keep the 9B selected.';
-      recommendedModel = 'qwen9b';
-    } else if (deviceMemGB) {
-      verdict = 'red';
-      title = 'No local model — switch to Frontier';
-      body = 'You have <b>~' + deviceMemGB + ' GB</b> RAM. That\'s below the minimum for any local model that can handle Spotlight\'s orchestration pipeline. Switch to <strong>Frontier</strong> mode above — Claude / Gemini / Codex / OpenCode give you full investigation quality without local compute.';
-      recommendedModel = null;
-    } else if (isAppleSilicon && cores >= 8) {
-      verdict = 'amber';
-      title = 'Confirm your RAM — defaulting to the 9B';
-      body = 'Apple Silicon with <b>' + cores + ' cores</b> typically has 16+ GB unified memory, but we can\'t confirm via the browser. Defaulting to the <strong>Qwen 3.5 9B Journalist</strong> (safe on any 16 GB+ Mac). Run the command below to check your actual RAM — at 32+ GB you can use the 27B instead.';
-      recommendedModel = 'qwen9b';
-    } else if (isMac && arch === 'x86') {
-      verdict = 'red';
-      title = 'Intel Mac — use Frontier mode';
-      body = 'Intel Macs don\'t have Apple Silicon\'s unified memory advantage. Neither local model will handle Spotlight\'s orchestration well. We recommend switching to <strong>Frontier</strong> mode.';
-      recommendedModel = null;
-    } else if (isLinux) {
-      verdict = 'amber';
-      title = 'Check your GPU/VRAM — defaulting to the 9B';
-      body = 'On Linux, the 9B (~6 GB) runs on 16 GB RAM CPU-only or any 8+ GB NVIDIA/AMD GPU. For the 27B (~17 GB) you need 32+ GB system RAM or 24+ GB VRAM. Confirm your specs with the command below.';
-      recommendedModel = 'qwen9b';
-    } else {
-      verdict = 'red';
-      title = 'Browser detection limited — use Frontier mode';
-      body = 'Your browser doesn\'t expose enough hardware info. We recommend switching to <strong>Frontier</strong> mode for a reliable investigation experience.';
-      recommendedModel = null;
-    }
-
-    // Apply model recommendation
-    if (recommendedModel) {
-      recommendModel(recommendedModel);
-    }
-
-    fitPanel.classList.remove('idle', 'green', 'amber', 'red');
-    fitPanel.classList.add(verdict);
-    fitVerdict.querySelector('.icon').textContent = verdict === 'green' ? '✓' : verdict === 'amber' ? '?' : '✗';
-    fitVerdict.className = 'fit-verdict ' + verdict;
-    fitTitle.textContent = title;
-    fitBody.innerHTML = body;
-
-    fitStats.innerHTML = `
-      <div class="stat-item"><div class="k">Platform</div><span class="v">${isAppleSilicon ? 'Apple Silicon' : isMac ? 'Intel Mac' : isLinux ? 'Linux' : 'Other'}</span></div>
-      <div class="stat-item"><div class="k">CPU cores</div><span class="v">${cores}</span></div>
-      <div class="stat-item"><div class="k">RAM (browser)</div><span class="v">${deviceMemGB ? '~' + deviceMemGB + ' GB+' : 'n/a'}</span></div>
-      <div class="stat-item"><div class="k">GPU</div><span class="v">${gpuName.length > 28 ? gpuName.slice(0, 26) + '…' : gpuName}</span></div>
-    `;
-
-    const cmd = isMac
-      ? "system_profiler SPHardwareDataType | grep -E 'Memory|Chip|Cores'"
-      : "free -h && lscpu | grep -E 'Model name|CPU\\(s\\)' && lspci | grep -i vga";
-    fitCmd.textContent = cmd;
-    fitCmdBox.style.display = 'flex';
-  }
-
-  fitBtn.addEventListener('click', runFitCheck);
-  fitCmdCopy.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(fitCmd.textContent);
-      fitCmdCopy.textContent = 'Copied!';
-      setTimeout(() => { fitCmdCopy.textContent = 'Copy'; }, 1500);
-    } catch {}
-  });
-
-  // Init
-  renderSuggestedInstallBase();
-  renderMode();
-  renderCloud();
-  renderVaultApp();
 
   // --- Reveal system (subset) ---
   const io = new IntersectionObserver((entries) => {
@@ -2112,7 +978,7 @@
   // --- Topnav theme switcher ──────────────────────────────────────────────
   // Detects which section sits under the top edge of the viewport and swaps
   // the topnav styling: hero = mix-blend over dark, dark section = ink bg,
-  // everything else (form / paper main) = paper bg + dark text.
+  // everything else (static sections) = default.
   // Mirrors the landing implementation. Sections opt in via data-nav-theme.
   (function () {
     const nav = document.getElementById('topnav');
@@ -2127,8 +993,6 @@
       const probe = window.scrollY + 24;
       let theme = 'paper';
       for (const s of sections) {
-        // Skip hidden sections (#install-output starts with .hidden, only
-        // becomes a target once the user generates the script).
         if (s.offsetParent === null) continue;
         const top = s.offsetTop;
         const bottom = top + s.offsetHeight;
@@ -2140,14 +1004,6 @@
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update, { passive: true });
     update();
-
-    // The install-output section becomes visible after the user clicks
-    // Generate — re-run once it appears so the nav picks it up.
-    const out = document.getElementById('install-output');
-    if (out) {
-      const mo = new MutationObserver(update);
-      mo.observe(out, { attributes: true, attributeFilter: ['class'] });
-    }
   })();
 })();
 </script>
