@@ -4361,8 +4361,8 @@
     });
   })();
 
-  // ── Newsletter signup — posts to the shared Supabase Edge Function used
-  // by the Scoutpost landing-card flow.
+  // ── Newsletter signup — posts to the Navigator API, the shared signup
+  // endpoint for all Buried Signals properties (CORS allowlisted).
   (function () {
     const form = document.getElementById('newsletter-signup-form');
     const emailInput = document.getElementById('newsletter-email');
@@ -4372,8 +4372,7 @@
     const disclaimerEl = document.getElementById('newsletter-disclaimer');
     if (!form || !emailInput || !submitBtn || !errorEl || !successEl || !disclaimerEl) return;
 
-    const supabaseUrl = 'https://gfmdziplticfoakhrfpt.supabase.co';
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmbWR6aXBsdGljZm9ha2hyZnB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MDYzMjIsImV4cCI6MjA4MzE4MjMyMn0.Liz22BqK2qfHBcIsIJxGTT4VvMzfBE_yRFraVrUPKq4';
+    const NEWSLETTER_ENDPOINT = 'https://navigator.indicator.media/api/newsletter/subscribe';
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -4386,12 +4385,9 @@
       errorEl.classList.add('hidden');
 
       try {
-        const res = await fetch(`${supabaseUrl}/functions/v1/newsletter-subscribe`, {
+        const res = await fetch(NEWSLETTER_ENDPOINT, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: supabaseAnonKey
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: value, newsletters: ['buried_signals'] })
         });
         const data = await res.json().catch(() => ({}));
