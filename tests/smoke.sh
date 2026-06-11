@@ -120,6 +120,18 @@ else
 fi
 
 echo ""
+echo "── Validators and helpers ──"
+for t in validate-case-check monitoring-registry-check preflight-check; do
+  python3 "tests/$t.py" >/dev/null 2>&1
+  rc=$?
+  if [ $rc -eq 0 ]; then
+    ok "tests/$t.py passes"
+  else
+    fail "tests/$t.py failed with rc=$rc"
+  fi
+done
+
+echo ""
 echo "── Cleanliness ──"
 
 banned_syntax=$(grep -rlE 'WebFetch|WebSearch|allowedTools|disallowedTools|maxTurns|run_in_background' skills/ agents/ 2>/dev/null || true)

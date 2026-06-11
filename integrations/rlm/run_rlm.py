@@ -318,12 +318,21 @@ def normalize_model_artifact(raw: dict[str, Any], index: int) -> dict[str, Any]:
             continue
         line_start = ref.get("line_start", ref.get("line"))
         line_end = ref.get("line_end", line_start)
-        normalized_ref = {
-            "path": ref.get("path", ""),
+        path = ref.get("path", "")
+        # Drop malformed refs here instead of emitting None/empty values for
+        # downstream validation to reject — an artifact stripped of all refs
+        # still fails the non-discarded-needs-refs check, visibly.
+        if not (isinstance(path, str) and path.strip()):
+            continue
+        if not (isinstance(line_start, int) and line_start >= 1):
+            continue
+        if not (isinstance(line_end, int) and line_end >= line_start):
+            line_end = line_start
+        source_refs.append({
+            "path": path,
             "line_start": line_start,
             "line_end": line_end,
-        }
-        source_refs.append(normalized_ref)
+        })
     metadata = raw.get("metadata") if isinstance(raw.get("metadata"), dict) else {}
     return {
         "id": raw.get("id") if isinstance(raw.get("id"), str) and raw.get("id", "").strip() else f"{kind}-{index:04d}",

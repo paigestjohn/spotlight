@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
 import os
+from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
@@ -61,6 +63,21 @@ def _read_registry(path: Path) -> dict | None:
         return None
     with open(path) as fh:
         return json.load(fh)
+
+
+@contextmanager
+def _registry_lock(project: str):
+    """Exclusive advisory lock for the load -> mutate -> write cycle so
+    concurrent CLI invocations cannot silently lose each other's updates."""
+    path = _monitoring_path(project)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = path.with_suffix(".lock")
+    with open(lock_path, "w") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
 
 
 def _write_registry(project: str, registry: dict) -> Path:
@@ -257,16 +274,18 @@ def cmd_show(args: argparse.Namespace) -> None:
 
 
 def cmd_init(args: argparse.Namespace) -> None:
-    registry = load_registry(args.project)
-    path = _write_registry(args.project, registry)
+    with _registry_lock(args.project):
+        registry = load_registry(args.project)
+        path = _write_registry(args.project, registry)
     print(path)
 
 
 def cmd_migrate(args: argparse.Namespace) -> None:
-    path = _monitoring_path(args.project)
-    original = _read_registry(path)
-    registry = normalize_registry(args.project, original)
-    path = _write_registry(args.project, registry)
+    with _registry_lock(args.project):
+        path = _monitoring_path(args.project)
+        original = _read_registry(path)
+        registry = normalize_registry(args.project, original)
+        path = _write_registry(args.project, registry)
     if args.json:
         print(json.dumps({"path": str(path), "registry": registry}, indent=2, ensure_ascii=False))
         return
@@ -274,83 +293,88 @@ def cmd_migrate(args: argparse.Namespace) -> None:
 
 
 def cmd_link_mycroft_topic(args: argparse.Namespace) -> None:
-    registry = load_registry(args.project)
-    slugs = registry["mycroft"]["topic_slugs"]
-    slugs.append(args.slug)
-    registry["mycroft"]["topic_slugs"] = _dedupe_strings(slugs)
-    registry["mycroft"]["last_checked_at"] = args.last_checked_at
-    path = _write_registry(args.project, registry)
+    with _registry_lock(args.project):
+        registry = load_registry(args.project)
+        slugs = registry["mycroft"]["topic_slugs"]
+        slugs.append(args.slug)
+        registry["mycroft"]["topic_slugs"] = _dedupe_strings(slugs)
+        registry["mycroft"]["last_checked_at"] = args.last_checked_at
+        path = _write_registry(args.project, registry)
     print(path)
 
 
 def cmd_link_scoutpost_project(args: argparse.Namespace) -> None:
-    registry = load_registry(args.project)
-    registry["scoutpost"]["project_id"] = args.project_id
-    if args.project_name:
-        registry["scoutpost"]["project_name"] = args.project_name
-    path = _write_registry(args.project, registry)
+    with _registry_lock(args.project):
+        registry = load_registry(args.project)
+        registry["scoutpost"]["project_id"] = args.project_id
+        if args.project_name:
+            registry["scoutpost"]["project_name"] = args.project_name
+        path = _write_registry(args.project, registry)
     print(path)
 
 
 def cmd_link_scoutpost_scout(args: argparse.Namespace) -> None:
-    registry = load_registry(args.project)
-    scouts = registry["scoutpost"]["scouts"]
-    scout = {
-        "scout_id": args.scout_id,
-        "monitor_kind": args.monitor_kind,
-        "target": args.target,
-        "criteria": args.criteria,
-        "created_at": args.created_at or _now_iso(),
-        "status": args.status,
-    }
-    scouts = [existing for existing in scouts if existing.get("scout_id") != args.scout_id]
-    scouts.append(scout)
-    registry["scoutpost"]["scouts"] = scouts
-    path = _write_registry(args.project, registry)
+    with _registry_lock(args.project):
+        registry = load_registry(args.project)
+        scouts = registry["scoutpost"]["scouts"]
+        scout = {
+            "scout_id": args.scout_id,
+            "monitor_kind": args.monitor_kind,
+            "target": args.target,
+            "criteria": args.criteria,
+            "created_at": args.created_at or _now_iso(),
+            "status": args.status,
+        }
+        scouts = [existing for existing in scouts if existing.get("scout_id") != args.scout_id]
+        scouts.append(scout)
+        registry["scoutpost"]["scouts"] = scouts
+        path = _write_registry(args.project, registry)
     print(path)
 
 
 def cmd_link_fallback(args: argparse.Namespace) -> None:
-    registry = load_registry(args.project)
-    routine = {
-        "runtime": args.runtime,
-        "handle": args.handle,
-        "monitor_kind": args.monitor_kind,
-        "target": args.target,
-        "criteria": args.criteria,
-        "created_at": args.created_at or _now_iso(),
-    }
-    fallbacks = [
-        existing
-        for existing in registry["fallback_routines"]
-        if not (existing.get("runtime") == args.runtime and existing.get("handle") == args.handle)
-    ]
-    fallbacks.append(routine)
-    registry["fallback_routines"] = fallbacks
-    path = _write_registry(args.project, registry)
+    with _registry_lock(args.project):
+        registry = load_registry(args.project)
+        routine = {
+            "runtime": args.runtime,
+            "handle": args.handle,
+            "monitor_kind": args.monitor_kind,
+            "target": args.target,
+            "criteria": args.criteria,
+            "created_at": args.created_at or _now_iso(),
+        }
+        fallbacks = [
+            existing
+            for existing in registry["fallback_routines"]
+            if not (existing.get("runtime") == args.runtime and existing.get("handle") == args.handle)
+        ]
+        fallbacks.append(routine)
+        registry["fallback_routines"] = fallbacks
+        path = _write_registry(args.project, registry)
     print(path)
 
 
 def cmd_record_check(args: argparse.Namespace) -> None:
-    registry = load_registry(args.project)
     item_payload = []
     if args.items_json:
         item_payload = json.loads(args.items_json)
         if not isinstance(item_payload, list):
             raise ValueError("--items-json must decode to a list")
-    registry["checks"].append(
-        {
-            "checked_at": args.checked_at or _now_iso(),
-            "source": args.source,
-            "summary": args.summary,
-            "items": item_payload,
-        }
-    )
-    if args.source == "mycroft":
-        registry["mycroft"]["last_checked_at"] = args.checked_at or registry["checks"][-1]["checked_at"]
-    elif args.source == "scoutpost":
-        registry["scoutpost"]["last_checked_at"] = args.checked_at or registry["checks"][-1]["checked_at"]
-    path = _write_registry(args.project, registry)
+    with _registry_lock(args.project):
+        registry = load_registry(args.project)
+        registry["checks"].append(
+            {
+                "checked_at": args.checked_at or _now_iso(),
+                "source": args.source,
+                "summary": args.summary,
+                "items": item_payload,
+            }
+        )
+        if args.source == "mycroft":
+            registry["mycroft"]["last_checked_at"] = args.checked_at or registry["checks"][-1]["checked_at"]
+        elif args.source == "scoutpost":
+            registry["scoutpost"]["last_checked_at"] = args.checked_at or registry["checks"][-1]["checked_at"]
+        path = _write_registry(args.project, registry)
     print(path)
 
 
