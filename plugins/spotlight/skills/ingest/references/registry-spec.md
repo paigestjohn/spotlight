@@ -139,9 +139,9 @@ Registry entries stay minimal — claim text, evidence, and sources live in the 
   "schema_version": "1.0",
   "generated": "ISO 8601",
   "aliases": {
-    "bc strategy ltd": "black-cube",
-    "black cube": "black-cube",
-    "uab innodiets": "innodiets-uab"
+    "acme ltd": "acme-corp",
+    "acme corporation": "acme-corp",
+    "j. doe": "john-doe"
   }
 }
 ```

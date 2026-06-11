@@ -134,21 +134,21 @@ usage_count: N
 
 ### 5. Claim Note
 
-**Path:** `{vault}/claims/{claim-id}.md` where `claim-id` is `{project-id}-f{n}` (lowercased finding ID of the originating case — e.g. `health-insider-f1`). The claim's identity stays bound to the case that first recorded it; later cases append to it rather than minting a new ID.
+**Path:** `{vault}/claims/{claim-id}.md` where `claim-id` is `{project-id}-f{n}` (lowercased finding ID of the originating case — e.g. `acme-files-f1`). The claim's identity stays bound to the case that first recorded it; later cases append to it rather than minting a new ID.
 
 ```yaml
 ---
-id: health-insider-f1
-project: health-insider
+id: acme-files-f1
+project: acme-files
 finding_id: F1
-entities: [innodiets-uab, health-insider-site]
+entities: [acme-corp, john-doe]
 verdict: verified
 confidence: high
 confidence_cap: high
 layer: durable
 recorded: YYYY-MM-DD
 verified: YYYY-MM-DD
-verified_by: health-insider
+verified_by: acme-files
 needs_verification: false
 ---
 ```
@@ -201,7 +201,7 @@ Findings that fail the gate stay in the investigation note (flagged, as today) a
 **ID rules:**
 - All IDs are **kebab-case** (lowercase, hyphens, no spaces).
 - Examples: `swiss-leaks`, `john-doe`, `reverse-image-search`, `bellingcat-osm`.
-- Claim IDs are `{project-id}-f{n}`: `health-insider-f1`.
+- Claim IDs are `{project-id}-f{n}`: `acme-files-f1`.
 
 **Directory fallback** — When wikilinks don't resolve (e.g., flat export or non-Obsidian vault), use relative links:
 

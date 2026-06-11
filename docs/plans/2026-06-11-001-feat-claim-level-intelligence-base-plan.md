@@ -15,7 +15,7 @@ Add a claim-record layer to the Spotlight knowledge vault — standalone, cross-
 
 ## Problem Frame
 
-The vault compounds knowledge per entity, methodology, and tool, but claims — the atomic unit of investigative knowledge — exist only embedded in investigation notes and case-local JSON. A new investigation cannot ask "what do we already know about X, with what verdict, verified when, from which case?" without re-reading whole investigation notes. Entity aliases are recorded but only forward (entity → aliases), so an agent meeting "BC Strategy Ltd" cannot cheaply resolve it to `black-cube`. Nothing distinguishes a durable verified fact from a lead that was never re-checked, and ingest quality rules (tip curation, verdict flagging) are conventions without a validator.
+The vault compounds knowledge per entity, methodology, and tool, but claims — the atomic unit of investigative knowledge — exist only embedded in investigation notes and case-local JSON. A new investigation cannot ask "what do we already know about X, with what verdict, verified when, from which case?" without re-reading whole investigation notes. Entity aliases are recorded but only forward (entity → aliases), so an agent meeting an alternate spelling or former name cannot cheaply resolve it to the canonical entity. Nothing distinguishes a durable verified fact from a lead that was never re-checked, and ingest quality rules (tip curation, verdict flagging) are conventions without a validator.
 
 The 2026-06 vault audit found the foundation is strong — 80 notes, 100% frontmatter compliance, 98.7% wikilink connectivity, zero stubs or duplicates — so this is structural extension, not cleanup.
 
@@ -78,17 +78,17 @@ flowchart TB
 Claim note frontmatter (directional, exact fields pinned in U1):
 
 ```yaml
-id: health-insider-f1
-project: health-insider
+id: acme-files-f1
+project: acme-files
 finding_id: F1
-entities: [innodiets-uab, health-insider-site]
+entities: [acme-corp, john-doe]
 verdict: verified          # existing 6-value enum
 confidence: high
 confidence_cap: high       # from grounding
 layer: durable             # durable | lead
 recorded: 2026-04-02
 verified: 2026-04-02
-verified_by: health-insider
+verified_by: acme-files
 needs_verification: false
 ```
 
@@ -114,7 +114,7 @@ needs_verification: false
 - **Files:** `skills/ingest/references/registry-spec.md`, `skills/ingest/SKILL.md`
 - **Approach:** Specify `entities/_aliases.json` (normalized alias string → entity id; includes canonical names; case-insensitive match guidance) as a generated artifact rebuilt during ingest step 3. Specify `entities/_merge-proposals.json` (candidate pair, colliding alias, source project, date, status: open/accepted/rejected) written when a new entity's name or aliases collide with an existing entity's alias set; ingest proceeds with both entities separate until a human resolves.
 - **Test scenarios** (enforced via U5 validator): alias index contains every alias from every entity note; collision between new entity name and existing alias produces a proposal, not a merge; rejected proposal is preserved (not re-proposed blindly each ingest).
-- **Verification:** Resolving "BC Strategy Ltd" via the index returns `black-cube` against the live vault.
+- **Verification:** Resolving a known alias via the index returns its canonical entity ID against the live vault.
 
 ### U3. Ingest skill extension with claim quality gates
 
@@ -153,8 +153,8 @@ needs_verification: false
 - **Dependencies:** U1, U2, U3, U5
 - **Files:** `scripts/backfill-claims.py` (new)
 - **Approach:** Parse existing `investigations/*.md` finding sections (Claim/Confidence/Verdict/Sources are uniformly structured) plus registries; apply the same eligibility gate as U3 — only investigations with `status: confirmed`, only findings whose verdict maps to `verified`/`partially_verified` (legacy labels `confirmed` → verified), with sources present; everything else is reported as excluded, not written. Emit claim notes, claims registry, alias index, and updated master stats. `recorded`/`verified` come from the investigation `date`. Idempotent (re-run produces no diff), refuses to modify existing notes, honors `.ingest-lock`, path-contained via the `spotlight_safe.py` probe pattern. Existing investigation notes are read-only inputs.
-- **Test scenarios:** backfill on a fixture copy of the live vault yields claims for every verified finding in the four `confirmed` investigations; the `pending_review` investigation (chat-control-denmark) is skipped and reported, not ingested; unverified findings are excluded and listed in the report; second run is a no-op; a malformed finding section is reported and skipped, not half-written; entity files untouched (hash-equal before/after).
-- **Verification:** `tests/vault-claims-check.py` passes against the backfilled vault; spot-check that `health-insider-f1` cites its original sources.
+- **Test scenarios:** backfill on a fixture copy of the live vault yields claims for every verified finding in the four `confirmed` investigations; any `pending_review` investigation is skipped and reported, not ingested; unverified findings are excluded and listed in the report; second run is a no-op; a malformed finding section is reported and skipped, not half-written; entity files untouched (hash-equal before/after).
+- **Verification:** `tests/vault-claims-check.py` passes against the backfilled vault; spot-check that a backfilled claim cites its original sources.
 
 ### U7. Plugin payload and distribution parity
 
