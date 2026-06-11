@@ -10,6 +10,45 @@ All notable changes to Spotlight. Format follows [Keep a Changelog](https://keep
 > `cases/{project}/data/findings.json`, `fact-check.json`, or
 > `provenance-manifest.json`. The classroom profile flag is also removed.
 
+### Changed — installation architecture (supersedes the browser-generated config blob)
+
+- **One static installer**: `curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash`.
+  The hosted `setup.html` is now a landing page (how it works, keys checklist,
+  command + ZIP fallback); its `spotlight-install.zip` contains only a key-free
+  bootstrap that fetches and runs the same canonical script. A run with the
+  retired `SPOTLIGHT_CONFIG` base64 blob set fails loud with a pointer to the
+  new command — it is never decoded.
+- **Local configurator**: the installer serves `install/configure.html` from
+  `127.0.0.1` (`install/setup_server.py`, stdlib only, per-run token on every
+  GET and POST). All choices move there — mode, runtime, local model + hardware
+  fit check, required keys, vault app, install + vault paths with a **native
+  folder picker** (osascript/zenity/kdialog) and per-OS default chips, and
+  plug-ins. API keys are entered on the local page, **live-validated against
+  each provider** (401/403 rejects; network failures never block), staged in
+  `~/.config/spotlight/` (0600, atomic), and written to `$SPOTLIGHT_DIR/.env`
+  by the install body; the staged secret copy is deleted after the final write
+  and on any abort. Keys never appear on a website, in a downloadable artifact,
+  in the shell command line, or in shell history. The configurator also writes
+  `setup-config.env` and the personalized `getting-started.html` guide that
+  opens when the install completes.
+- **Headless / CI path**: `bash -s -- --headless` with pre-exported env vars
+  (loaded from a 0600 env file via `set -a; . keys.env; set +a`) replaces the
+  config blob for automation; the existing `:?` guards enforce the required
+  set. Re-runs against a completed install offer to reuse the previous
+  configuration instead of reopening the configurator.
+- Hard validation: configuration cannot be submitted until required fields are
+  present (Firecrawl + OSINT Navigator keys; a provider key when the runtime
+  is opencode; install + vault paths, with the vault rejected if it equals or
+  nests inside the install dir).
+
+### Removed
+
+- The hosted setup form and client-side `SPOTLIGHT_CONFIG` generator
+  (base64 env blob carried through the clipboard and shell history), per-user
+  keyed installer ZIPs (`spotlight-setup.zip` / `spotlight-setup.command`),
+  and the multi-step macOS Gatekeeper "Open Anyway" walkthrough (the ZIP's
+  key-free bootstrap needs only a one-line right-click → Open note).
+
 ### Added
 
 - **Vault claims layer.** A fifth note type: standalone, cross-case-queryable

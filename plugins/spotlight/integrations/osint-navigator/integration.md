@@ -63,7 +63,7 @@ Complete endpoint catalog, response schemas, and per-endpoint examples live at:
 
 **`skills/osint/references/navigator-integration.md`**
 
-This integration's purpose is to make Navigator **discoverable** as a Spotlight integration (preflight, setup.html, skills/integrations/SKILL.md routing). The agent-facing how-to-use lives alongside the OSINT skill proper since Navigator is tightly coupled to OSINT methodology.
+This integration's purpose is to make Navigator **discoverable** as a Spotlight integration (preflight, the install configurator, skills/integrations/SKILL.md routing). The agent-facing how-to-use lives alongside the OSINT skill proper since Navigator is tightly coupled to OSINT methodology.
 
 ## Cycle integration
 

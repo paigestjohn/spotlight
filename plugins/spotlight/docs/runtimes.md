@@ -93,7 +93,7 @@ Merge into `~/.config/opencode/opencode.json` (preserves any other providers you
 }
 ```
 
-Start with: `opencode --model llama.cpp/qwen27` (or use the `setup.html`-generated launcher script).
+Start with: `opencode --model llama.cpp/qwen27` (or use the installer-generated launcher script).
 
 ### Local Ollama provider config
 
@@ -144,7 +144,7 @@ Enforce at the agent definition: strip `firecrawl` (and any external-fetch shell
 
 **What it is:** Minimal TypeScript coding harness by Mario Zechner (https://pi.dev). MIT license. Spotlight setup installs the reviewed `@mariozechner/pi-coding-agent@0.73.1` pin when Pi is selected. Natively supports `AGENTS.md` + `skills/*/SKILL.md`.
 
-**Status:** Local alternative. opencode (above) remains the recommended local Spotlight runtime because pi lacks native sub-agents (so investigator + fact-checker run single-context, weakening the verification independence guarantee). Spotlight's installer (`setup.html` → `install-spotlight.sh`) offers pi as an explicit second choice — picked it when you want a leaner install and accept the sub-agent trade-off.
+**Status:** Local alternative. opencode (above) remains the recommended local Spotlight runtime because pi lacks native sub-agents (so investigator + fact-checker run single-context, weakening the verification independence guarantee). Spotlight's installer (`install-spotlight.sh`, with the runtime picked in the local configurator) offers pi as an explicit second choice — picked it when you want a leaner install and accept the sub-agent trade-off.
 
 ### Loading this repo
 
@@ -455,7 +455,7 @@ Any OpenAI-compatible `/v1/chat/completions` endpoint can drive Spotlight as lon
 
 | Backing | URL | Use case |
 |---|---|---|
-| llama-server (llama.cpp) | `http://127.0.0.1:8080/v1` | Lean, Terminal-only — `brew install llama.cpp`. Default for setup.html's local mode. |
+| llama-server (llama.cpp) | `http://127.0.0.1:8080/v1` | Lean, Terminal-only — `brew install llama.cpp`. Default for the installer's local mode. |
 | Ollama | `http://127.0.0.1:11434/v1` | CLI-first model manager — `brew install ollama`, `ollama pull <repo>`. |
 | Exoscale Dedicated Inference | `https://exoscale-ci-…/v1` | Swiss-sovereign hosted inference |
 | vLLM | `http://localhost:8000/v1` | High-throughput self-hosted |

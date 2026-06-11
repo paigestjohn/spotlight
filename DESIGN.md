@@ -8,7 +8,7 @@ role: Canonical design system for Spotlight marketing + installer. Source of tru
 
 This document is **the** reference. If the code deviates from what's written here, fix the code. If a new pattern emerges, add it here first, then use it.
 
-Scope: `index.html` (landing) and `setup.html` (installer). Both pages share the same DA — most patterns apply to both; a few are landing-only and marked as such.
+Scope: `index.html` (landing) and `setup.html` (install landing page — the command + ZIP slab; the form moved to the local configurator, `install/configure.html`, which follows the same DA). Both pages share the same DA — most patterns apply to both; a few are landing-only and marked as such.
 
 ---
 
@@ -99,7 +99,7 @@ Two families. No third font.
 | **H3** | Card / offer heading | `clamp(28px, 3.8vw, 48px)` | 500 | 72 | `-0.015em` | `1.08` |
 | **H4** | Int-card name, credits entity | `clamp(22px, 2.4vw, 34px)` | 500 | 72 | `-0.02em` | `1.1` |
 | **PQ** | Pull quote (chapter-break) | `clamp(24px, 3.2vw, 42px)` italic | 400 | 72 | `0` | `1.25` |
-| **L1** | Attribution lede, generate-bar label | `clamp(22px, 2.6vw, 34px)` italic | 400 | 72 | `0` | `1.3` |
+| **L1** | Attribution lede | `clamp(22px, 2.6vw, 34px)` italic | 400 | 72 | `0` | `1.3` |
 
 **Italic accent rule**: inside a Fraunces display element, use `<em>` (or `<span class="accent">`) to emphasise 1–3 words with:
 ```css
@@ -107,7 +107,7 @@ font-style: italic;
 font-variation-settings: "opsz" <same>, "wght" 400;
 color: var(--accent-warm);
 ```
-Reserved slots: `.hero-title .accent`, `.attr-lede em`, `.chapter-break .pull em`, `.footer-huge em`, `.generate-bar .lbl em`. Nothing else gets italic terracotta.
+Reserved slots: `.hero-title .accent`, `.attr-lede em`, `.chapter-break .pull em`, `.footer-huge em`. Nothing else gets italic terracotta.
 
 ### UI tiers (Geist Mono)
 
@@ -703,7 +703,7 @@ Deviations observed on 2026-04-22 and their resolution status. 13/14 complete.
 4. **If you need a new token** (colour, font size, letter-spacing, spacing value), stop. Those are rare. Propose and justify before adding.
 5. **Always test** both landing and setup if the change touches shared components (nav, footer, buttons, inputs, typography).
 6. **Reduced motion** — if you add motion, extend the rule in §5 to collapse it.
-7. **Run** `bun tests/setup-generator-check.js` and `bash tests/smoke.sh` after any change to `setup.html`.
+7. **Run** `bash tests/install-spotlight-check.sh` (its landing-page section covers `setup.html`) and `bash tests/smoke.sh` after any change to `setup.html`; run `python3 tests/configurator-server-check.py` after any change to `install/configure.html`.
 
 ---
 

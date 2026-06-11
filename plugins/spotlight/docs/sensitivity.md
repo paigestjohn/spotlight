@@ -194,7 +194,7 @@ means a primitive that's available everywhere else for free.
 | All launchers (`spotlight-local`, `spotlight-claude`, etc.) | Export `SPOTLIGHT_RUNTIME` at session start. `local`, `claude`, `gemini`, `codex`, or `opencode`. |
 | `skills/ingest/SKILL.md` | Accept `--target sensitive`. When set: write to the sensitive vault path; add the result to the sensitive QMD index instead of the default; refuse to cross-link into the default vault. Refuse entirely if `SPOTLIGHT_SENSITIVE_ENABLED=0`. |
 | New: `~/.local/bin/qmd-spotlight` | Wrapper that queries the default index, optionally also the sensitive index. Env check at top refuses if `SPOTLIGHT_RUNTIME` is set to a frontier value. Installed by `install-spotlight.sh` only when the local runtime is selected. |
-| `install-spotlight.sh` | When local runtime + `SPOTLIGHT_SENSITIVE_ENABLED=1`: ensure the sensitive vault directory exists at the convention-derived path, install the wrapper on PATH, prompt only if the journalist wants to override the default path/index name. |
+| `install-spotlight.sh` | When local runtime + `SPOTLIGHT_SENSITIVE_ENABLED=1`: ensure the sensitive vault directory exists at the convention-derived path, install the wrapper on PATH; the local configurator would offer an override of the default path/index name. |
 | `docs/sensitivity.md` | This doc. |
 
 That's the whole change. Roughly 50–100 LOC across config, ingest

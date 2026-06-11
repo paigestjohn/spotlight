@@ -133,8 +133,24 @@ See [docs/integrations.md](docs/integrations.md) for setup and routing details.
 
 ## Install
 
-Open [setup.html](setup.html) in a browser. Choose a runtime, enter the keys you
-want to use, select optional integrations, and generate an installer.
+### Guided Install
+
+```bash
+curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash
+```
+
+One static, reviewable script ([`install-spotlight.sh`](install-spotlight.sh))
+for every install. It opens a local configurator page in the browser — served
+from `127.0.0.1` by `install/setup_server.py`. Runtime, API keys, optional
+integrations, and install/vault paths (with a native folder picker) are all
+collected there; keys are verified live with each provider and written to local
+files with owner-only permissions. **API keys never transit Buried Signals
+infrastructure and never exist in any downloadable artifact.** The hosted pages
+are static and contain no forms; the configurator accepts POSTs only on the
+loopback interface, guarded by a per-run token.
+
+Prefer a file? The hosted setup page offers `spotlight-install.zip`, whose
+key-free bootstrap fetches and runs the same canonical script.
 
 The installer:
 
@@ -144,15 +160,27 @@ The installer:
 - creates the active case workspace and knowledge-vault scaffold,
 - registers the vault for local search,
 - installs `spotlight`, `spotlight doctor`, and `spotlight update`,
-- runs preflight.
+- runs preflight and opens a personalized getting-started guide.
 
-Two install paths are generated:
+### Local Install
 
-- **Copy into Terminal**: paste the generated script into a terminal.
-- **Download installer**: extract the ZIP and run the `.command` file on macOS.
+Clone the repo and run the same installer from the working tree:
 
-The setup page runs locally in the browser. API keys in the form are used to
-generate local install artifacts; they are not submitted to a server.
+```sh
+git clone https://github.com/buriedsignals/spotlight.git
+bash spotlight/install-spotlight.sh
+```
+
+### Headless / CI Install
+
+`--headless` skips the configurator and reads pre-exported environment
+variables. Load keys from a `0600` env file — never inline `export KEY=...`
+commands, which would land the keys in shell history:
+
+```sh
+set -a; . keys.env; set +a   # keys.env is chmod 600
+curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash -s -- --headless
+```
 
 ## Runtimes
 

@@ -37,7 +37,7 @@ Spotlight calls out to third-party services when configured. Each has its own te
 
 ## Data you provide
 
-- API keys you enter in `setup.html` are written only to your local `.env` file (chmod 600). They never leave your machine.
+- API keys are entered on a configurator page served from `127.0.0.1` by the installer running on your own machine. They are validated directly with each provider and written to local files with owner-only permissions (chmod 600). They never touch buriedsignals.com — the hosted pages are static and contain no forms, and keys never exist in any downloadable artifact.
 - Investigation case files are stored locally in `cases/` (or wherever you set `cases_root`). Nothing is uploaded to Buried Signals.
 - Your vault stays on your machine. Buried Signals has no access to your findings.
 

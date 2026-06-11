@@ -643,13 +643,13 @@
         <p>Local runtimes are slower than cloud runtimes — the 9B does an investigation in ~15 min vs ~5 min on cloud; the 27B takes 45–90 min. They're the right choice when material can't leave the machine.</p>
 
         <h3>Hardware fit-check</h3>
-        <p>The <a href="../setup.html">install form</a> probes your hardware via <code>navigator.deviceMemory</code> + WebGPU and recommends a model: 9B Journalist for any 16 GB+ Mac (default), the 27B if RAM reports ≥ 32 GB. Below 16 GB the form pushes users to Frontier mode.</p>
+        <p>The local configurator the installer opens probes your hardware via <code>navigator.deviceMemory</code> + WebGPU and recommends a model: 9B Journalist for any 16 GB+ Mac (default), the 27B if RAM reports ≥ 32 GB. Below 16 GB it pushes users to Frontier mode.</p>
       </section>
 
       <!-- ── 05 Config ──────────────────────────────── -->
       <section id="config">
         <h2><span class="num">05 — Configuration</span>One install, a handful of env vars.</h2>
-        <p>The <a href="../setup.html">install form</a> generates a single Terminal one-liner that writes your config and runs the installer. Runtime config lives in <code>$SPOTLIGHT_DIR/.env</code>; you can edit it after install to reconfigure.</p>
+        <p>Install is <a href="../setup.html">one static command</a> — <code>curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash</code>. Configuration happens locally: the installer serves a configurator page from <code>127.0.0.1</code> that collects runtime, keys, and vault paths. Runtime config lives in <code>$SPOTLIGHT_DIR/.env</code>; you can edit it after install to reconfigure.</p>
 
         <h3>Required</h3>
 <pre><code>SPOTLIGHT_VAULT_PATH=~/Obsidian/main          # durable knowledge vault for search/ingest

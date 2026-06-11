@@ -21,7 +21,7 @@ Spotlight is designed for journalists, investigative workflows, and sensitive re
 ## 2. Public routes
 
 - Landing page: https://spotlight.buriedsignals.com/
-- Install flow: https://spotlight.buriedsignals.com/setup.html
+- Install landing page (one-command install): https://spotlight.buriedsignals.com/setup.html
 - README: https://spotlight.buriedsignals.com/README.md
 - Runtime contract: https://spotlight.buriedsignals.com/AGENTS.md
 - Docs index: https://spotlight.buriedsignals.com/docs/README.md
@@ -276,9 +276,18 @@ Primary docs:
 
 ## 15. Install and dependencies
 
-Public setup starts at:
+Public setup starts at the install landing page:
 
 - https://spotlight.buriedsignals.com/setup.html
+
+One static command installs Spotlight:
+
+- `curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash`
+
+Configuration (runtime, API keys, install + vault paths) happens in a local
+configurator the installer serves from 127.0.0.1 on the journalist's machine;
+keys are live-validated with each provider and never transit Buried Signals
+infrastructure.
 
 Required dependency documented in the README:
 

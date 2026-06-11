@@ -4,7 +4,7 @@
 
 ## Start here
 
-- [Install](https://spotlight.buriedsignals.com/setup.html): public setup flow for journalists
+- [Install](https://spotlight.buriedsignals.com/setup.html): install landing page — one command (`curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash`); configuration happens in a local configurator on the journalist's machine
 - [Landing page](https://spotlight.buriedsignals.com/): public product overview
 - [Documentation index](https://spotlight.buriedsignals.com/docs/README.md): operator manual and reading order
 - [Runtime contract](https://spotlight.buriedsignals.com/AGENTS.md): machine-readable verb registry, agent manifests, skill registry, and case structure

@@ -76,15 +76,12 @@ green=2  yellow=0  red=1
 The intended path from website → working install:
 
 1. **Landing page** on buriedsignals.com (separate work) links to the hosted setup page
-2. **`setup.html`** opens in the journalist's browser — runtime picker, integration checkboxes, API key inputs, vault config
-3. Journalist clicks **Generate installer**
-4. Two install options:
-   - **Option A — Copy into Terminal:** click "Copy script", open Terminal (⌘+Space → Terminal), paste (⌘+V), Enter
-   - **Option B — Download installer:** click "Download spotlight-setup.zip", extract, double-click the `.command` file
-5. Script installs: firecrawl CLI + QMD + chosen runtime + selected integrations + `.env` (chmod 600) + `.spotlight-config.json`; creates the active case workspace and separate knowledge-vault scaffold, registers the vault as the `spotlight` QMD collection, installs `spotlight doctor` / `spotlight update`, and runs preflight for sanity-check.
-6. Journalist opens a new terminal, runs `spotlight`, and starts investigating.
+2. **`setup.html`** is a static landing page — what to have ready, plus one install command: `curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash` (a `spotlight-install.zip` fallback contains only a key-free bootstrap that fetches and runs the same script)
+3. The installer opens a **local configurator** served from `127.0.0.1` — runtime picker, integration checkboxes, API key inputs (live-validated with each provider), install + vault paths with a native folder picker
+4. Script installs: firecrawl CLI + QMD + chosen runtime + selected integrations + `.env` (chmod 600) + `.spotlight-config.json`; creates the active case workspace and separate knowledge-vault scaffold, registers the vault as the `spotlight` QMD collection, installs `spotlight doctor` / `spotlight update`, and runs preflight for sanity-check.
+5. The install ends by opening a personalized getting-started guide. Journalist opens a new terminal, runs `spotlight`, and starts investigating.
 
-The script is identical for both options — only the delivery differs. Keys written into the user's `.env` never leave their machine.
+Keys are entered only on the local configurator page and written to local files with owner-only permissions — they never touch buriedsignals.com or any downloadable artifact.
 
 ## Adding a new integration
 
@@ -95,7 +92,7 @@ The script is identical for both options — only the delivery differs. Keys wri
 3. Write `integration.md` with: when to use, exact verb calls, output format, evidence handling, sensitive-mode behavior
 4. Add a row to the routing table in `skills/integrations/SKILL.md`
 
-Optionally expose the integration in `setup.html` by adding a checkbox + key input to the form. Preflight picks up the new integration automatically on its next run — no code changes needed.
+Optionally expose the integration in the local configurator by adding a checkbox + key input to `install/configure.html` (wired through `install/setup_server.py`). Preflight picks up the new integration automatically on its next run — no code changes needed.
 
 ## Agent-facing usage
 
@@ -132,4 +129,5 @@ The orchestrator marks sensitive-mode investigations at Gate 1 noting which inte
 | `integrations/<id>/manifest.json` | Per-integration contract |
 | `integrations/<id>/integration.md` | Per-integration agent-facing usage |
 | `skills/integrations/SKILL.md` | Agent-facing routing layer |
-| `setup.html` | Journalist-facing installer generator |
+| `setup.html` | Hosted install landing page (one-command installer) |
+| `install/configure.html` + `install/setup_server.py` | Local configurator the installer serves on `127.0.0.1` |
