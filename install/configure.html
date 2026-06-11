@@ -335,7 +335,7 @@
         <label><input type="radio" name="rlm_mode" value="lite" checked> Lite</label>
         <label><input type="radio" name="rlm_mode" value="local_gemma4_e4b"> Gemma4 E4B</label>
       </div>
-      <p class="hint">Gemma4 E4B mode downloads a small local model and runs a hybrid prefilter — stronger recall, zero decoy hits on the benchmark suite. Output stays local as <code>needs_verification</code> leads.</p>
+      <p class="hint">Gemma4 E4B mode downloads a small local model and runs a hybrid prefilter. On the synthetic context-rot benchmark it improved average recall from 0.75 to 1.0 and removed decoy hits from 4 to 0 — see <code>docs/rlm-benchmark-audit.md</code>. Output stays local as <code>needs_verification</code> leads.</p>
     </div>
   </div>
 

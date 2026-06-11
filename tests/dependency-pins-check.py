@@ -8,6 +8,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = (ROOT / "install-spotlight.sh").read_text()
 SETUP = (ROOT / "setup.html").read_text()
+CONFIGURE = (ROOT / "install" / "configure.html").read_text()
 MANIFEST_PATH = ROOT / "VALIDATED_DEPENDENCIES.md"
 MANIFEST = MANIFEST_PATH.read_text()
 
@@ -62,10 +63,15 @@ for package, version in EXPECTED.items():
     if f"`{package}`" not in MANIFEST or f"`{version}`" not in MANIFEST:
         fail(f"{MANIFEST_PATH.name} missing {package}@{version}")
 
-if "VALIDATED_DEPENDENCIES.md" not in SETUP:
-    fail("setup.html does not mention VALIDATED_DEPENDENCIES.md")
-if "does not install npm/PyPI <code>latest</code>" not in SETUP:
-    fail("setup.html does not tell users the installer avoids latest installs")
+# The installer is the single pin authority. setup.html is a static landing
+# page and install/configure.html is the local configurator — neither
+# documents (or could drift from) the reviewed versions.
+PIN_PATTERN = re.compile(r"@\d+\.\d+\.\d+|==\d+\.\d+")
+for page_name, page in [("setup.html", SETUP), ("install/configure.html", CONFIGURE)]:
+    match = PIN_PATTERN.search(page)
+    if match:
+        fail(f"{page_name} carries a version pin string ({match.group(0)}); pins live in install-spotlight.sh only")
+
 if "releases/latest" in INSTALLER or "Downloading Tolaria latest release" in INSTALLER:
     fail("installer still downloads a moving Tolaria latest release")
 if "The installer downloads Tolaria" in SETUP or "downloads Tolaria on macOS" in SETUP:

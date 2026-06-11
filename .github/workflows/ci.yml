@@ -32,5 +32,48 @@ jobs:
       - name: Run eval (contract compliance + sample data)
         run: bash tests/eval.sh
 
-      - name: Generated script syntax (all 6 runtime configs)
-        run: node tests/setup-generator-check.js
+      - name: Configurator server contract
+        run: python3 tests/configurator-server-check.py
+
+      - name: Installer + landing-page fragments
+        run: bash tests/install-spotlight-check.sh
+
+      - name: HTML pages parse (setup.html + install/configure.html)
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+
+          VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input",
+                  "link", "meta", "param", "source", "track", "wbr"}
+
+          class BalanceParser(HTMLParser):
+              def __init__(self):
+                  super().__init__(convert_charrefs=True)
+                  self.stack = []
+                  self.problems = []
+
+              def handle_starttag(self, tag, attrs):
+                  if tag not in VOID:
+                      self.stack.append(tag)
+
+              def handle_endtag(self, tag):
+                  if tag in VOID:
+                      return
+                  if tag in self.stack:
+                      del self.stack[len(self.stack) - 1 - self.stack[::-1].index(tag):]
+                  else:
+                      self.problems.append(f"unmatched </{tag}> at line {self.getpos()[0]}")
+
+          failed = False
+          for page in ["setup.html", "install/configure.html"]:
+              parser = BalanceParser()
+              with open(page, encoding="utf-8") as fh:
+                  parser.feed(fh.read())
+              parser.close()
+              if parser.problems or parser.stack:
+                  failed = True
+                  print(f"FAIL {page}: problems={parser.problems} left-open={parser.stack}")
+              else:
+                  print(f"{page} parses with balanced tags")
+          raise SystemExit(1 if failed else 0)
+          PY

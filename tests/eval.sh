@@ -4,7 +4,7 @@
 # Goes beyond smoke.sh's structural checks: validates that agent + skill
 # frontmatter is well-formed, allowed_verbs reference real verbs from
 # AGENTS.md, sample case files validate against their schemas, and the
-# RUNTIMES table in setup.html is consistent with the HTML/UI.
+# runtime/provider choices in install/configure.html are consistent.
 #
 # Exit 0 on pass, 1 if any check fails.
 
@@ -115,24 +115,30 @@ validate(instance=json.load(open('$sample')), schema=json.load(open('$schema')))
 fi
 
 echo ""
-echo "── RUNTIMES consistency (setup.html) ──"
+echo "── Runtime consistency (install/configure.html) ──"
 
-# Extract RUNTIMES keys from setup.html, radio values, and cloud-usage-* IDs.
-# All three sets must match (minus 'local' which is a separate mode, not a cloud-runtime radio).
-runtimes_keys=$(grep -E "^    (local|claude|codex|gemini|opencode|[a-z]+): \{$" setup.html | sed 's/^    //' | sed 's/: {$//' | sort -u)
-radio_values=$(grep -oE 'name="cloud_runtime" value="[^"]+"' setup.html | sed 's/.*value="\([^"]*\)".*/\1/' | sort -u)
-usage_ids=$(grep -oE 'id="cloud-usage-[a-z]+"' setup.html | sed 's/.*cloud-usage-\([a-z]*\)".*/\1/' | sort -u)
+# The configurator's radio sets are the runtime/provider contract the
+# installer's case branches consume. Both sets must match the supported lists.
+radio_values=$(grep -oE 'name="cloud_runtime" value="[^"]+"' install/configure.html | sed 's/.*value="\([^"]*\)".*/\1/' | sort -u | tr '\n' ' ' | sed 's/ $//')
+expected_runtimes="claude codex gemini opencode"
 
-# RUNTIMES minus 'local' should equal the radio_values set
-runtimes_cloud=$(echo "$runtimes_keys" | grep -v '^local$' | sort -u)
-
-if [ "$runtimes_cloud" = "$radio_values" ] && [ "$radio_values" = "$usage_ids" ]; then
-  ok "RUNTIMES keys, radio values, and cloud-usage-* IDs all match"
+if [ "$radio_values" = "$expected_runtimes" ]; then
+  ok "cloud_runtime radios cover claude/codex/gemini/opencode"
 else
-  fail "drift between RUNTIMES / radios / usage-card IDs"
-  printf "%s  RUNTIMES (cloud): %s%s\n" "$_c_dim" "$(echo $runtimes_cloud | tr '\n' ' ')" "$_c_reset"
-  printf "%s  radios:           %s%s\n" "$_c_dim" "$(echo $radio_values | tr '\n' ' ')" "$_c_reset"
-  printf "%s  usage IDs:        %s%s\n" "$_c_dim" "$(echo $usage_ids | tr '\n' ' ')" "$_c_reset"
+  fail "cloud_runtime radio drift in install/configure.html"
+  printf "%s  radios:   %s%s\n" "$_c_dim" "$radio_values" "$_c_reset"
+  printf "%s  expected: %s%s\n" "$_c_dim" "$expected_runtimes" "$_c_reset"
+fi
+
+provider_values=$(grep -oE 'name="opencode_provider" value="[^"]+"' install/configure.html | sed 's/.*value="\([^"]*\)".*/\1/' | sort -u | tr '\n' ' ' | sed 's/ $//')
+expected_providers="fireworks openrouter together"
+
+if [ "$provider_values" = "$expected_providers" ]; then
+  ok "opencode_provider radios cover openrouter/fireworks/together"
+else
+  fail "opencode_provider radio drift in install/configure.html"
+  printf "%s  radios:   %s%s\n" "$_c_dim" "$provider_values" "$_c_reset"
+  printf "%s  expected: %s%s\n" "$_c_dim" "$expected_providers" "$_c_reset"
 fi
 
 echo ""

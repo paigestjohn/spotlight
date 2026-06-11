@@ -16,6 +16,9 @@
 #  12. index.html exists
 #  13. DISCLAIMER.md + LICENSE present
 #  14. Setup dependency pins are enforced
+#  15. Configurator server contract holds
+#  16. Installer + landing-page fragment checks pass
+#  17. Installer dry-run matrix passes (4 combos + contract checks)
 #
 # Exit 0 on pass, 1 if any check fails.
 
@@ -183,6 +186,32 @@ if [ $rc -eq 0 ]; then
   ok "plugin distribution payload valid"
 else
   fail "plugin distribution payload drifted"
+fi
+
+echo ""
+echo "── Installer ──"
+python3 tests/configurator-server-check.py >/dev/null 2>&1
+rc=$?
+if [ $rc -eq 0 ]; then
+  ok "configurator server contract holds"
+else
+  fail "configurator server check failed with rc=$rc"
+fi
+
+bash tests/install-spotlight-check.sh >/dev/null 2>&1
+rc=$?
+if [ $rc -eq 0 ]; then
+  ok "installer + landing-page fragments hold"
+else
+  fail "installer fragment check failed with rc=$rc"
+fi
+
+bash tests/install-spotlight-smoke.sh >/dev/null 2>&1
+rc=$?
+if [ $rc -eq 0 ]; then
+  ok "installer dry-run matrix passes"
+else
+  fail "installer dry-run matrix failed with rc=$rc"
 fi
 
 echo ""

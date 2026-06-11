@@ -41,11 +41,11 @@ def main() -> int:
         if phrase not in skill:
             fail(f"spotlight skill missing RLM methodology instruction: {phrase}")
 
-    setup = (ROOT / "setup.html").read_text(encoding="utf-8")
-    if "docs/rlm-benchmark-audit.md" not in setup:
-        fail("setup page does not reference RLM benchmark audit")
-    if "removed decoy hits from 4 to 0" not in setup:
-        fail("setup page missing concrete RLM benchmark improvement")
+    configure = (ROOT / "install" / "configure.html").read_text(encoding="utf-8")
+    if "docs/rlm-benchmark-audit.md" not in configure:
+        fail("configurator page does not reference RLM benchmark audit")
+    if "removed decoy hits from 4 to 0" not in configure:
+        fail("configurator page missing concrete RLM benchmark improvement")
 
     audit = (ROOT / "docs" / "rlm-benchmark-audit.md").read_text(encoding="utf-8")
     for phrase in [

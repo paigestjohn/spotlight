@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
-# Smoke test: run install-spotlight.sh --dry-run against four fixture configs
-# covering the cartesian product the installer must support. Assertions
-# check that each combo prints the right key install actions without
-# touching the filesystem or running brew/npm/curl.
+# Smoke test: run install-spotlight.sh --headless --dry-run against four
+# fixture configs covering the cartesian product the installer must support.
+# Assertions check that each combo prints the right key install actions
+# without touching the filesystem or running brew/npm/curl.
+#
+# The headless path reads pre-exported env vars directly (the retired
+# SPOTLIGHT_CONFIG base64 blob is a contract-checked hard error below), so
+# each combo is passed as KEY=VAL pairs through env(1). SPOTLIGHT_DIR is
+# pinned to a sandbox dir because the installer cd's there even in dry-run,
+# and because expand_path's ${input#~/} does not strip ~/ on bash 3.2
+# (pre-existing body behavior, deliberately characterized, not fixed).
 #
 # Usage: bash tests/install-spotlight-smoke.sh
 
@@ -12,27 +19,28 @@ cd "$(dirname "$0")/.."
 INSTALLER="$(pwd)/install-spotlight.sh"
 [ -f "$INSTALLER" ] || { echo "install-spotlight.sh not found at $INSTALLER" >&2; exit 1; }
 
+SANDBOX="$(mktemp -d -t spotlight-install-smoke.XXXXXX)"
+trap 'rm -rf "$SANDBOX"' EXIT
+SANDBOX_DIR="$SANDBOX/spotlight-test"
+mkdir -p "$SANDBOX_DIR"
+
 PASS=0
 FAIL=0
 
-mkb64() {
-  # Args: KEY=VAL ... ; emits base64 of `export K='V'` lines.
-  python3 -c "
-import base64, sys, shlex
-fields = sys.argv[1:]
-out = []
-for f in fields:
-    k, _, v = f.partition('=')
-    out.append(f\"export {k}={shlex.quote(v)}\")
-print(base64.b64encode('\n'.join(out).encode('utf-8')).decode('ascii'))
-" "$@"
-}
+# Every combo must print the headless notice and open the configurator's
+# getting-started guide (dry-run prints the action instead).
+COMMON_ASSERTIONS=(
+  "→ Headless install: reading configuration from pre-exported environment variables."
+  "DRY-RUN: open $HOME/.config/spotlight/getting-started.html"
+)
 
 check_combo() {
   local label="$1"; shift
-  local b64; b64=$(mkb64 "$@")
   local out
-  if ! out=$(SPOTLIGHT_CONFIG="$b64" bash "$INSTALLER" --dry-run 2>&1); then
+  if ! out=$(env -u SPOTLIGHT_INGEST_TARGET -u SPOTLIGHT_SOVEREIGNTY_INHERITS_MYCROFT \
+                 -u SPOTLIGHT_VAULT_PATH -u OSINT_NAV_API_KEY \
+                 SPOTLIGHT_DIR="$SANDBOX_DIR" "$@" \
+                 bash "$INSTALLER" --headless --dry-run 2>&1); then
     echo "✗ $label  installer exited non-zero"
     echo "$out" | tail -10 | sed 's/^/    /'
     FAIL=$((FAIL + 1))
@@ -40,7 +48,7 @@ check_combo() {
   fi
   # Run the per-combo assertions passed via global ASSERTIONS array.
   local missing=()
-  for needle in "${ASSERTIONS[@]}"; do
+  for needle in "${COMMON_ASSERTIONS[@]}" "${ASSERTIONS[@]}"; do
     if ! printf '%s' "$out" | grep -qF "$needle"; then
       missing+=("$needle")
     fi
@@ -50,12 +58,12 @@ check_combo() {
     for m in "${missing[@]}"; do echo "    - $m"; done
     FAIL=$((FAIL + 1))
   else
-    echo "✓ $label  ${#ASSERTIONS[@]} assertions matched"
+    echo "✓ $label  $(( ${#ASSERTIONS[@]} + ${#COMMON_ASSERTIONS[@]} )) assertions matched"
     PASS=$((PASS + 1))
   fi
 }
 
-# Common base config — every combo needs these keys.
+# Common base config — every combo needs these vars.
 BASE=(
   SPOTLIGHT_DIR_INPUT='~/Code/spotlight-test'
   SPOTLIGHT_VAULT_INPUT='~/Vaults/spotlight-test'
@@ -127,13 +135,34 @@ check_combo "local/llamacpp/pi" "${BASE[@]}" \
   SPOTLIGHT_AGENT=pi SPOTLIGHT_OPENCODE_INTERFACE=cli \
   SPOTLIGHT_MODEL_REPO='tomvaillant/qwen3.5-9b-abliterated-journalist-GGUF'
 
-# --- Bonus: missing-config rejection ---
-if SPOTLIGHT_CONFIG="" bash "$INSTALLER" --dry-run 2>/dev/null; then
-  echo "✗ empty-config rejection  installer should fail when SPOTLIGHT_CONFIG unset"
-  FAIL=$((FAIL + 1))
-else
-  echo "✓ empty-config rejection  installer rejects missing SPOTLIGHT_CONFIG"
+# --- Contract: retired SPOTLIGHT_CONFIG channel fails loud ---
+out=$(SPOTLIGHT_CONFIG=x bash "$INSTALLER" --dry-run 2>&1) && rc=0 || rc=$?
+if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -qF "no longer accepts SPOTLIGHT_CONFIG"; then
+  echo "✓ SPOTLIGHT_CONFIG retirement  exit 1 + retirement message"
   PASS=$((PASS + 1))
+else
+  echo "✗ SPOTLIGHT_CONFIG retirement  expected exit 1 + retirement message (rc=$rc)"
+  echo "$out" | tail -5 | sed 's/^/    /'
+  FAIL=$((FAIL + 1))
+fi
+
+# --- Contract: headless run without FIRECRAWL_API_KEY hits the :? guard ---
+NOKEY=()
+for kv in "${BASE[@]}"; do
+  case "$kv" in FIRECRAWL_API_KEY=*) ;; *) NOKEY+=("$kv") ;; esac
+done
+out=$(env -u SPOTLIGHT_INGEST_TARGET -u SPOTLIGHT_SOVEREIGNTY_INHERITS_MYCROFT \
+          -u SPOTLIGHT_VAULT_PATH -u OSINT_NAV_API_KEY -u FIRECRAWL_API_KEY \
+          SPOTLIGHT_DIR="$SANDBOX_DIR" "${NOKEY[@]}" \
+          SPOTLIGHT_MODE=cloud SPOTLIGHT_RUNTIME=claude \
+          bash "$INSTALLER" --headless --dry-run 2>&1) && rc=0 || rc=$?
+if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -qF "FIRECRAWL_API_KEY"; then
+  echo "✓ headless missing-key guard  :? failure names FIRECRAWL_API_KEY"
+  PASS=$((PASS + 1))
+else
+  echo "✗ headless missing-key guard  expected non-zero exit naming FIRECRAWL_API_KEY (rc=$rc)"
+  echo "$out" | tail -5 | sed 's/^/    /'
+  FAIL=$((FAIL + 1))
 fi
 
 echo ""
