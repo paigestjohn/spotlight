@@ -10,6 +10,23 @@ All notable changes to Spotlight. Format follows [Keep a Changelog](https://keep
 > `cases/{project}/data/findings.json`, `fact-check.json`, or
 > `provenance-manifest.json`. The classroom profile flag is also removed.
 
+### Added — interactive diagrams in report-drafting (default)
+
+- `report.html` now carries interactive mermaid diagrams by default whenever the
+  case has relational structure (entity networks, money flows, funnels): zoomable/
+  draggable canvas, crisp vector zoom 0.25×–10×, hyperlinked nodes (hover glow + ↗)
+  pointing at primary sources, role-color legends, evidence-labeled edges.
+- New `skills/report-drafting/references/interactive-diagrams.md` — complete
+  copy-paste recipe (mermaid 11 + ELK via CDN) including three non-obvious fixes
+  battle-tested in the health-insider investigation: `document.fonts.ready`-deferred
+  rendering (label measurement vs webfont race), `foreignObject` overflow (label
+  clipping), `useMaxWidth: false` + CSS `zoom` (pixelation at high zoom). Plus the
+  per-diagram dagre frontmatter override for cyclic flows, authoring rules
+  (≤14 nodes, totals in cluster titles), and a mandatory headless smoke test.
+- `report-drafting` SKILL.md: new "Interactive diagrams" section, workflow step 6,
+  smoke-test step extended with the headless diagram checks. Node hyperlinks obey
+  the existing citation discipline (ground-truth files only).
+
 ### Changed — installation architecture (supersedes the browser-generated config blob)
 
 - **One static installer**: `curl -fsSL https://spotlight.buriedsignals.com/install-spotlight.sh | bash`.

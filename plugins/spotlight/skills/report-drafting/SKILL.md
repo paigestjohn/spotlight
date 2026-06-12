@@ -1,6 +1,6 @@
 ---
 name: report-drafting
-description: "Phase 5 synthesis sub-skill for data-detective — draft the journalist-grade deliverables editors actually read: findings-report.md (audit narrative), report.html (public-facing artifact), evidence-map.json (machine-readable ledger). Ships with a working report-template.html skeleton (CSS variables, pill classes, .path/.sources/.flag/.timeline/.phase patterns) and the design discipline that produces it: per-finding replication-path block, per-finding sources strip, novelty + confidence pills, phase-by-phase methodology absorbing the fact-check verdict table inside Phase 3 and the spotlight-handoff table inside Phase 6, and HTML editing protocol that never greedy-regexes the live file. Use at Phase 5 after Gate 1, before Phase 6 spotlight-handoff. Triggers on draft the report, build the HTML report, journalist-grade output, synthesis phase, findings report, or evidence map."
+description: "Phase 5 synthesis sub-skill for data-detective — draft the journalist-grade deliverables editors actually read: findings-report.md (audit narrative), report.html (public-facing artifact), evidence-map.json (machine-readable ledger). Ships with a working report-template.html skeleton (CSS variables, pill classes, .path/.sources/.flag/.timeline/.phase patterns), interactive mermaid diagrams by default (zoomable/draggable canvas, hyperlinked nodes, no font cropping — see references/interactive-diagrams.md), and the design discipline that produces it: per-finding replication-path block, per-finding sources strip, novelty + confidence pills, phase-by-phase methodology absorbing the fact-check verdict table inside Phase 3 and the spotlight-handoff table inside Phase 6, and HTML editing protocol that never greedy-regexes the live file. Use at Phase 5 after Gate 1, before Phase 6 spotlight-handoff. Triggers on draft the report, build the HTML report, journalist-grade output, synthesis phase, findings report, evidence map, network diagram, or money-flow diagram."
 license: MIT
 metadata:
   type: orchestration-subskill
@@ -93,6 +93,22 @@ CSS variables already in the template (`--ink`, `--paper`, `--rule`, `--bg-soft`
 - `.pill-id` (mono, light) — finding ID badge.
 
 **TL;DR table** at the top: one row per finding, `<a href="#c-NNN">` linked, with novelty + confidence pills inline.
+
+---
+
+## Interactive diagrams (default, not optional garnish)
+
+When the case involves an **entity network, money flow, funnel, or pipeline** — ≥3 actors with directed relationships — the report carries one or more interactive mermaid diagrams. This is a DEFAULT: skip it only when the case genuinely has no relational structure, and say so in the run log.
+
+Read `references/interactive-diagrams.md` and follow it exactly. It is the complete recipe — mermaid 11 + ELK from CDN, pan/zoom/fullscreen canvas, hyperlinked nodes with hover affordance — including three non-obvious fixes (fonts.ready-deferred rendering, foreignObject overflow, `useMaxWidth: false` + CSS `zoom` for crisp high-resolution scaling) that were each learned against a real rendering failure. Do not improvise a "simpler" version; the simple version clips labels and pixelates.
+
+Summary of the discipline (details in the reference):
+- ≤14 nodes per diagram; split by question (attribution diagram ≠ money-flow diagram)
+- Edges carry evidence figures (`==>|"named payer — 99/100 ads"|`), never bare arrows
+- Every node with a primary source gets a `click` hyperlink — node URLs obey the same citation discipline as prose (ground-truth files only)
+- Cluster titles carry totals; role colors get a legend
+- Cyclic flows that must start at a specific node use the per-diagram dagre frontmatter override
+- The headless smoke test in the reference is mandatory before declaring the diagram done
 
 ---
 
@@ -199,15 +215,18 @@ This is what makes the case-trace defensible to an editor: not "we never made mi
    a. One .phase block per executed phase (P0..P7).
    b. INSIDE Phase 3: adversarial fact-check verdict table.
    c. INSIDE Phase 6: spotlight-handoff outcomes table.
-6. Fill "Open monitoring targets" section from findings.json's unresolved-gaps list.
-7. Fill footer: conflicts of interest, database attributions.
-8. Write findings-report.md in parallel (narrative form, no styling, every claim sourced from the same allowed-set manifest as the HTML).
-9. Write evidence-map.json (audit ledger, see data-detective/references/evidence-map-format.md).
-10. RUN THE CITATION CLOSURE SCRIPT (see Citation Discipline section above). Every UUID and external URL in the three drafted files must trace to a ground-truth file. Fix orphans before proceeding.
-11. Validate HTML tags balance via:
+6. If the case has relational structure (default assumption — networks, money flows, funnels):
+   build the interactive diagram section(s) per references/interactive-diagrams.md —
+   CDN scripts + canvas CSS + per-diagram markup, node hyperlinks from the citation manifest only.
+7. Fill "Open monitoring targets" section from findings.json's unresolved-gaps list.
+8. Fill footer: conflicts of interest, database attributions.
+9. Write findings-report.md in parallel (narrative form, no styling, every claim sourced from the same allowed-set manifest as the HTML).
+10. Write evidence-map.json (audit ledger, see data-detective/references/evidence-map-format.md).
+11. RUN THE CITATION CLOSURE SCRIPT (see Citation Discipline section above). Every UUID and external URL in the three drafted files must trace to a ground-truth file. Fix orphans before proceeding.
+12. Validate HTML tags balance via:
      python3 -c "from html.parser import HTMLParser; ..." 
-12. Open report.html in browser; visual smoke test.
-13. Append synthesis_complete + draft_paths + citation_closure_passed to investigation-log.json.
+13. Smoke test: open report.html in browser AND run the headless checks from references/interactive-diagrams.md (zero mermaid error elements, expected svg count, screenshot inspected for clipped labels).
+14. Append synthesis_complete + draft_paths + citation_closure_passed to investigation-log.json.
 ```
 
 ---
@@ -250,3 +269,5 @@ This is what makes the case-trace defensible to an editor: not "we never made mi
 - HTML comments marking the agent customization points
 
 Copy it, fill it, ship it.
+
+For interactive diagram sections (default when the case has relational structure), the canvas markup, CSS, scripts, and authoring rules live in `references/interactive-diagrams.md` — paste from there, not from memory.
