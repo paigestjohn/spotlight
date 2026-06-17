@@ -10,6 +10,23 @@ All notable changes to Spotlight. Format follows [Keep a Changelog](https://keep
 > `cases/{project}/data/findings.json`, `fact-check.json`, or
 > `provenance-manifest.json`. The classroom profile flag is also removed.
 
+### Added — first-party snapshot tier in web-archiving (Tier 0, default)
+
+- `skills/web-archiving` now captures a first-party **MHTML archive + full-page
+  screenshot + response headers** by default, content-addressed by SHA-256, via the
+  local `dev-browser` CLI (real Chrome over CDP `Page.captureSnapshot`). Wayback and
+  Archive.today remain as third-party complements (Tier 1/2). Borrows OpenSanctions
+  Pravda's evidence-layer ideas without its Docker/Postgres/FastAPI stack.
+- New `skills/web-archiving/references/snapshot-record.md` (content-addressed record
+  schema + `evidence_item` mapping) and `references/capture-dev-browser.md` (capture recipe).
+- Tier-0 snapshots are recorded as `evidence-bundle.json` items, and
+  `scripts/build-provenance-manifest.py` now hashes the files referenced by
+  `raw_path`/`screenshot_path`, so the MHTML + screenshot bytes are tamper-evident inside
+  the C2PA-signed manifest.
+- Guards: sensitive-mode skips live capture; access-wall detection flags login/paywall
+  pages as `human_verification_required` rather than storing them as content evidence.
+- Mycroft consumes this skill via the engine cross-over (no separate copy).
+
 ### Added — interactive diagrams in report-drafting (default)
 
 - `report.html` now carries interactive mermaid diagrams by default whenever the
