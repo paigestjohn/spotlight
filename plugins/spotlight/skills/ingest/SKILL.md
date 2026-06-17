@@ -152,7 +152,9 @@ If the vault is empty (registries do not exist), initialize each with the empty 
 ```yaml
 ---
 id: {project-id}
+type: investigation
 title: {from summary.json title, or derive from findings}
+description: {one sentence, ~150 chars, summarizing the investigation — retrieval hint}
 status: confirmed
 date: {today YYYY-MM-DD}
 regions: [{from findings}]
@@ -175,9 +177,9 @@ total_findings: {total findings count}
    - **Evidence** — supporting evidence (verbatim quote)
    - **Sources** — with URLs and access timestamps
    - **Perspective** — whose perspective this represents
-3. **Connections** — wikilinked entities: `[[entity-id]]` for each entity involved.
+3. **Connections** — linked entities: `[entity-id](../entities/entity-id.md)` for each entity involved.
 4. **Gaps** — unresolved questions, noted limitations.
-5. **Methodology Applied** — techniques and tools used, wikilinked: `[[technique-id]]`, `[[tool-id]]`.
+5. **Methodology Applied** — techniques and tools used, linked: `[technique-id](../methodology/technique-id.md)`, `[tool-id](../tools/tool-id.md)`.
 
 ### Step 3 — Create or Update Entity Notes
 
@@ -200,7 +202,7 @@ Generate kebab-case ID from entity name.
 **If entity exists** in `{vault}/entities/_registry.json` (match on `id`):
 
 - `read-file("{vault}/entities/{entity-id}.md")`
-- Add a row to the "Role in Investigations" table: `| [[{project-id}]] | {role description} | {date} |`
+- Add a row to the "Role in Investigations" table: `| [{project-id}](../investigations/{project-id}.md) | {role description} | {date} |`
 - Add `{project-id}` to frontmatter `investigations` array (if not already present)
 - `write-file` the updated note
 
@@ -214,6 +216,7 @@ Normalize the new entity's name and aliases (lowercase, trim, collapse whitespac
 ---
 id: {entity-id}
 type: {inferred type}
+description: {one sentence on who/what this entity is — retrieval hint}
 subtype: {if determinable, else omit}
 aliases: [{alternate names found in findings}]
 country: {if determinable}
@@ -223,7 +226,7 @@ first_seen: {today YYYY-MM-DD}
 ---
 ```
 
-Body: Description, Role in Investigations table (one row for this project), Key Relationships (wikilinks to other entities from same investigation).
+Body: Description, Role in Investigations table (one row for this project), Key Relationships (relative markdown links to other entities from same investigation).
 
 ### Step 4 — Create or Update Methodology Notes
 
@@ -234,7 +237,7 @@ Extract techniques from `investigation-log.json`:
 **If technique exists** in `{vault}/methodology/_registry.json`:
 
 - `read-file` the existing note
-- Add a row to "Usage History" table: `| [[{project-id}]] | {context} | {date} |`
+- Add a row to "Usage History" table: `| [{project-id}](../investigations/{project-id}.md) | {context} | {date} |`
 - Add lessons from `cycles[].methodology.failed_approaches` to "Lessons Learned" section
 - Add `{project-id}` to frontmatter `investigations` array
 - `write-file` the updated note
@@ -247,6 +250,7 @@ Extract techniques from `investigation-log.json`:
 ---
 id: {technique-id}
 type: technique
+description: {one sentence, ~150 chars, on what this technique does — retrieval hint}
 category: {infer from technique name}
 tools: [{tool IDs used with this technique}]
 investigations: [{project-id}]
@@ -278,6 +282,7 @@ Extract tools from `investigation-log.json`:
 ---
 id: {tool-id}
 type: tool
+description: {one sentence, ~150 chars, on what this tool does — retrieval hint}
 category: {infer from tool name}
 url: {if known}
 access: {if known, else omit}
@@ -308,7 +313,7 @@ For each finding in `findings.json`, join its matching fact-check entry from `fa
 - `layer: durable` when verdict is `verified`; `layer: lead` + `needs_verification: true` when `partially_verified`
 - `recorded` = today; `verified` = fact-check date; `verified_by` = this project
 - `entities` = entity IDs from Step 3 that this finding references
-- Body: Claim (verbatim), Evidence Summary, Sources (with access dates), Supersession History (empty table), Connections (wikilinks to entities and `[[{project-id}]]`)
+- Body: Claim (verbatim), Evidence Summary, Sources (with access dates), Supersession History (empty table), Connections (relative markdown links to entities and `[{project-id}](../investigations/{project-id}.md)`)
 
 **If the claim already exists** (re-ingest of the same project, or a later project re-verifying the same claim):
 
@@ -330,32 +335,32 @@ This is mandatory. Update every registry affected by the ingestion.
 
 See `references/registry-spec.md` for exact schemas.
 
-### Step 8 — Update _INDEX.md
+### Step 8 — Update index.md
 
-`write-file("{vault}/_INDEX.md", ...)` using the template from `references/registry-spec.md`.
+`write-file("{vault}/index.md", ...)` using the template from `references/registry-spec.md`.
 
 - Stats from master registry
 - Recent Investigations table from investigations registry (sorted by date, newest first)
 - Browse links
 
-For Obsidian and Tolaria vaults: use wikilinks in the investigations table (`[[project-id]]`).
-For directory fallback: use relative links (`[project-id](investigations/project-id.md)`).
+Use relative markdown links in the investigations table (`[project-id](investigations/project-id.md)`).
 
 After Step 8 completes, remove the `.ingest-lock`. Include the claim exclusion log from Step 6 in the ingest summary reported to the user: claims written, claims updated, and each excluded finding with its reason.
 
 ---
 
-## Directory Fallback
+## Cross-Links
 
-When `vault_type` is `"directory"` (no `.obsidian/` detected):
+All cross-references use **relative markdown links**, regardless of vault type. Obsidian
+resolves these into its graph and backlinks exactly like `[[wikilinks]]` (verified), and
+they stay portable to non-Obsidian consumers:
 
-- Same directory structure, same frontmatter, same body sections.
-- Replace all wikilinks `[[entity-id]]` with relative markdown links `[entity-id](../entities/entity-id.md)`.
-- Replace all wikilinks `[[project-id]]` with `[project-id](../investigations/project-id.md)`.
-- Replace all wikilinks `[[technique-id]]` with `[technique-id](../methodology/technique-id.md)`.
-- Replace all wikilinks `[[tool-id]]` with `[tool-id](../tools/tool-id.md)`.
-- Replace all wikilinks `[[claim-id]]` with `[claim-id](../claims/claim-id.md)`.
-- `_INDEX.md` browse section uses relative links too.
+- Entities: `[entity-id](../entities/entity-id.md)`
+- Investigations: `[project-id](../investigations/project-id.md)`
+- Methodology: `[technique-id](../methodology/technique-id.md)`
+- Tools: `[tool-id](../tools/tool-id.md)`
+- Claims: `[claim-id](../claims/claim-id.md)`
+- `index.md` browse section uses relative links from the vault root (`[project-id](investigations/project-id.md)`).
 
 Frontmatter and registry JSON are identical regardless of vault type.
 
@@ -367,7 +372,7 @@ Frontmatter and registry JSON are identical regardless of vault type.
 2. **No duplicates.** Check registries before creating. Match on `id`. If it exists, update it.
 3. **Tips are curated.** Read existing tips before adding new ones. Only add genuinely novel insights — not rephrased duplicates.
 4. **Frontmatter is the contract.** Every note must have complete frontmatter per `references/entity-model.md`. Agents rely on it programmatically. Never omit or rename fields.
-5. **Wikilinks create the graph.** Use `[[entity-id]]` format in Obsidian and Tolaria vaults for all cross-references.
+5. **Relative markdown links create the graph.** Use `[entity-id](../entities/entity-id.md)` form for all cross-references — Obsidian resolves these into its graph and backlinks, and they stay portable to other consumers.
 6. **IDs are kebab-case.** Lowercase, hyphens, no spaces. Examples: `swiss-leaks`, `john-doe`, `reverse-image-search`.
 7. **Only confirmed knowledge enters.** No speculative findings, no in-progress research. Low-confidence claims must be explicitly flagged with `> **LOW CONFIDENCE** — {reason}` if included at all.
 8. **The claims layer admits verified intelligence only.** Verdict `verified` or `partially_verified`, grounding cap above `low`, sources present, non-RLM origin. Every exclusion is logged with its reason in the ingest summary.
@@ -380,7 +385,7 @@ Frontmatter and registry JSON are identical regardless of vault type.
 
 For runtimes that provide a native `vault-write(vault_path, note_path, content)` verb, prefer it over raw `write-file`. The `vault-write` verb should handle:
 
-- Vault-specific formatting (wikilinks, frontmatter validation)
+- Vault-specific formatting (relative markdown links, frontmatter validation)
 - Registry update atomicity
 - `.ingest-lock` coordination
 
@@ -419,5 +424,5 @@ Writes to:
   {vault}/tools/_registry.json
   {vault}/claims/_registry.json
   {vault}/_registry.json                   (master)
-  {vault}/_INDEX.md
+  {vault}/index.md
 ```

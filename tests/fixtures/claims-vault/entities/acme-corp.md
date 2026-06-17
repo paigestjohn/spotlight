@@ -1,6 +1,7 @@
 ---
 id: acme-corp
 type: company
+description: "Fixture company entity — subject of the test-case investigation."
 aliases: [ACME Ltd, Acme Corporation]
 country: TL
 region: Testville
@@ -16,8 +17,8 @@ Fixture company entity.
 
 | Investigation | Role | Date |
 |---------------|------|------|
-| [[test-case]] | subject | 2026-06-01 |
+| [test-case](../investigations/test-case.md) | subject | 2026-06-01 |
 
 ## Key Relationships
 
-[[john-doe]] — contractor.
+[john-doe](../entities/john-doe.md) — contractor.

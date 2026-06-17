@@ -34,7 +34,7 @@ Phase 4 — Gate 1
         │ GATE: user approves investigation
         ▼
 Phase 5 — Ingestion
-    invoke-skill("ingest") → writes vault notes, registries, _INDEX.md
+    invoke-skill("ingest") → writes vault notes, registries, index.md
         │ GATE: user approves ingest
         ▼
 END
@@ -235,7 +235,7 @@ After Gate 1 approval:
 
 > "Investigation complete. Ingest confirmed findings into your knowledge base?"
 
-- If yes: `invoke-skill("ingest")` — 7-step archival into vault notes + registries + `_INDEX.md`. See the ingest skill for details.
+- If yes: `invoke-skill("ingest")` — 7-step archival into vault notes + registries + `index.md`. See the ingest skill for details.
 - If no: pipeline ends. Case files remain in `{CASE_DIR}/` for future reference or later ingestion.
 
 ## Evidence grounding — the rule that applies across all phases

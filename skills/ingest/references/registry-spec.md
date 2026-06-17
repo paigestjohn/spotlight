@@ -209,9 +209,9 @@ How Spotlight case files map to vault notes and registries.
 
 ---
 
-## _INDEX.md Template
+## index.md Template
 
-Generated at `{vault}/_INDEX.md` and updated on every ingestion run.
+Generated at `{vault}/index.md` and updated on every ingestion run.
 
 ```markdown
 # Knowledge Base Index
@@ -232,7 +232,7 @@ Generated at `{vault}/_INDEX.md` and updated on every ingestion run.
 
 | Investigation | Date | Findings | Status |
 |--------------|------|----------|--------|
-| [[project-id]] | YYYY-MM-DD | N verified / M total | confirmed |
+| [project-id](investigations/project-id.md) | YYYY-MM-DD | N verified / M total | confirmed |
 
 ## Browse
 

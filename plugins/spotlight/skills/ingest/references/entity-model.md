@@ -1,6 +1,6 @@
 # Entity Model
 
-Note types, frontmatter contracts, and wikilink conventions for vault ingestion.
+Note types, frontmatter contracts, and cross-link conventions for vault ingestion.
 
 ---
 
@@ -13,7 +13,9 @@ Note types, frontmatter contracts, and wikilink conventions for vault ingestion.
 ```yaml
 ---
 id: project-id
+type: investigation
 title: Human-readable title
+description: One sentence (~150 chars) summarizing the investigation — retrieval hint
 status: confirmed
 date: YYYY-MM-DD
 regions: [list]
@@ -36,9 +38,9 @@ total_findings: N
    - Evidence
    - Sources
    - Perspective
-3. **Connections** — Wikilinked entities involved in this investigation.
+3. **Connections** — Linked entities (relative markdown links) involved in this investigation.
 4. **Gaps** — Open questions and unresolved leads.
-5. **Methodology Applied** — Techniques and tools used, with wikilinks.
+5. **Methodology Applied** — Techniques and tools used, with relative markdown links.
 
 ---
 
@@ -50,6 +52,7 @@ total_findings: N
 ---
 id: entity-id
 type: person|organization|company|place
+description: One sentence (~150 chars) on who/what this entity is — retrieval hint
 subtype: optional-subtype
 aliases: [list]
 country: XX
@@ -66,9 +69,9 @@ first_seen: YYYY-MM-DD
 
 | Investigation | Role | Date |
 |---------------|------|------|
-| [[project-id]] | description of role | YYYY-MM-DD |
+| [project-id](../investigations/project-id.md) | description of role | YYYY-MM-DD |
 
-3. **Key Relationships** — Wikilinks to other entities with relationship context.
+3. **Key Relationships** — Relative markdown links to other entities with relationship context.
 
 ---
 
@@ -80,6 +83,7 @@ first_seen: YYYY-MM-DD
 ---
 id: technique-id
 type: technique
+description: One sentence (~150 chars) on what this technique does — retrieval hint
 category: osint-category
 tools: [tool-id-1]
 investigations: [project-id-1]
@@ -90,12 +94,12 @@ investigations: [project-id-1]
 
 1. **Description** — What this technique does and when to use it.
 2. **Steps** — Ordered procedure.
-3. **Tools** — Wikilinked tools used by this technique.
+3. **Tools** — Linked tools (relative markdown links) used by this technique.
 4. **Usage History** — Table:
 
 | Investigation | Context | Date |
 |---------------|---------|------|
-| [[project-id]] | how it was applied | YYYY-MM-DD |
+| [project-id](../investigations/project-id.md) | how it was applied | YYYY-MM-DD |
 
 5. **Lessons Learned** — What worked, what failed, what to do differently.
 
@@ -109,6 +113,7 @@ investigations: [project-id-1]
 ---
 id: tool-id
 type: tool
+description: One sentence (~150 chars) on what this tool does — retrieval hint
 category: osint-category
 url: https://...
 access: free|freemium|paid|signup-required
@@ -126,7 +131,7 @@ usage_count: N
 
 | Investigation | Context | Date |
 |---------------|---------|------|
-| [[project-id]] | how it was used | YYYY-MM-DD |
+| [project-id](../investigations/project-id.md) | how it was used | YYYY-MM-DD |
 
 4. **Tips for Future Agents** — Curated advice for effective use.
 
@@ -139,6 +144,7 @@ usage_count: N
 ```yaml
 ---
 id: acme-files-f1
+type: claim
 project: acme-files
 finding_id: F1
 entities: [acme-corp, john-doe]
@@ -180,31 +186,29 @@ Findings that fail the gate stay in the investigation note (flagged, as today) a
 
 | Date | Investigation | Event | Verdict |
 |------|---------------|-------|---------|
-| YYYY-MM-DD | [[project-id]] | re-verified / superseded / strengthened | verified |
+| YYYY-MM-DD | [project-id](../investigations/project-id.md) | re-verified / superseded / strengthened | verified |
 
-5. **Connections** — wikilinks to `[[entity-id]]`s and the originating `[[project-id]]`.
+5. **Connections** — relative markdown links to `[entity-id](../entities/entity-id.md)`s and the originating `[project-id](../investigations/project-id.md)`.
 
 **Sensitive-vault parity:** when a sensitive vault is enabled, it carries the same `claims/` structure; the existing rule that the two vaults never cross-link applies to claim notes unchanged.
 
 ---
 
-## Wikilink Conventions
+## Cross-Link Conventions
+
+All cross-references use **relative markdown links** (Obsidian resolves these into its
+graph and backlinks exactly like wikilinks, and they stay portable to non-Obsidian
+consumers). Paths are relative to the linking note's directory:
 
 | Reference type | Format |
 |----------------|--------|
-| Entity | `[[entity-id]]` |
-| Investigation | `[[project-id]]` |
-| Methodology | `[[technique-id]]` |
-| Tool | `[[tool-id]]` |
-| Claim | `[[claim-id]]` |
+| Entity | `[entity-id](../entities/entity-id.md)` |
+| Investigation | `[project-id](../investigations/project-id.md)` |
+| Methodology | `[technique-id](../methodology/technique-id.md)` |
+| Tool | `[tool-id](../tools/tool-id.md)` |
+| Claim | `[claim-id](../claims/claim-id.md)` |
 
 **ID rules:**
 - All IDs are **kebab-case** (lowercase, hyphens, no spaces).
 - Examples: `swiss-leaks`, `john-doe`, `reverse-image-search`, `bellingcat-osm`.
 - Claim IDs are `{project-id}-f{n}`: `acme-files-f1`.
-
-**Directory fallback** — When wikilinks don't resolve (e.g., flat export or non-Obsidian vault), use relative links:
-
-```markdown
-[entity-id](../entities/entity-id.md)
-```

@@ -194,13 +194,13 @@ export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$PATH"
 # VALIDATED_DEPENDENCIES.md. The installer never asks npm or pip for "latest"
 # on packages managed by Spotlight setup.
 FIRECRAWL_CLI_VERSION="1.3.1"
-QMD_VERSION="2.0.1"
+QMD_VERSION="2.5.3"
 DEV_BROWSER_VERSION="0.2.8"
 CLAUDE_CODE_VERSION="2.1.169"
 GEMINI_CLI_VERSION="0.45.2"
 OPENAI_CODEX_VERSION="0.138.0"
-OPENCODE_AI_VERSION="1.16.2"
-PI_CODING_AGENT_VERSION="0.73.1"
+OPENCODE_AI_VERSION="1.17.7"
+PI_CODING_AGENT_VERSION="0.79.6"
 JSONSCHEMA_VERSION="4.25.1"
 REQUESTS_VERSION="2.32.5"
 MAIGRET_VERSION="0.4.4"
@@ -390,7 +390,7 @@ reviewed_npm_version() {
     @google/gemini-cli) echo "$GEMINI_CLI_VERSION" ;;
     @openai/codex) echo "$OPENAI_CODEX_VERSION" ;;
     opencode-ai) echo "$OPENCODE_AI_VERSION" ;;
-    @mariozechner/pi-coding-agent) echo "$PI_CODING_AGENT_VERSION" ;;
+    @earendil-works/pi-coding-agent) echo "$PI_CODING_AGENT_VERSION" ;;
     *) return 1 ;;
   esac
 }
@@ -693,22 +693,23 @@ if [ "$SPOTLIGHT_MODE" = "local" ]; then
     fi
 
     step "Agent harness (Pi)"
-    ensure_npm_global_exact pi @mariozechner/pi-coding-agent
+    ensure_npm_global_exact pi @earendil-works/pi-coding-agent
 
     step "pi-llama-cpp extension (model browser for llama-server)"
     spin "Installing pi-llama-cpp" pi install npm:pi-llama-cpp
 
-    # Symlink Spotlight skills into pi's global skill dir.
+    # Symlink Spotlight skills into pi's global skill dir, namespaced under spotlight/
+    # (engine-matching <root>/<product>/<skill> shape; pi recurses to discover them).
     step "Spotlight skills → pi"
-    run mkdir -p "$HOME/.pi/agent/skills"
+    run mkdir -p "$HOME/.pi/agent/skills/spotlight"
     if [ "$DRY_RUN" = "1" ]; then
-      printf 'DRY-RUN: symlink %s/skills/*/ into ~/.pi/agent/skills/\n' "$SPOTLIGHT_DIR"
+      printf 'DRY-RUN: symlink %s/skills/*/ into ~/.pi/agent/skills/spotlight/\n' "$SPOTLIGHT_DIR"
     else
       for skill_dir in "$SPOTLIGHT_DIR/skills/"*/; do
         name=$(basename "$skill_dir")
-        ln -sfn "$skill_dir" "$HOME/.pi/agent/skills/$name"
+        ln -sfn "$skill_dir" "$HOME/.pi/agent/skills/spotlight/$name"
       done
-      printf "%s✓%s pi loads %s Spotlight skills from ~/.pi/agent/skills/\n" "$_c_green" "$_c_reset" "$(ls -1 "$HOME/.pi/agent/skills" | wc -l | tr -d ' ')"
+      printf "%s✓%s pi loads %s Spotlight skills from ~/.pi/agent/skills/spotlight/\n" "$_c_green" "$_c_reset" "$(ls -1 "$HOME/.pi/agent/skills/spotlight" | wc -l | tr -d ' ')"
     fi
 
     # Tell pi where the OpenAI-compatible endpoint is.
@@ -745,15 +746,15 @@ if [ "$SPOTLIGHT_MODE" = "local" ]; then
     fi
 
     step "Spotlight skills → opencode"
-    run mkdir -p "$HOME/.config/opencode/skills"
+    run mkdir -p "$HOME/.config/opencode/skills/spotlight"
     if [ "$DRY_RUN" = "1" ]; then
-      printf 'DRY-RUN: symlink %s/skills/*/ into ~/.config/opencode/skills/\n' "$SPOTLIGHT_DIR"
+      printf 'DRY-RUN: symlink %s/skills/*/ into ~/.config/opencode/skills/spotlight/\n' "$SPOTLIGHT_DIR"
     else
       for skill_dir in "$SPOTLIGHT_DIR/skills/"*/; do
         name=$(basename "$skill_dir")
-        ln -sfn "$skill_dir" "$HOME/.config/opencode/skills/$name"
+        ln -sfn "$skill_dir" "$HOME/.config/opencode/skills/spotlight/$name"
       done
-      printf "%s✓%s opencode loads %s Spotlight skills from ~/.config/opencode/skills/\n" "$_c_green" "$_c_reset" "$(ls -1 "$HOME/.config/opencode/skills" | wc -l | tr -d ' ')"
+      printf "%s✓%s opencode loads %s Spotlight skills from ~/.config/opencode/skills/spotlight/\n" "$_c_green" "$_c_reset" "$(ls -1 "$HOME/.config/opencode/skills/spotlight" | wc -l | tr -d ' ')"
     fi
 
     step "opencode provider config"
@@ -803,7 +804,7 @@ if [ "$SPOTLIGHT_MODE" = "local" ]; then
 set -euo pipefail
 MODEL="\$HOME/Models/$MODEL_LEAF/$GGUF_FILE"
 command -v llama-server >/dev/null 2>&1 || { echo "llama-server missing — brew install llama.cpp" >&2; exit 1; }
-command -v pi           >/dev/null 2>&1 || { echo "pi missing — install reviewed @mariozechner/pi-coding-agent@$PI_CODING_AGENT_VERSION with install-spotlight.sh" >&2; exit 1; }
+command -v pi           >/dev/null 2>&1 || { echo "pi missing — install reviewed @earendil-works/pi-coding-agent@$PI_CODING_AGENT_VERSION with install-spotlight.sh" >&2; exit 1; }
 [ -f "\$MODEL" ] || { echo "Model not found: \$MODEL" >&2; exit 1; }
 lsof -ti:8080 >/dev/null 2>&1 && { echo "Port 8080 already in use — kill the existing process first" >&2; exit 1; }
 llama-server --model "\$MODEL" --alias qwen27 --host 127.0.0.1 --port 8080 \\
@@ -850,7 +851,7 @@ SPOTLIGHT_DIR="\${SPOTLIGHT_DIR:-$SPOTLIGHT_DIR}"
 ENV_FILE="\$SPOTLIGHT_DIR/.env"
 if [ -f "\$ENV_FILE" ]; then set -a; . "\$ENV_FILE"; set +a; fi
 command -v ollama >/dev/null 2>&1 || { echo "ollama missing — brew install ollama" >&2; exit 1; }
-command -v pi     >/dev/null 2>&1 || { echo "pi missing — install reviewed @mariozechner/pi-coding-agent@$PI_CODING_AGENT_VERSION with install-spotlight.sh" >&2; exit 1; }
+command -v pi     >/dev/null 2>&1 || { echo "pi missing — install reviewed @earendil-works/pi-coding-agent@$PI_CODING_AGENT_VERSION with install-spotlight.sh" >&2; exit 1; }
 OLLAMA_MODEL="\${OLLAMA_MODEL:-$OLLAMA_MODEL_DEFAULT}"
 SPOTLIGHT_OLLAMA_ALIAS="\${SPOTLIGHT_OLLAMA_ALIAS:-$OLLAMA_ALIAS_DEFAULT}"
 ollama list >/dev/null 2>&1 || { brew services start ollama 2>/dev/null || ollama serve >/tmp/ollama-spotlight.log 2>&1 & sleep 2; }
@@ -940,15 +941,15 @@ else
   fi
   if [ "$SPOTLIGHT_RUNTIME" = "opencode" ]; then
     printf "%s✓%s Provider key will be loaded from .env (%s)\n" "$_c_green" "$_c_reset" "$SPOTLIGHT_CLOUD_KEY_VAR"
-    run mkdir -p "$HOME/.config/opencode/skills"
+    run mkdir -p "$HOME/.config/opencode/skills/spotlight"
     if [ "$DRY_RUN" = "1" ]; then
-      printf 'DRY-RUN: symlink %s/skills/*/ into ~/.config/opencode/skills/\n' "$SPOTLIGHT_DIR"
+      printf 'DRY-RUN: symlink %s/skills/*/ into ~/.config/opencode/skills/spotlight/\n' "$SPOTLIGHT_DIR"
     else
       for skill_dir in "$SPOTLIGHT_DIR/skills/"*/; do
         name=$(basename "$skill_dir")
-        ln -sfn "$skill_dir" "$HOME/.config/opencode/skills/$name"
+        ln -sfn "$skill_dir" "$HOME/.config/opencode/skills/spotlight/$name"
       done
-      printf "%s✓%s opencode loads Spotlight skills from %s/.config/opencode/skills/\n" "$_c_green" "$_c_reset" "$HOME"
+      printf "%s✓%s opencode loads Spotlight skills from %s/.config/opencode/skills/spotlight/\n" "$_c_green" "$_c_reset" "$HOME"
     fi
   fi
 fi
@@ -1099,8 +1100,8 @@ fi
 
 step "Case workspace and vault scaffold"
 run mkdir -p "$SPOTLIGHT_CASES_ROOT" "$SPOTLIGHT_VAULT_PATH/evidence" "$SPOTLIGHT_VAULT_PATH/captures" "$SPOTLIGHT_VAULT_PATH/briefs" "$SPOTLIGHT_VAULT_PATH/exports" "$SPOTLIGHT_VAULT_PATH/_schema"
-if [ "$DRY_RUN" != "1" ] && [ ! -f "$SPOTLIGHT_VAULT_PATH/_index.md" ]; then
-  cat > "$SPOTLIGHT_VAULT_PATH/_index.md" <<'INDEX_EOF'
+if [ "$DRY_RUN" != "1" ] && [ ! -f "$SPOTLIGHT_VAULT_PATH/index.md" ]; then
+  cat > "$SPOTLIGHT_VAULT_PATH/index.md" <<'INDEX_EOF'
 ---
 type: spotlight-index
 tags: [spotlight, index]

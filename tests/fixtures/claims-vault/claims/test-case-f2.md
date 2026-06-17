@@ -1,5 +1,6 @@
 ---
 id: test-case-f2
+type: claim
 project: test-case
 finding_id: F2
 entities: [acme-corp]
@@ -32,4 +33,4 @@ Bank reference codes consistent with subsidiary accounts; account ownership not 
 
 ## Connections
 
-[[acme-corp]], [[test-case]]
+[acme-corp](../entities/acme-corp.md), [test-case](../investigations/test-case.md)

@@ -1,6 +1,7 @@
 ---
 id: john-doe
 type: person
+description: "Fixture person entity — contractor paid by Acme Corp."
 aliases: [J. Doe]
 country: TL
 region: Testville
@@ -16,8 +17,8 @@ Fixture person entity.
 
 | Investigation | Role | Date |
 |---------------|------|------|
-| [[test-case]] | contractor | 2026-06-01 |
+| [test-case](../investigations/test-case.md) | contractor | 2026-06-01 |
 
 ## Key Relationships
 
-[[acme-corp]] — client.
+[acme-corp](../entities/acme-corp.md) — client.

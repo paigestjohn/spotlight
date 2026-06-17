@@ -1,5 +1,6 @@
 ---
 id: test-case-f1
+type: claim
 project: test-case
 finding_id: F1
 entities: [acme-corp, john-doe]
@@ -32,4 +33,4 @@ Registry filing 123 corroborated by two independent sources.
 
 ## Connections
 
-[[acme-corp]], [[john-doe]], [[test-case]]
+[acme-corp](../entities/acme-corp.md), [john-doe](../entities/john-doe.md), [test-case](../investigations/test-case.md)

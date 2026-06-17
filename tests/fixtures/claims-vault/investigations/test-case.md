@@ -1,6 +1,8 @@
 ---
 id: test-case
+type: investigation
 title: "Test Case: Acme Consultancy Payments"
+description: "Fixture investigation — Acme Corp's undisclosed consultancy payments to John Doe."
 status: confirmed
 date: 2026-06-01
 regions: [Testland]
@@ -47,7 +49,7 @@ Fixture investigation used by tests/vault-claims-check.py.
 
 ## Connections
 
-[[acme-corp]], [[john-doe]]
+[acme-corp](../entities/acme-corp.md), [john-doe](../entities/john-doe.md)
 
 ## Gaps
 
