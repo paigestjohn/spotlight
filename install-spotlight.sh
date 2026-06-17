@@ -340,7 +340,7 @@ step() { printf "\n%s%s━━ %s ━━%s\n" "$_c_bold" "$_c_cyan" "$1" "$_c_res
 # truth) lists exactly the skills to surface; fall back to the on-disk skill
 # dirs if it is absent.
 link_spotlight_skills() {
-  _dest="$1"
+  local _dest="$1" _sid skill_dir
   if [ -s "$SPOTLIGHT_DIR/skills.manifest" ]; then
     while IFS= read -r _sid; do
       { [ -n "$_sid" ] && [ -d "$SPOTLIGHT_DIR/skills/$_sid" ]; } || continue
