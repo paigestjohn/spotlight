@@ -579,7 +579,8 @@ fi
 
   if ! command -v obsidian >/dev/null 2>&1; then
     printf "%s!%s Opening Obsidian so you can enable the CLI\n" "$_c_cyan" "$_c_reset"
-    run open -a Obsidian 2>/dev/null || true
+    run "/mnt/c/Program Files/Obsidian/Obsidian.exe" 2>/dev/null || true
+    --run open -a Obsidian 2>/dev/null || true
     echo ""
     echo "  ${_c_bold}Enable the Obsidian CLI (one-time):${_c_reset}"
     echo "    Settings → General → Advanced → toggle ${_c_bold}Command Line Interface${_c_reset} ON"
