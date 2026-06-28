@@ -483,7 +483,7 @@ install_python_reviewed_deps() {
     printf 'DRY-RUN: python3 -m pip install --user --quiet jsonschema==%s requests==%s\n' "$JSONSCHEMA_VERSION" "$REQUESTS_VERSION"
     return 0
   fi
-  spin "Installing reviewed Python deps" python3 -m pip install --user --quiet \
+  spin "Installing reviewed Python deps" python3 -m pip install --user --break-system-packages --quiet \
     "jsonschema==$JSONSCHEMA_VERSION" \
     "requests==$REQUESTS_VERSION"
   python3 - "$JSONSCHEMA_VERSION" "$REQUESTS_VERSION" <<'PY'
