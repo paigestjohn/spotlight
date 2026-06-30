@@ -568,15 +568,8 @@ else
   else
   echo "Obsidian not found at /mnt/c/Program Files/Obsidian/Obsidian.exe — install it on Windows first." >&2
   exit 1
-fi
-  --prior version built for macOS
-  --if [ -d "/Applications/Obsidian.app" ] || [ -d "$HOME/Applications/Obsidian.app" ]; then
-  --  printf "%s✓%s Obsidian.app installed\n" "$_c_green" "$_c_reset"
-  --else
-  --  ensure_brew
-  --  spin "Installing Obsidian via brew cask" brew install --cask obsidian
-  --fi
-
+  fi
+ 
   if ! command -v obsidian >/dev/null 2>&1; then
     printf "%s!%s Opening Obsidian so you can enable the CLI\n" "$_c_cyan" "$_c_reset"
     run "/mnt/c/Program Files/Obsidian/Obsidian.exe" 2>/dev/null || true
